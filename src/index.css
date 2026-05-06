@@ -1,0 +1,343 @@
+/* ============ Geist (sans) ============ */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Italic-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ============ Geist Mono ============ */
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============ Geist Pixel — Square is the default ============ */
+@font-face {
+  font-family: 'Geist Pixel';
+  src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Line';
+  src: url('/fonts/GeistPixel-Line.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Grid';
+  src: url('/fonts/GeistPixel-Grid.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Circle';
+  src: url('/fonts/GeistPixel-Circle.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Pixel Triangle';
+  src: url('/fonts/GeistPixel-Triangle.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============ Uniblock tokens — light only, no dark mode ============ */
+:root {
+  --ub-blue: #1FB6FF;
+  --ub-blue-soft: rgba(31, 182, 255, 0.10);
+  --ub-blue-border: rgba(31, 182, 255, 0.45);
+
+  --ub-black: #222222;
+  --ub-text-2: #3B3B3B;
+  --ub-text-3: #6A6A6A;
+
+  --ub-border: #B5B5B5;
+  --ub-border-soft: #D6D6D6;
+
+  /* Refined chrome — hairlines instead of dashed grids */
+  --ub-line: rgba(34, 34, 34, 0.08);
+  --ub-line-strong: rgba(34, 34, 34, 0.14);
+  --ub-canvas: #f5f6f8;
+  --ub-elevated: #ffffff;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(34, 34, 34, 0.04);
+  --shadow-md: 0 4px 24px rgba(34, 34, 34, 0.06);
+  --shadow-pop: 0 12px 40px rgba(34, 34, 34, 0.1);
+
+  --ub-white: #ffffff;
+  --ub-grid: #f4f5f7;
+  --ub-hover: #eef0f3;
+
+  --ub-success: #16a34a;
+  --ub-success-soft: rgba(22, 163, 74, 0.10);
+  --ub-warning: #d97706;
+  --ub-warning-soft: rgba(217, 119, 6, 0.10);
+  --ub-danger: #dc2626;
+  --ub-danger-soft: rgba(220, 38, 38, 0.10);
+
+  /* Only flat offset shadow allowed (menus/popovers). */
+  --ub-pop-shadow: 4px 4px 0 rgba(0, 0, 0, 0.08);
+
+  --font-sans: 'Geist', 'Inter', 'Helvetica', 'Arial', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
+  --font-pixel: 'Geist Pixel', 'Geist Mono', monospace;
+
+  --sidebar-w: 248px;
+
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ub-black);
+  background: var(--ub-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: var(--ub-canvas);
+  color: var(--ub-black);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+  background: var(--ub-elevated);
+}
+
+/* Scrollbars — square, neutral */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ub-grid);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ub-border-soft);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ub-border);
+}
+
+/* Selection */
+::selection {
+  background: var(--ub-blue);
+  color: var(--ub-white);
+}
+
+/* Utility classes */
+.muted   { color: var(--ub-text-2); }
+.dim     { color: var(--ub-text-3); }
+.mono    { font-family: var(--font-mono); font-feature-settings: 'liga' 0; }
+.pixel   { font-family: var(--font-pixel); letter-spacing: 0.02em; }
+
+/* Blueprint grid (used in modal/empty surfaces) */
+.blueprint-bg {
+  background-color: var(--ub-elevated);
+  background-image:
+    linear-gradient(rgba(31, 182, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 182, 255, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ============ Atoms ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  border: 1px solid var(--ub-line);
+  background: var(--ub-elevated);
+  color: var(--ub-black);
+  box-shadow: none;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    filter 0.1s ease;
+  white-space: nowrap;
+}
+.btn:hover {
+  background: var(--ub-hover);
+  border-color: var(--ub-line-strong);
+}
+.btn:active {
+  filter: brightness(0.92);
+}
+.btn.primary {
+  background: var(--ub-blue);
+  border: 1px solid var(--ub-blue);
+  color: var(--ub-white);
+  box-shadow: none;
+}
+.btn.primary:hover {
+  background: var(--ub-blue);
+  border-color: var(--ub-blue);
+  filter: brightness(0.95);
+}
+.btn.dark {
+  background: var(--ub-black);
+  border: 1px solid var(--ub-black);
+  color: var(--ub-white);
+}
+.btn.dark:hover {
+  background: var(--ub-black);
+  filter: brightness(1.15);
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ub-text-2);
+  box-shadow: none;
+}
+.btn.ghost:hover {
+  background: var(--ub-hover);
+  color: var(--ub-black);
+  border-color: transparent;
+  box-shadow: none;
+}
+.btn.icon-only {
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+.btn.danger {
+  background: var(--ub-danger);
+  border: 1px solid var(--ub-danger);
+  color: var(--ub-white);
+}
+.btn.danger:hover {
+  filter: brightness(0.95);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--ub-grid);
+  color: var(--ub-text-2);
+  border: none;
+  font-family: var(--font-sans);
+}
+.badge.method-get {
+  background: var(--ub-blue-soft);
+  color: var(--ub-blue);
+}
+.badge.method-post {
+  background: var(--ub-success-soft);
+  color: var(--ub-success);
+}
+.badge.method-ws {
+  background: var(--ub-grid);
+  color: var(--ub-black);
+}
+.badge.new {
+  background: var(--ub-blue-soft);
+  color: var(--ub-blue);
+}
+.badge.success {
+  background: var(--ub-success-soft);
+  color: var(--ub-success);
+}
+.badge.warning {
+  background: var(--ub-warning-soft);
+  color: var(--ub-warning);
+}
+.badge.danger {
+  background: var(--ub-danger-soft);
+  color: var(--ub-danger);
+}
+.badge.solid {
+  background: var(--ub-black);
+  color: var(--ub-white);
+  border: 1px solid var(--ub-black);
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-xs);
+  background: var(--ub-grid);
+  border: 1px solid var(--ub-line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ub-text-2);
+}
