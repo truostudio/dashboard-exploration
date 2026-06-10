@@ -29,6 +29,7 @@ export function GetStarted({ steps, onNavigate, onDismiss }: Props) {
           </p>
         </div>
         <div className="getstarted-head-right">
+          <span className="mono dim" style={{ fontSize: 12 }}>{pct}%</span>
           <div className="qs-bar wide" aria-hidden>
             <div className="qs-bar-fill" style={{ width: `${pct}%` }} />
           </div>

@@ -1,26 +1,18 @@
-import type { ReactNode } from 'react';
-
 type Props = {
   label: string;
   value: string;
   delta?: { value: string; trend: 'up' | 'down' | 'neutral' };
   hint?: string;
-  spark?: ReactNode;
 };
 
-export function KPICard({ label, value, delta, hint, spark }: Props) {
+export function KPICard({ label, value, delta, hint }: Props) {
   return (
     <article className="kpi">
-      <div className="kpi-row">
-        <span className="kpi-label">{label}</span>
-        {delta && (
-          <span className={`kpi-delta ${delta.trend}`}>{delta.value}</span>
-        )}
-      </div>
+      <span className="kpi-label">{label}</span>
       <div className="kpi-value">{value}</div>
-      <div className="kpi-row bottom">
+      <div className="kpi-foot">
+        {delta && <span className={`kpi-delta ${delta.trend}`}>{delta.value}</span>}
         {hint && <span className="kpi-hint">{hint}</span>}
-        {spark && <div className="kpi-spark">{spark}</div>}
       </div>
     </article>
   );

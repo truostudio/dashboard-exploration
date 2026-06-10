@@ -114,9 +114,9 @@ export function Quickstart({
 
   return (
     <div className="view">
-      <section className="qs-hero blueprint-bg">
+      <section className="qs-hero blueprint-bg marks rise rise-1">
         <div className="qs-hero-inner">
-          <span className="badge new">QUICKSTART</span>
+          <span className="eyebrow">Quickstart — 00 / 05</span>
           <h2 className="qs-hero-title">Make your first request in under a minute.</h2>
           <p className="qs-hero-sub muted">
             Your project is ready. Drop the snippet below into your codebase, hit Run, and Uniblock will route it

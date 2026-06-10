@@ -25,44 +25,54 @@ export type ViewId =
   | 'settings-keys'
   | 'settings-billing';
 
-const titles: Record<ViewId, { title: string; subtitle: string }> = {
+const titles: Record<ViewId, { title: string; subtitle: string; eyebrow: string }> = {
   quickstart: {
+    eyebrow: 'Onboarding — 5 steps',
     title: 'Quickstart',
     subtitle: 'A guided path from zero to your first production request.',
   },
   overview: {
+    eyebrow: 'eth-mainnet-prod — Live',
     title: 'Overview',
     subtitle: 'Live snapshot of requests, latency, and routing health.',
   },
   endpoints: {
+    eyebrow: 'eth-mainnet-prod — API',
     title: 'Endpoints',
     subtitle: 'Unified APIs, Direct APIs, and JSON-RPC for eth-mainnet-prod.',
   },
   'api-tester': {
+    eyebrow: 'eth-mainnet-prod — API',
     title: 'API Tester',
     subtitle: 'Try any endpoint against live data with your project credentials.',
   },
   webhooks: {
+    eyebrow: 'eth-mainnet-prod — Events',
     title: 'Webhooks',
     subtitle: 'Subscribe to address activity, mints, swaps, and contract events.',
   },
   logs: {
+    eyebrow: 'eth-mainnet-prod — Observability',
     title: 'Logs',
     subtitle: 'Live request log with filters, status, and per-call routing detail.',
   },
   'settings-project': {
+    eyebrow: 'Settings',
     title: 'Project',
     subtitle: 'General settings, routing rules, limits, and danger zone.',
   },
   'settings-team': {
+    eyebrow: 'Settings',
     title: 'Team',
     subtitle: 'Members, invites, and roles for this project.',
   },
   'settings-keys': {
+    eyebrow: 'Settings',
     title: 'API Keys',
     subtitle: 'Scoped, rotatable keys for every environment.',
   },
   'settings-billing': {
+    eyebrow: 'Settings',
     title: 'Billing',
     subtitle: 'Plan, usage, payment method, and invoices.',
   },
@@ -101,6 +111,7 @@ function App() {
 
       <div className="main-col">
         <Topbar
+          eyebrow={meta.eyebrow}
           title={meta.title}
           subtitle={meta.subtitle}
           onNewProject={() => setNewProjectOpen(true)}

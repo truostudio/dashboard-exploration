@@ -106,7 +106,25 @@
   --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
   --font-pixel: 'Geist Pixel', 'Geist Mono', monospace;
 
-  --sidebar-w: 248px;
+  /* ---- Type scale (editorial, restrained) ---- */
+  --t-display: clamp(32px, 3.6vw, 46px);
+  --t-h1: clamp(26px, 2.6vw, 32px);
+  --t-h2: 17px;
+  --t-eyebrow: 11px;
+
+  /* ---- Space scale (8pt rhythm) ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --sidebar-w: 264px;
 
   font-family: var(--font-sans);
   font-size: 14px;
@@ -135,9 +153,9 @@ body,
 }
 
 body {
-  background: var(--ub-canvas);
   color: var(--ub-black);
   font-family: var(--font-sans);
+  background: var(--ub-canvas);
 }
 
 a {
@@ -186,8 +204,10 @@ textarea {
 /* Utility classes */
 .muted   { color: var(--ub-text-2); }
 .dim     { color: var(--ub-text-3); }
-.mono    { font-family: var(--font-mono); font-feature-settings: 'liga' 0; }
+.mono    { font-family: var(--font-mono); font-feature-settings: 'liga' 0, 'tnum' 1; }
 .pixel   { font-family: var(--font-pixel); letter-spacing: 0.02em; }
+/* Tabular lining figures — precise number alignment everywhere data lives */
+.tnum    { font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
 
 /* Blueprint grid (used in modal/empty surfaces) */
 .blueprint-bg {
@@ -231,12 +251,12 @@ textarea {
   background: var(--ub-blue);
   border: 1px solid var(--ub-blue);
   color: var(--ub-white);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
 .btn.primary:hover {
   background: var(--ub-blue);
   border-color: var(--ub-blue);
-  filter: brightness(0.95);
+  filter: brightness(1.03);
 }
 .btn.dark {
   background: var(--ub-black);
@@ -340,4 +360,47 @@ textarea {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ub-text-2);
+}
+
+/* ============ Eyebrow / overline label ============ */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--t-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+}
+
+/* .marks is a no-op now (kept so existing markup is harmless) */
+.marks { position: relative; }
+
+/* ============ Signature: choreographed entrance ============ */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  opacity: 0;
+  animation: rise 0.55s var(--ease-out) forwards;
+}
+.rise-1 { animation-delay: 0.02s; }
+.rise-2 { animation-delay: 0.08s; }
+.rise-3 { animation-delay: 0.14s; }
+.rise-4 { animation-delay: 0.20s; }
+.rise-5 { animation-delay: 0.26s; }
+.rise-6 { animation-delay: 0.32s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; opacity: 1; }
+  body { background-attachment: scroll; }
+}
+
+/* Focus visibility — consistent blue ring */
+:focus-visible {
+  outline: 2px solid var(--ub-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }

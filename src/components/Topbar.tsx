@@ -3,6 +3,7 @@ import { Icon } from './Icons';
 type Props = {
   title: string;
   subtitle?: string;
+  eyebrow?: string;
   onNewProject: () => void;
   primaryAction?: { label: string; onClick: () => void };
 };
@@ -10,12 +11,14 @@ type Props = {
 export function Topbar({
   title,
   subtitle,
+  eyebrow,
   onNewProject,
   primaryAction,
 }: Props) {
   return (
     <header className="topbar">
       <div className="tb-left">
+        {eyebrow && <span className="eyebrow tb-eyebrow">{eyebrow}</span>}
         <h1 className="tb-title">{title}</h1>
         {subtitle && <p className="tb-subtitle">{subtitle}</p>}
       </div>

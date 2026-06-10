@@ -34,14 +34,15 @@ export function RequestsChart() {
   const total = data.reduce((s, p) => s + p.requests, 0);
 
   return (
-    <section className="panel chart">
+    <section className="panel chart marks">
       <header className="panel-head">
         <div>
+          <span className="eyebrow">Throughput</span>
           <h2 className="panel-title">Total requests</h2>
-          <p className="panel-sub">
-            <span className="mono panel-num">{formatNumber(total)}</span>{' '}
-            <span className="dim">requests in last {range}</span>
-          </p>
+          <div className="chart-hero">
+            <span className="chart-hero-num">{total.toLocaleString()}</span>
+            <span className="dim">requests · last {range}</span>
+          </div>
         </div>
         <div className="seg">
           {ranges.map((r) => (
@@ -62,6 +63,12 @@ export function RequestsChart() {
             data={data}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
           >
+            <defs>
+              <linearGradient id="reqFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--ub-blue)" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="var(--ub-blue)" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               stroke="rgba(34, 34, 34, 0.06)"
               strokeDasharray="0"
@@ -97,15 +104,14 @@ export function RequestsChart() {
                 boxShadow: 'var(--shadow-md)',
               }}
               labelStyle={{ color: 'var(--ub-text-2)' }}
-              formatter={(v: number) => formatNumber(v)}
+              formatter={(v) => formatNumber(Number(v))}
             />
             <Area
               type="monotone"
               dataKey="requests"
               stroke="var(--ub-blue)"
-              strokeWidth={1.5}
-              fill="var(--ub-blue)"
-              fillOpacity={0.10}
+              strokeWidth={2}
+              fill="url(#reqFill)"
               activeDot={{
                 r: 4,
                 stroke: 'var(--ub-blue)',

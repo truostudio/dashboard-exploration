@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { KPICard, Sparkline } from '../components/KPICard';
+import { KPICard } from '../components/KPICard';
 import { RequestsChart } from '../components/RequestsChart';
 import { RecentRequests } from '../components/RecentRequests';
 import { GetStarted } from '../components/GetStarted';
@@ -18,72 +18,48 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
   return (
     <div className="view">
       {showGetStarted && (
-        <GetStarted steps={steps} onNavigate={onNavigate} onDismiss={onDismissGetStarted} />
+        <div className="rise rise-1">
+          <GetStarted steps={steps} onNavigate={onNavigate} onDismiss={onDismissGetStarted} />
+        </div>
       )}
 
-      <section className="kpi-grid">
+      <section className="kpi-grid rise rise-2">
         <KPICard
           label="Total requests"
-          value="2.41M"
-          delta={{ value: '+12.4%', trend: 'up' }}
-          hint="vs previous 24h"
-          spark={<Sparkline data={[10, 14, 9, 17, 22, 19, 26, 31, 28, 36]} trend="up" />}
+          value="2,410,442"
+          delta={{ value: '12.4%', trend: 'up' }}
+          hint="vs prev 24h"
         />
         <KPICard
           label="Success rate"
           value="99.94%"
-          delta={{ value: '+0.05%', trend: 'up' }}
-          hint="200-class responses"
-          spark={<Sparkline data={[99.7, 99.8, 99.85, 99.9, 99.92, 99.93, 99.94]} trend="up" />}
+          delta={{ value: '0.05%', trend: 'up' }}
+          hint="200-class"
         />
         <KPICard
           label="Avg latency"
-          value="78ms"
-          delta={{ value: '-6ms', trend: 'up' }}
-          hint="p50 across providers"
-          spark={<Sparkline data={[110, 102, 96, 90, 88, 84, 80, 78]} trend="up" />}
+          value="78 ms"
+          delta={{ value: '6 ms', trend: 'up' }}
+          hint="p50"
         />
         <KPICard
           label="Active chains"
           value="14"
-          delta={{ value: '+2', trend: 'up' }}
-          hint="of 280 supported"
-          spark={<Sparkline data={[8, 9, 10, 10, 12, 12, 13, 14]} trend="neutral" />}
+          delta={{ value: '2', trend: 'up' }}
+          hint="of 280"
         />
       </section>
 
-      <RequestsChart />
+      <section className="bento rise rise-3">
+        <RequestsChart />
 
-      <section className="two-col">
-        <article className="panel">
+        <article className="panel marks">
           <header className="panel-head">
             <div>
-              <h2 className="panel-title">Top endpoints</h2>
-              <p className="panel-sub dim">Most-called routes in the last 24h</p>
-            </div>
-          </header>
-          <ul className="list">
-            {topEndpoints.map((e) => (
-              <li key={e.path} className="list-row">
-                <div className="list-main">
-                  <span className="mono">{e.path}</span>
-                  <span className="dim">{e.calls.toLocaleString()} calls</span>
-                </div>
-                <div className="bar" style={{ '--w': `${e.share * 3.4}%` } as CSSProperties}>
-                  <div className="bar-fill" />
-                </div>
-                <span className="mono dim list-pct">{e.share}%</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="panel">
-          <header className="panel-head">
-            <div>
+              <span className="eyebrow">Routing pool</span>
               <h2 className="panel-title">Provider health</h2>
-              <p className="panel-sub dim">Routing pool status</p>
             </div>
+            <span className="badge success">{providers.length} online</span>
           </header>
           <ul className="list">
             {providers.slice(0, 6).map((p) => (
@@ -103,7 +79,32 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
         </article>
       </section>
 
-      <RecentRequests />
+      <article className="panel marks rise rise-4">
+        <header className="panel-head">
+          <div>
+            <span className="eyebrow">Last 24 hours</span>
+            <h2 className="panel-title">Top endpoints</h2>
+          </div>
+        </header>
+        <ul className="list cols-2">
+          {topEndpoints.map((e) => (
+            <li key={e.path} className="list-row">
+              <div className="list-main">
+                <span className="mono">{e.path}</span>
+                <span className="dim">{e.calls.toLocaleString()} calls</span>
+              </div>
+              <div className="bar" style={{ '--w': `${e.share * 3.4}%` } as CSSProperties}>
+                <div className="bar-fill" />
+              </div>
+              <span className="mono dim list-pct">{e.share}%</span>
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <div className="rise rise-5">
+        <RecentRequests />
+      </div>
     </div>
   );
 }
