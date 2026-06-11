@@ -1,201 +1,112 @@
 import type { CSSProperties } from 'react';
 import { Icon } from '../components/Icons';
-import { invoices, plans } from '../data/mock';
-
-const usage = {
-  cuUsed:    7_840_000,
-  cuLimit:   40_000_000,
-  requests:  3_120_244,
-  bandwidth: '184 GB',
-  errors:    742,
-  byEndpoint: [
-    { path: '/token/balance',     pct: 32 },
-    { path: 'eth_call',           pct: 24 },
-    { path: '/market/price',      pct: 16 },
-    { path: '/nft/metadata',      pct: 12 },
-    { path: 'eth_getBalance',     pct:  9 },
-    { path: 'other',              pct:  7 },
-  ],
-};
-
-function pct(used: number, total: number) {
-  return Math.min(100, (used / total) * 100);
-}
+import { invoices, plans, cuUsed, cuLimit, cuBreakdown } from '../data/mock';
 
 export function SettingsBilling() {
-  const cuPct = pct(usage.cuUsed, usage.cuLimit);
+  const current = plans.find((p) => p.current)!;
+  const cuPct = Math.round((cuUsed / cuLimit) * 100);
 
   return (
     <div className="view">
-      <section className="panel plan-panel">
+      {/* Plan summary */}
+      <article className="panel rise rise-1">
         <header className="panel-head">
           <div>
-            <h2 className="panel-title">Current plan</h2>
-            <p className="panel-sub dim">You're on the Free plan, billed monthly. Renews May 31.</p>
+            <span className="eyebrow">Current subscription</span>
+            <h2 className="panel-title">{current.name} Plan</h2>
+            <p className="panel-sub dim">Renews monthly · next invoice Jul 1, 2026</p>
           </div>
-          <div className="plan-tag">
-            <span className="badge new">FREE</span>
-            <span className="pixel plan-tag-name">Startup</span>
-          </div>
+          <button className="btn primary">Upgrade plan</button>
         </header>
-
-        <div className="usage-grid">
-          <div className="usage-card">
-            <span className="kpi-label">Compute units</span>
-            <div className="usage-row">
-              <span className="pixel usage-num">{(usage.cuUsed / 1e6).toFixed(2)}M</span>
-              <span className="dim mono">/ {(usage.cuLimit / 1e6).toFixed(0)}M</span>
-            </div>
-            <div className="usage-bar"><div className="usage-bar-fill" style={{ width: `${cuPct}%` }} /></div>
-            <span className="dim mono">{cuPct.toFixed(1)}% used · resets May 31</span>
+        <div className="cu-summary">
+          <div className="cu-summary-head">
+            <span className="kpi-tile-num">{cuUsed.toLocaleString()}</span>
+            <span className="dim">of {cuLimit.toLocaleString()} compute units · {cuPct}%</span>
           </div>
-
-          <div className="usage-card">
-            <span className="kpi-label">Requests</span>
-            <div className="usage-row">
-              <span className="pixel usage-num">{(usage.requests / 1e6).toFixed(2)}M</span>
-              <span className="dim mono">this period</span>
-            </div>
-            <div className="usage-bar"><div className="usage-bar-fill" style={{ width: '24%' }} /></div>
-            <span className="dim mono">+12.4% vs last month</span>
-          </div>
-
-          <div className="usage-card">
-            <span className="kpi-label">Bandwidth</span>
-            <div className="usage-row">
-              <span className="pixel usage-num">{usage.bandwidth}</span>
-              <span className="dim mono">egress</span>
-            </div>
-            <div className="usage-bar"><div className="usage-bar-fill" style={{ width: '38%' }} /></div>
-            <span className="dim mono">All regions combined</span>
-          </div>
-
-          <div className="usage-card">
-            <span className="kpi-label">Errors</span>
-            <div className="usage-row">
-              <span className="pixel usage-num">{usage.errors}</span>
-              <span className="dim mono">0.024%</span>
-            </div>
-            <div className="usage-bar"><div className="usage-bar-fill warn" style={{ width: '4%' }} /></div>
-            <span className="dim mono">Within healthy threshold</span>
-          </div>
+          <div className="usage-bar"><div className="usage-bar-fill" style={{ width: `${cuPct}%` }} /></div>
         </div>
-      </section>
+      </article>
 
-      <section className="panel">
-        <header className="panel-head">
-          <div>
-            <h2 className="panel-title">Plans</h2>
-            <p className="panel-sub dim">Pick a plan that matches the volume you're shipping.</p>
-          </div>
-          <button className="btn ghost"><Icon.External size={13} /> Compare in detail</button>
-        </header>
+      {/* Compute units breakdown */}
+      <article className="panel rise rise-2">
+        <header className="panel-head"><div><span className="eyebrow">This cycle</span><h2 className="panel-title">Compute Units</h2></div></header>
+        <ul className="list">
+          {cuBreakdown.map((c) => (
+            <li key={c.name} className="list-row">
+              <div className="list-main"><span>{c.name}</span></div>
+              <div className="bar" style={{ '--w': `${c.share}%` } as CSSProperties}><div className="bar-fill" /></div>
+              <span className="mono dim list-pct">{(c.cu / 1_000_000).toFixed(2)}M</span>
+            </li>
+          ))}
+        </ul>
+      </article>
 
+      {/* Plans */}
+      <article className="panel rise rise-3">
+        <header className="panel-head"><div><span className="eyebrow">Uniblock plans</span><h2 className="panel-title">Plans</h2></div></header>
         <div className="plans-grid">
           {plans.map((p) => (
-            <article key={p.id} className={`plan-card ${p.current ? 'current' : ''}`}>
+            <div key={p.id} className={`plan-card ${p.current ? 'current' : ''}`}>
               <div className="plan-card-head">
                 <span className="plan-name pixel">{p.name}</span>
-                {p.current && <span className="badge new">Current</span>}
+                {p.current && <span className="badge new">CURRENT</span>}
               </div>
               <div className="plan-price">
-                <span className="pixel plan-price-num">{p.price}</span>
-                <span className="dim mono">/ mo</span>
+                <span className="plan-price-num">{p.price}</span>
+                <span className="plan-cu dim">{p.cu}</span>
               </div>
-              <span className="dim mono plan-cu">{p.cu}</span>
               <ul className="plan-features">
-                {p.highlights.map((h) => (
-                  <li key={h}><Icon.Check size={12} /> <span>{h}</span></li>
-                ))}
+                {p.highlights.map((h) => <li key={h}><Icon.Check size={13} /> {h}</li>)}
               </ul>
-              <button className={`btn ${p.current ? 'ghost' : 'primary'} plan-cta`} disabled={p.current}>
-                {p.cta}
-              </button>
-            </article>
+              <button className={`btn plan-cta ${p.current ? '' : 'primary'}`} disabled={p.current}>{p.cta}</button>
+            </div>
           ))}
         </div>
-      </section>
+      </article>
 
-      <section className="two-col">
-        <article className="panel">
-          <header className="panel-head">
-            <div>
-              <h2 className="panel-title">Payment method</h2>
-              <p className="panel-sub dim">No card on file — add one to lift the free-plan cap.</p>
-            </div>
-          </header>
-          <div className="card-stub">
-            <div className="card-stub-row">
-              <Icon.Card size={16} />
-              <span className="dim">No payment method</span>
-            </div>
-            <div className="card-stub-row">
-              <button className="btn primary"><Icon.Plus size={13} /> Add card</button>
-              <button className="btn">Use ACH</button>
-            </div>
-          </div>
-        </article>
-
-        <article className="panel">
-          <header className="panel-head">
-            <div>
-              <h2 className="panel-title">Top spend by endpoint</h2>
-              <p className="panel-sub dim">Where your CUs went this period</p>
-            </div>
-          </header>
-          <ul className="list">
-            {usage.byEndpoint.map((e) => (
-              <li key={e.path} className="list-row">
-                <div className="list-main">
-                  <span className="mono">{e.path}</span>
-                </div>
-                <div className="bar" style={{ '--w': `${e.pct * 2.8}%` } as CSSProperties}>
-                  <div className="bar-fill" />
-                </div>
-                <span className="mono dim list-pct">{e.pct}%</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-      </section>
-
-      <section className="panel">
+      {/* Payment method */}
+      <article className="panel rise rise-4">
         <header className="panel-head">
-          <div>
-            <h2 className="panel-title">Invoices</h2>
-            <p className="panel-sub dim">Past billing periods</p>
-          </div>
-          <button className="btn ghost"><Icon.Download size={13} /> Download all</button>
+          <div><span className="eyebrow">Billing</span><h2 className="panel-title">Payment Method</h2></div>
+          <button className="btn"><Icon.Plus size={14} /> Add method</button>
         </header>
-        <div className="table-wrap">
+        <div className="card-stub">
+          <div className="card-stub-row">
+            <Icon.Card size={20} className="dim" />
+            <div className="list-main">
+              <span style={{ fontWeight: 600 }}>Visa ending 4242</span>
+              <span className="dim mono" style={{ fontSize: 12 }}>Expires 08 / 2027 · default</span>
+            </div>
+            <span className="badge success" style={{ marginLeft: 'auto' }}>Default</span>
+          </div>
+        </div>
+      </article>
+
+      {/* Payment intents / invoices */}
+      <article className="panel marks rise rise-5" style={{ padding: 0 }}>
+        <header className="panel-head" style={{ padding: '18px 20px 0' }}>
+          <div><h2 className="panel-title">Payment History</h2></div>
+        </header>
+        <div className="table-wrap" style={{ margin: '14px 0 0' }}>
           <table className="table">
             <thead>
-              <tr>
-                <th>Invoice</th>
-                <th>Period</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th className="num"></th>
-              </tr>
+              <tr><th>Invoice</th><th>Date</th><th>Period</th><th className="num">Amount</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               {invoices.map((inv) => (
                 <tr key={inv.id}>
                   <td className="mono">{inv.id}</td>
-                  <td>{inv.period}</td>
-                  <td className="muted">{inv.date}</td>
-                  <td className="mono">{inv.amount}</td>
-                  <td><span className="badge success">{inv.status}</span></td>
-                  <td className="num">
-                    <button className="btn ghost icon-only" aria-label="Download"><Icon.Download size={13} /></button>
-                  </td>
+                  <td className="dim">{inv.date}</td>
+                  <td className="dim">{inv.period}</td>
+                  <td className="num mono">{inv.amount.replace(/\s+/g, '')}</td>
+                  <td><span className={`badge ${inv.status === 'paid' ? 'success' : inv.status === 'failed' ? 'danger' : 'warning'}`}>{inv.status}</span></td>
+                  <td className="num"><button className="btn ghost icon-only" aria-label="Download"><Icon.Download size={15} /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </article>
     </div>
   );
 }

@@ -1,194 +1,76 @@
 import { useState } from 'react';
 import { Icon } from '../components/Icons';
-import { providers, chains } from '../data/mock';
-
-const regions = ['us-east', 'us-west', 'eu-west', 'ap-southeast', 'global'] as const;
-
-type Region = (typeof regions)[number];
+import { apiKeys } from '../data/mock';
 
 export function SettingsProject() {
-  const [name, setName] = useState('eth-mainnet-prod');
-  const [env, setEnv] = useState<'dev' | 'staging' | 'prod'>('prod');
-  const [region, setRegion] = useState<Region>('global');
-  const [autoFailover, setAutoFailover] = useState(true);
-  const [retries, setRetries] = useState(2);
-  const [order, setOrder] = useState(['alchemy', 'quicknode', 'infura', 'helius']);
-
-  function move(id: string, dir: -1 | 1) {
-    const i = order.indexOf(id);
-    if (i < 0) return;
-    const j = i + dir;
-    if (j < 0 || j >= order.length) return;
-    const next = [...order];
-    [next[i], next[j]] = [next[j], next[i]];
-    setOrder(next);
-  }
+  const [copied, setCopied] = useState<string | null>(null);
 
   return (
     <div className="view">
-      <section className="panel">
-        <header className="panel-head">
+      <div className="view-toolbar rise rise-1">
+        <span className="dim" style={{ fontSize: 13 }}>Keys, project name, and lifecycle for eth-mainnet-prod.</span>
+        <button className="btn"><Icon.External size={14} /> Manage Integrations</button>
+      </div>
+
+      {/* API Keys */}
+      <article className="panel rise rise-2" style={{ padding: 0 }}>
+        <header className="panel-head" style={{ padding: '18px 20px 0' }}>
           <div>
-            <h2 className="panel-title">General</h2>
-            <p className="panel-sub dim">Project identity and where Uniblock should originate requests from.</p>
+            <h2 className="panel-title">API Keys</h2>
+            <p className="panel-sub dim">Manage your project API keys.</p>
           </div>
+          <button className="btn primary"><Icon.Plus size={14} /> Create API key</button>
         </header>
-
-        <div className="settings-grid">
-          <label className="field">
-            <span className="field-label">Project name</span>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-
-          <label className="field">
-            <span className="field-label">Project ID</span>
-            <input className="input" value={name} disabled />
-          </label>
-
-          <div className="field">
-            <span className="field-label">Environment</span>
-            <div className="seg">
-              {(['dev', 'staging', 'prod'] as const).map((e) => (
-                <button key={e} className={`seg-item ${env === e ? 'active' : ''}`} onClick={() => setEnv(e)}>
-                  {e}
-                </button>
+        <div className="table-wrap" style={{ margin: '14px 0 0' }}>
+          <table className="table">
+            <thead>
+              <tr><th>Name</th><th>Key</th><th>Created At</th><th>Last used</th><th></th></tr>
+            </thead>
+            <tbody>
+              {apiKeys.map((k) => (
+                <tr key={k.id}>
+                  <td style={{ fontWeight: 500 }}>{k.name}</td>
+                  <td><span className="mono">{k.prefix}{'••••'}</span></td>
+                  <td className="dim">{k.created}</td>
+                  <td className="dim">{k.lastUsed}</td>
+                  <td className="num">
+                    <span className="row-actions">
+                      <button className="btn ghost icon-only" aria-label="Copy" onClick={() => { navigator.clipboard?.writeText(k.prefix); setCopied(k.id); setTimeout(() => setCopied(null), 1200); }}>
+                        {copied === k.id ? <Icon.Check size={14} /> : <Icon.Copy size={14} />}
+                      </button>
+                      <button className="btn ghost icon-only" aria-label="Edit"><Icon.Eye size={14} /></button>
+                      <button className="btn ghost icon-only" aria-label="Delete"><Icon.Trash size={14} /></button>
+                    </span>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </div>
-
-          <div className="field">
-            <span className="field-label">Region</span>
-            <div className="seg">
-              {regions.map((r) => (
-                <button key={r} className={`seg-item ${region === r ? 'active' : ''}`} onClick={() => setRegion(r)}>
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
+      </article>
 
-        <div className="form-actions">
-          <button className="btn primary">Save changes</button>
-          <button className="btn ghost">Discard</button>
-        </div>
-      </section>
-
-      <section className="panel">
-        <header className="panel-head">
-          <div>
-            <h2 className="panel-title">Routing</h2>
-            <p className="panel-sub dim">
-              Uniblock routes each request to the fastest healthy provider in your pool. Reorder to set fallback
-              priority. Disable a provider to remove it from the pool entirely.
-            </p>
-          </div>
-          <span className="badge">Smart routing</span>
-        </header>
-
-        <div className="route-list">
-          {order.map((id, i) => {
-            const p = providers.find((x) => x.id === id)!;
-            return (
-              <div key={id} className="route-row">
-                <span className="route-rank mono">{String(i + 1).padStart(2, '0')}</span>
-                <div className="route-main">
-                  <span className="route-name">{p.name}</span>
-                  <span className="dim mono">{p.latencyMs}ms · {p.uptime}% uptime · {p.status}</span>
-                </div>
-                <div className="route-actions">
-                  <button className="btn ghost icon-only" aria-label="Move up" onClick={() => move(id, -1)} disabled={i === 0}>
-                    <Icon.ChevronDown size={13} style={{ transform: 'rotate(180deg)' }} />
-                  </button>
-                  <button className="btn ghost icon-only" aria-label="Move down" onClick={() => move(id, 1)} disabled={i === order.length - 1}>
-                    <Icon.ChevronDown size={13} />
-                  </button>
-                  <button className="btn ghost icon-only" aria-label="Remove" onClick={() => setOrder(order.filter((x) => x !== id))}>
-                    <Icon.X size={13} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="form-actions">
-          <button className="btn"><Icon.Plus size={13} /> Add provider</button>
-          <div className="form-actions-spacer" />
-          <label className="toggle">
-            <input type="checkbox" checked={autoFailover} onChange={(e) => setAutoFailover(e.target.checked)} />
-            <span className="toggle-slider" aria-hidden />
-            <span className="toggle-label">Automatic failover</span>
-          </label>
-        </div>
-      </section>
-
-      <section className="panel">
-        <header className="panel-head">
-          <div>
-            <h2 className="panel-title">Limits & retries</h2>
-            <p className="panel-sub dim">How aggressively Uniblock should retry on transient errors.</p>
-          </div>
-        </header>
-
-        <div className="settings-grid">
-          <label className="field">
-            <span className="field-label">Retries on failure</span>
-            <div className="seg">
-              {[0, 1, 2, 3].map((n) => (
-                <button key={n} className={`seg-item ${retries === n ? 'active' : ''}`} onClick={() => setRetries(n)}>
-                  {n}
-                </button>
-              ))}
-            </div>
-          </label>
-
-          <label className="field">
-            <span className="field-label">Per-key rate limit</span>
-            <input className="input" defaultValue="500 req/s" />
-          </label>
-
-          <label className="field">
-            <span className="field-label">Default chain</span>
-            <select className="input" defaultValue="ethereum">
-              {chains.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span className="field-label">IP allowlist</span>
-            <input className="input" placeholder="0.0.0.0/0 (open)" />
-          </label>
-        </div>
-      </section>
-
-      <section className="panel danger">
-        <header className="panel-head">
-          <div>
-            <h2 className="panel-title">Danger zone</h2>
-            <p className="panel-sub dim">Irreversible operations. Double-check what you're doing.</p>
-          </div>
-        </header>
-
-        <div className="danger-row">
-          <div className="danger-text">
-            <span className="danger-label">Transfer ownership</span>
-            <span className="dim">Move this project to another team member. They will become the new owner.</span>
-          </div>
-          <button className="btn">Transfer</button>
-        </div>
-        <div className="danger-row">
-          <div className="danger-text">
-            <span className="danger-label">Delete project</span>
-            <span className="dim">Permanently delete <span className="mono">{name}</span> and revoke all of its API keys.</span>
-          </div>
-          <button className="btn danger">
-            <Icon.Trash size={13} /> Delete project
+      {/* Manage Project */}
+      <article className="panel rise rise-3">
+        <header className="panel-head"><div><h2 className="panel-title">Manage Project</h2></div></header>
+        <div className="manage-list">
+          <button className="manage-row">
+            <span className="manage-avatar"><Icon.Settings size={16} /></span>
+            <span className="manage-text">
+              <span className="manage-title">Rename Project</span>
+              <span className="dim">Edit name displayed on dashboard.</span>
+            </span>
+            <Icon.Chevron size={15} className="dim" />
+          </button>
+          <button className="manage-row">
+            <span className="manage-avatar danger"><Icon.Trash size={16} /></span>
+            <span className="manage-text">
+              <span className="manage-title">Archive Project</span>
+              <span className="dim">Remove project from dashboard.</span>
+            </span>
+            <Icon.Chevron size={15} className="dim" />
           </button>
         </div>
-      </section>
+      </article>
     </div>
   );
 }

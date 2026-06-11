@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { requestSeries } from '../data/mock';
+import { AnimatedNumber } from './AnimatedNumber';
 
 const ranges = ['24h', '7d', '30d', '90d'] as const;
 
@@ -40,7 +41,7 @@ export function RequestsChart() {
           <span className="eyebrow">Throughput</span>
           <h2 className="panel-title">Total requests</h2>
           <div className="chart-hero">
-            <span className="chart-hero-num">{total.toLocaleString()}</span>
+            <AnimatedNumber className="chart-hero-num" value={total.toLocaleString()} />
             <span className="dim">requests · last {range}</span>
           </div>
         </div>

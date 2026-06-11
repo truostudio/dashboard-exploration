@@ -1,3 +1,5 @@
+import { AnimatedNumber } from './AnimatedNumber';
+
 type Props = {
   label: string;
   value: string;
@@ -9,7 +11,7 @@ export function KPICard({ label, value, delta, hint }: Props) {
   return (
     <article className="kpi">
       <span className="kpi-label">{label}</span>
-      <div className="kpi-value">{value}</div>
+      <AnimatedNumber className="kpi-value" value={value} />
       <div className="kpi-foot">
         {delta && <span className={`kpi-delta ${delta.trend}`}>{delta.value}</span>}
         {hint && <span className="kpi-hint">{hint}</span>}
