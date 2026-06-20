@@ -134,6 +134,13 @@ export const Icon = {
       <path d="M7 15h3" />
     </svg>
   ),
+  Menu: ({ size = 16, ...p }: IconProps) => (
+    <svg {...base(size)} {...p}>
+      <path d="M3 6h18" />
+      <path d="M3 12h18" />
+      <path d="M3 18h18" />
+    </svg>
+  ),
   Search: ({ size = 16, ...p }: IconProps) => (
     <svg {...base(size)} {...p}>
       <circle cx="11" cy="11" r="6.5" />

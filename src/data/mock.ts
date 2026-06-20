@@ -395,16 +395,66 @@ export const rpcMethods: RpcMethod[] = [
   { name: 'eth_feeHistory',           group: 'Gas',          description: 'Historical base fee & priority fee' },
 ];
 
-export type RpcChain = { name: string; symbol: string; chainId: number; providers: number; color: string; icon: string };
-export const rpcChains: RpcChain[] = [
-  { name: 'Ethereum',  symbol: 'ETH',  chainId: 1,     providers: 6, color: '#627eea', icon: chainIcon(1) },
-  { name: 'BNB Chain', symbol: 'BNB',  chainId: 56,    providers: 4, color: '#f0b90b', icon: chainIcon(56) },
-  { name: 'Base',      symbol: 'BASE', chainId: 8453,  providers: 5, color: '#0052ff', icon: chainIcon(8453) },
-  { name: 'Polygon',   symbol: 'POL',  chainId: 137,   providers: 5, color: '#8247e5', icon: chainIcon(80002) },
-  { name: 'Arbitrum',  symbol: 'ARB',  chainId: 42161, providers: 5, color: '#28a0f0', icon: chainIcon(42161) },
-  { name: 'Optimism',  symbol: 'OP',   chainId: 10,    providers: 4, color: '#ff0420', icon: chainIcon(10) },
-  { name: 'Avalanche', symbol: 'AVAX', chainId: 43114, providers: 4, color: '#e84142', icon: chainIcon(43114) },
-  { name: 'Linea',     symbol: 'LINEA',chainId: 59144, providers: 3, color: '#61dfff', icon: chainIcon(59144) },
+export type RpcProvider = { name: string; icon: string };
+const rp = (name: string, file: string): RpcProvider => ({ name, icon: `/assets/icons/providers/${file}` });
+
+// JSON-RPC / WebSocket routing providers available per chain (listJsonRpcProvidersForChain)
+const PROV = {
+  alchemy: rp('Alchemy', 'Alchemy.webp'),
+  quicknode: rp('QuickNode', 'QuickNode.webp'),
+  infura: rp('Infura', 'Infura.webp'),
+  chainstack: rp('Chainstack', 'Chainstack.webp'),
+  ankr: rp('Ankr', 'Ankr.webp'),
+  blockdaemon: rp('Blockdaemon', 'Blockdaemon.webp'),
+  getblock: rp('GetBlock', 'GetBlock.webp'),
+  tatum: rp('Tatum', 'Tatum.webp'),
+  nodies: rp('Nodies', 'Nodies.webp'),
+  pokt: rp('Pokt', 'Pokt.webp'),
+};
+
+// A chain "group" bundles a mainnet with its related networks (devnets/testnets).
+export type RpcNetwork = { name: string; chainId: string; status: 'online' | 'offline'; lastRequest: string; wssProviders: RpcProvider[] };
+export type RpcGroup = { id: string; name: string; icon: string; networks: RpcNetwork[] };
+
+const NA = 'No activity in last 7 days';
+const evmProviders = [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.chainstack, PROV.ankr, PROV.blockdaemon];
+const solProviders = [PROV.quicknode, PROV.chainstack];
+
+export const rpcNetworkCount = 217;
+export const rpcGroups: RpcGroup[] = [
+  { id: 'solana', name: 'Solana', icon: chainIcon('solana'), networks: [
+    { name: 'Solana',        chainId: 'solana',        status: 'online', lastRequest: NA, wssProviders: solProviders },
+    { name: 'Solana Devnet', chainId: 'solana-devnet', status: 'online', lastRequest: NA, wssProviders: solProviders },
+  ]},
+  { id: 'ethereum', name: 'Ethereum', icon: chainIcon(1), networks: [
+    { name: 'Ethereum',         chainId: '1',        status: 'online', lastRequest: NA, wssProviders: evmProviders },
+    { name: 'Ethereum Hoodi',   chainId: '560048',   status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.chainstack] },
+    { name: 'Ethereum Sepolia', chainId: '11155111', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura] },
+  ]},
+  { id: 'bnb', name: 'BNB Smart Chain', icon: chainIcon(56), networks: [
+    { name: 'BNB Smart Chain',         chainId: '56', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.chainstack, PROV.getblock] },
+    { name: 'BNB Smart Chain Testnet', chainId: '97', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
+  ]},
+  { id: 'base', name: 'Base', icon: chainIcon(8453), networks: [
+    { name: 'Base',         chainId: '8453',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.chainstack, PROV.ankr] },
+    { name: 'Base Sepolia', chainId: '84532', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+  ]},
+  { id: 'polygon', name: 'Polygon', icon: chainIcon(80002), networks: [
+    { name: 'Polygon',      chainId: '137',   status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'Polygon Amoy', chainId: '80002', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+  ]},
+  { id: 'arbitrum', name: 'Arbitrum', icon: chainIcon(42161), networks: [
+    { name: 'Arbitrum One',     chainId: '42161',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'Arbitrum Sepolia', chainId: '421614', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+  ]},
+  { id: 'optimism', name: 'Optimism', icon: chainIcon(10), networks: [
+    { name: 'OP Mainnet', chainId: '10',        status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'OP Sepolia', chainId: '11155420',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+  ]},
+  { id: 'avalanche', name: 'Avalanche', icon: chainIcon(43114), networks: [
+    { name: 'Avalanche C-Chain', chainId: '43114', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.blockdaemon] },
+    { name: 'Avalanche Fuji',    chainId: '43113', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
+  ]},
 ];
 
 // ============ Webhooks ============

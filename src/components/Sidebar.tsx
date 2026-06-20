@@ -119,9 +119,10 @@ type Props = {
   onNavigate: (id: ViewId) => void;
   onNewProject: () => void;
   quickstartProgress: { done: number; total: number };
+  open?: boolean;
 };
 
-export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress }: Props) {
+export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, open: drawerOpen }: Props) {
   const [project, setProject] = useState(projects[0].id);
   const [open, setOpen] = useState(false);
 
@@ -130,7 +131,7 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress }: 
   const qsActive = view === 'quickstart';
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${drawerOpen ? 'open' : ''}`}>
       <div className="sb-top">
         <div className="brand">
           <img

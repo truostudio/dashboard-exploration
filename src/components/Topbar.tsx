@@ -4,6 +4,7 @@ type Props = {
   title: string;
   subtitle?: string;
   onNewProject: () => void;
+  onMenu?: () => void;
   primaryAction?: { label: string; onClick: () => void };
 };
 
@@ -11,10 +12,14 @@ export function Topbar({
   title,
   subtitle,
   onNewProject,
+  onMenu,
   primaryAction,
 }: Props) {
   return (
     <header className="topbar">
+      <button className="tb-menu btn ghost icon-only" aria-label="Open menu" onClick={onMenu}>
+        <Icon.Menu size={18} />
+      </button>
       <div className="tb-left">
         <h1 className="tb-title">{title}</h1>
         {subtitle && <p className="tb-subtitle">{subtitle}</p>}

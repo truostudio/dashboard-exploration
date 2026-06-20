@@ -2627,3 +2627,197 @@ img.prov-avatar { object-fit: contain; background: #fff; padding: 4px; }
 .url-copy-btn:hover { background: var(--ub-hover); color: var(--ub-black); }
 .url-copy-text { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-click { cursor: pointer; }
+
+/* ============ JSON-RPC connection + WSS providers ============ */
+.rpc-conn { display: flex; flex-direction: column; gap: 8px; }
+.wss-providers { display: flex; flex-wrap: wrap; gap: 8px; }
+.wss-prov {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 34px; padding: 0 12px 0 8px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line);
+  border-radius: 999px;
+  font-size: 13px; color: var(--ub-text-2);
+  transition: all 0.14s var(--ease-out);
+}
+.wss-prov:hover { border-color: var(--ub-line-strong); color: var(--ub-black); }
+.wss-prov.on { border-color: var(--ub-blue-border); background: var(--ub-blue-soft); color: var(--ub-blue); font-weight: 600; }
+.wss-prov img { width: 20px; height: 20px; border-radius: 50%; object-fit: contain; background: #fff; flex-shrink: 0; }
+
+/* ============ JSON-RPC grouped networks (real layout) ============ */
+.section-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.section-h { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: var(--ub-black); }
+
+.rpc-group { padding: 0; gap: 0; overflow: hidden; }
+.rpc-group-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+}
+.rpc-group-icon {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid var(--ub-line);
+  flex-shrink: 0;
+}
+.rpc-group-name { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.015em; color: var(--ub-black); flex: 1; min-width: 0; }
+.endpoint-toggle { display: flex; align-items: center; gap: 12px; }
+.endpoint-label { font-size: 12px; }
+.ep-pill {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--ub-grid);
+  border: 1px solid var(--ub-line);
+  border-radius: 9px;
+}
+.ep-pill button {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ub-text-3);
+  border-radius: 6px;
+  transition: background 0.16s var(--ease-out), color 0.16s var(--ease-out);
+}
+.ep-pill button.on { background: var(--ub-black); color: #fff; }
+
+/* network table cells */
+.rpc-net-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #fff; flex-shrink: 0; }
+.rpc-url { display: flex; align-items: center; gap: 10px; }
+.rpc-url-text { font-size: 12.5px; color: var(--ub-text-2); }
+.rpc-url-copy {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  color: var(--ub-text-3);
+  border-radius: var(--radius-xs);
+  transition: background 0.14s ease, color 0.14s ease;
+  flex-shrink: 0;
+}
+.rpc-url-copy:hover { background: var(--ub-grid); color: var(--ub-black); }
+
+/* ============ JSON-RPC per-row WSS provider picker ============ */
+/* allow the dropdown to escape the card/table bounds */
+.rpc-group { overflow: visible; }
+.rpc-group .table-wrap { overflow: visible; }
+
+.wss-select { position: relative; display: inline-block; }
+.wss-select-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-width: 150px; height: 32px; padding: 0 8px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line);
+  border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--ub-text-2);
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+.wss-select-btn:hover { border-color: var(--ub-line-strong); }
+.wss-select-btn.picked { color: var(--ub-black); }
+.wss-select-btn img { width: 18px; height: 18px; border-radius: 50%; object-fit: contain; background: #fff; flex-shrink: 0; }
+.wss-select-btn > svg:last-child { margin-left: auto; color: var(--ub-text-3); }
+
+.wss-menu {
+  position: absolute;
+  top: calc(100% + 4px); left: 0;
+  min-width: 200px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  padding: 6px;
+  z-index: 100;
+  display: flex; flex-direction: column; gap: 2px;
+  animation: rise 0.16s var(--ease-out);
+}
+.wss-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--ub-black);
+  text-align: left;
+}
+.wss-menu-item img { width: 20px; height: 20px; border-radius: 50%; object-fit: contain; background: #fff; flex-shrink: 0; }
+.wss-menu-item span { flex: 1; }
+.wss-menu-item:hover { background: var(--ub-hover); }
+.wss-menu-item.on { color: var(--ub-blue); }
+.wss-menu-item.on svg { color: var(--ub-blue); }
+.wss-backdrop { position: fixed; inset: 0; z-index: 90; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+.tb-menu { display: none; }
+.nav-backdrop { display: none; }
+.view-toolbar { flex-wrap: wrap; }
+
+/* ---- Tablet / mobile: sidebar becomes an off-canvas drawer ---- */
+@media (max-width: 960px) {
+  .app { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    height: 100vh;
+    width: 280px;
+    max-width: 86vw;
+    z-index: 120;
+    transform: translateX(-100%);
+    transition: transform 0.28s var(--ease-out);
+    border-right: 1px solid var(--ub-line);
+    border-bottom: none;
+    box-shadow: var(--shadow-pop);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(34, 34, 34, 0.42);
+    backdrop-filter: blur(2px);
+    z-index: 110;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .tb-menu { display: inline-flex; margin-right: 2px; flex-shrink: 0; }
+  .topbar { padding: 12px 16px; min-height: 60px; gap: 12px; }
+  .tb-title { font-size: 20px; }
+  .tb-search { display: none; }
+  .content { padding: 18px 16px 56px; }
+
+  /* JSON-RPC group header stacks */
+  .rpc-group-head { flex-wrap: wrap; }
+  .endpoint-toggle { width: 100%; justify-content: space-between; }
+  .rpc-group .table-wrap { overflow-x: auto; }
+}
+
+/* ---- Hide the "New project" label text on small, keep icon-only feel ---- */
+@media (max-width: 600px) {
+  .tb-actions .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+
+/* ---- Phones: collapse multi-column surfaces to one column ---- */
+@media (max-width: 560px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .kpi { border-left: none; border-top: 1px solid var(--ub-line); }
+  .kpi:first-child { border-top: none; }
+
+  .kpi-tiles { flex-direction: column; }
+  .kpi-tile { border-left: none; border-top: 1px solid var(--ub-line); }
+  .kpi-tile:first-child { border-top: none; }
+
+  .unified-grid,
+  .prov-direct-grid,
+  .ep-grid,
+  .event-grid,
+  .jrpc-grid,
+  .rpc-chain-grid,
+  .plans-grid,
+  .usage-grid,
+  .chain-grid,
+  .prov-grid { grid-template-columns: 1fr; }
+
+  .donut-row { flex-direction: column; align-items: flex-start; }
+  .users-toolbar { flex-direction: column; }
+  .users-toolbar > * { width: 100%; }
+}

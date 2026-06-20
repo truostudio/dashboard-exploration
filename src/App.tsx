@@ -84,6 +84,12 @@ const titles: Record<ViewId, { title: string; subtitle: string }> = {
 function App() {
   const [view, setView] = useState<ViewId>('quickstart');
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+
+  const navigate = (id: ViewId) => {
+    setView(id);
+    setNavOpen(false);
+  };
 
   // Quickstart progress (real signals from user actions)
   const [callMade, setCallMade] = useState(false);
@@ -107,16 +113,19 @@ function App() {
     <div className="app">
       <Sidebar
         view={view}
-        onNavigate={setView}
-        onNewProject={() => setNewProjectOpen(true)}
+        onNavigate={navigate}
+        onNewProject={() => { setNewProjectOpen(true); setNavOpen(false); }}
         quickstartProgress={{ done, total: quickstartSteps.length }}
+        open={navOpen}
       />
+      {navOpen && <div className="nav-backdrop" onClick={() => setNavOpen(false)} />}
 
       <div className="main-col">
         <Topbar
           title={meta.title}
           subtitle={meta.subtitle}
           onNewProject={() => setNewProjectOpen(true)}
+          onMenu={() => setNavOpen(true)}
         />
         <main className="content" role="main">
           <div className="view-swap" key={view}>
