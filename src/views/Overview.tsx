@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { Area, AreaChart, Tooltip, XAxis } from 'recharts';
 import { Icon } from '../components/Icons';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { GetStarted } from '../components/GetStarted';
+import { Segmented } from '../components/Segmented';
+import {
+  Panel, TitledPanel, StatTiles, Badge, MethodBadge, Select, CopyButton, useCopy,
+} from '../components/ui';
+import { ChartFrame, ChartTooltip, chartAxis, chartAxisLine, chartCursor } from '../components/ui/Chart';
 import type { Step } from '../components/GetStarted';
 import { overviewUsage, overviewKpis } from '../data/mock';
 import type { ViewId } from '../App';
@@ -43,12 +48,11 @@ function fmt(n: number) {
 
 export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarted }: Props) {
   const [keyShown, setKeyShown] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
   const [tab, setTab] = useState<'unified' | 'json-rpc'>('unified');
   const [running, setRunning] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [promptIdx, setPromptIdx] = useState(0);
-  const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const { copy, isCopied } = useCopy();
 
   const masked = `${API_KEY.slice(0, 11)}${'•'.repeat(14)}`;
   const promptText = prompts[promptIdx].template.replace(/{apiKey}/g, API_KEY);
@@ -75,43 +79,28 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
       )}
 
       {/* API key strip */}
-      <article className="panel keystrip rise rise-1">
+      <Panel className="keystrip rise rise-1">
         <Icon.Key size={16} className="dim" />
         <span className="keystrip-label">API key</span>
         <span className="mono keystrip-key">{keyShown ? API_KEY : masked}</span>
         <button className="btn ghost icon-only" aria-label="Show key" onClick={() => setKeyShown((v) => !v)}>
           <Icon.Eye size={14} />
         </button>
-        <button className="btn ghost icon-only" aria-label="Copy key" onClick={() => { navigator.clipboard?.writeText(API_KEY); setCopiedKey(true); setTimeout(() => setCopiedKey(false), 1200); }}>
-          {copiedKey ? <Icon.Check size={14} /> : <Icon.Copy size={14} />}
-        </button>
+        <CopyButton value={API_KEY} />
         <button className="btn" onClick={() => onNavigate('settings-project')}>Manage</button>
-      </article>
+      </Panel>
 
       {/* Total requests */}
-      <article className="panel rise rise-2">
-        <header className="panel-head">
-          <div>
-            <span className="eyebrow">Last 30 days</span>
-            <h2 className="panel-title">Total requests</h2>
-          </div>
-        </header>
-        <div className="kpi-tiles">
-          <div className="kpi-tile">
-            <AnimatedNumber className="kpi-tile-num" value={overviewKpis.total.toLocaleString()} />
-            <span className="kpi-tile-label">Total requests</span>
-          </div>
-          <div className="kpi-tile">
-            <AnimatedNumber className="kpi-tile-num" value={`${overviewKpis.successRate}%`} />
-            <span className="kpi-tile-label">Success rate</span>
-          </div>
-          <div className="kpi-tile">
-            <AnimatedNumber className="kpi-tile-num" value={`${overviewKpis.avgLatency} ms`} />
-            <span className="kpi-tile-label">Avg latency</span>
-          </div>
-        </div>
-        <div className="chart-body">
-          <ResponsiveContainer width="100%" height={220}>
+      <TitledPanel className="rise rise-2" eyebrow="Last 30 days" title="Total requests">
+        <StatTiles
+          columns={3}
+          tiles={[
+            { id: 'total', label: 'Total requests', value: <AnimatedNumber value={overviewKpis.total.toLocaleString()} /> },
+            { id: 'success', label: 'Success rate', value: <AnimatedNumber value={`${overviewKpis.successRate}%`} /> },
+            { id: 'latency', label: 'Avg latency', value: <AnimatedNumber value={`${overviewKpis.avgLatency} ms`} /> },
+          ]}
+        />
+        <ChartFrame height={220}>
             <AreaChart data={overviewUsage.rows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
               <defs>
                 <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
@@ -121,25 +110,29 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
               </defs>
               <XAxis
                 dataKey="ts"
-                stroke="var(--ub-text-3)"
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: 'rgba(34,34,34,0.08)' }}
+                {...chartAxis}
+                axisLine={chartAxisLine}
                 tickMargin={8}
                 tickFormatter={(t) => new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 minTickGap={40}
-                style={{ fontFamily: 'var(--font-mono)' }}
               />
               <Tooltip
-                contentStyle={{ background: 'var(--ub-elevated)', border: '1px solid rgba(34,34,34,0.08)', borderRadius: 10, fontSize: 12, fontFamily: 'var(--font-mono)', boxShadow: 'var(--shadow-md)' }}
-                labelFormatter={(t) => new Date(Number(t)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                formatter={(v) => [fmt(Number(v)), 'requests']}
+                cursor={chartCursor}
+                content={
+                  <ChartTooltip
+                    labelFormatter={(t) =>
+                      new Date(Number(t)).toLocaleDateString('en-US', {
+                        weekday: 'short', month: 'short', day: 'numeric',
+                      })
+                    }
+                    valueFormatter={(v) => fmt(Number(v))}
+                  />
+                }
               />
               <Area type="monotone" dataKey="total" stroke="var(--ub-blue)" strokeWidth={2} fill="url(#ovFill)" />
             </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </article>
+        </ChartFrame>
+      </TitledPanel>
 
       {/* Explore APIs */}
       <section className="explore-grid rise rise-3">
@@ -154,23 +147,28 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
       </section>
 
       {/* Test an Endpoint */}
-      <article className="panel rise rise-4">
-        <header className="panel-head">
-          <div>
-            <span className="eyebrow">Live</span>
-            <h2 className="panel-title">Test an Endpoint</h2>
-            <p className="panel-sub dim">Send a live request and watch Uniblock route it.</p>
-          </div>
-          <div className="seg">
-            <button className={`seg-item ${tab === 'unified' ? 'active' : ''}`} onClick={() => { setTab('unified'); setResponse(null); }}>Unified API</button>
-            <button className={`seg-item ${tab === 'json-rpc' ? 'active' : ''}`} onClick={() => { setTab('json-rpc'); setResponse(null); }}>JSON-RPC</button>
-          </div>
-        </header>
+      <TitledPanel
+        className="rise rise-4"
+        eyebrow="Live"
+        title="Test an Endpoint"
+        sub="Send a live request and watch Uniblock route it."
+        actions={
+          <Segmented
+            label="Endpoint surface"
+            value={tab}
+            onChange={(next) => { setTab(next); setResponse(null); }}
+            options={[
+              { value: 'unified', label: 'Unified API' },
+              { value: 'json-rpc', label: 'JSON-RPC' },
+            ]}
+          />
+        }
+      >
 
         <div className="composer-row">
           {tab === 'unified' ? (
             <>
-              <span className="badge method-get">GET</span>
+              <MethodBadge method="GET" />
               <select className="input" defaultValue="/token/balance">
                 <option>/token/balance</option>
                 <option>/nft/metadata</option>
@@ -179,7 +177,7 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
             </>
           ) : (
             <>
-              <span className="badge method-post">POST</span>
+              <MethodBadge method="POST" />
               <select className="input" defaultValue="eth_blockNumber">
                 <option>eth_blockNumber</option>
                 <option>eth_getBalance</option>
@@ -196,38 +194,42 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
         {response && (
           <div className="response-block">
             <div className="response-head">
-              <span className="badge success">200 OK</span>
+              <Badge tone="success">200 OK</Badge>
               <span className="mono dim">64 ms</span>
-              <span className="badge">alchemy</span>
+              <Badge>alchemy</Badge>
             </div>
             <pre className="code-pre response-pre">{response}</pre>
           </div>
         )}
-      </article>
+      </TitledPanel>
 
       {/* AI IDE prompt */}
-      <article className="panel rise rise-5">
-        <header className="panel-head">
-          <div>
-            <span className="eyebrow">Vibe-code it</span>
-            <h2 className="panel-title">AI IDE prompt</h2>
-            <p className="panel-sub dim">Paste into Cursor, Claude Code, or any agent to wire up Uniblock.</p>
-          </div>
-          <select className="input prompt-select" value={promptIdx} onChange={(e) => setPromptIdx(Number(e.target.value))}>
-            {prompts.map((p, i) => <option key={p.label} value={i}>{p.label}</option>)}
-          </select>
-        </header>
+      <TitledPanel
+        className="rise rise-5"
+        eyebrow="Vibe-code it"
+        title="AI IDE prompt"
+        sub="Paste into Cursor, Claude Code, or any agent to wire up Uniblock."
+        actions={
+          <Select
+            label="Prompt"
+            value={String(promptIdx)}
+            onChange={(v) => setPromptIdx(Number(v))}
+            options={prompts.map((p, i) => ({ value: String(i), label: p.label }))}
+          />
+        }
+      >
         <div className="code-block">
           <div className="code-tabs">
-            <span className="mono dim" style={{ fontSize: 12, padding: '0 4px' }}>prompt.txt</span>
+            <span className="mono dim code-filename">prompt.txt</span>
             <span className="code-tabs-spacer" />
-            <button className="btn code-copy" onClick={() => { navigator.clipboard?.writeText(promptText); setCopiedPrompt(true); setTimeout(() => setCopiedPrompt(false), 1200); }}>
-              {copiedPrompt ? <Icon.Check size={12} /> : <Icon.Copy size={12} />} {copiedPrompt ? 'Copied' : 'Copy'}
+            <button className="btn code-copy" onClick={() => copy(promptText, 'prompt')}>
+              {isCopied('prompt') ? <Icon.Check size={12} /> : <Icon.Copy size={12} />}
+              {isCopied('prompt') ? 'Copied' : 'Copy'}
             </button>
           </div>
           <pre className="code-pre prompt-pre">{promptText}</pre>
         </div>
-      </article>
+      </TitledPanel>
     </div>
   );
 }

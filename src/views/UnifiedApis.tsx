@@ -1,93 +1,127 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
-import { endpoints, chains } from '../data/mock';
-import type { EndpointCategory } from '../data/mock';
+import { EndpointDrawer } from '../components/EndpointDrawer';
+import { Segmented } from '../components/Segmented';
+import { Spec, ViewToolbar, SearchInput, AvatarStack, MethodBadge, Empty } from '../components/ui';
+import type { DrawerSource } from '../components/EndpointDrawer';
+import { chains } from '../data/mock';
+import { unifiedCategories, unifiedEndpointCount, platformStats } from '../data/catalog';
 
-const catLabels: { id: EndpointCategory; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'token', label: 'Token' },
-  { id: 'nft', label: 'NFT' },
-  { id: 'market', label: 'Market Data' },
-  { id: 'defi', label: 'DeFi' },
-  { id: 'transaction', label: 'Transaction' },
-  { id: 'scan', label: 'Scan' },
-  { id: 'social', label: 'SocialFi' },
-  { id: 'prediction', label: 'Prediction' },
-  { id: 'stablecoin', label: 'Stablecoin' },
-];
-
-const unified = endpoints.filter((e) => e.category !== 'json-rpc' && e.category !== 'direct');
-
-// Deterministic pseudo coverage per endpoint (real app reads endpoint.providers)
-function coverage(path: string) {
-  const seed = path.length;
-  const chainCount = 6 + (seed % 9);
-  const providerCount = 2 + (seed % 5);
-  return { chainCount, providerCount };
-}
+type Sort = 'trending' | 'alpha';
 
 export function UnifiedApis() {
-  const [active, setActive] = useState<EndpointCategory>('all');
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'trending' | 'alpha'>('trending');
+  const [sort, setSort] = useState<Sort>('trending');
+  const [active, setActive] = useState<string>('all');
+  const [open, setOpen] = useState<DrawerSource | null>(null);
 
-  const filtered = useMemo(() => {
-    let out = active === 'all' ? unified : unified.filter((e) => e.category === active);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      out = out.filter((e) => e.path.toLowerCase().includes(q) || e.description.toLowerCase().includes(q));
+  const query = search.trim().toLowerCase();
+
+  const categories = useMemo(() => {
+    let list = active === 'all' ? unifiedCategories : unifiedCategories.filter((c) => c.id === active);
+
+    // Searching narrows each category to its matching endpoints, and drops
+    // categories that no longer have any.
+    if (query) {
+      list = list
+        .map((category) => ({
+          ...category,
+          endpoints: category.endpoints.filter(
+            (e) =>
+              e.path.toLowerCase().includes(query) ||
+              e.title.toLowerCase().includes(query) ||
+              e.category.toLowerCase().includes(query),
+          ),
+        }))
+        .filter((category) => category.endpoints.length > 0);
     }
-    if (sort === 'alpha') out = [...out].sort((a, b) => a.path.localeCompare(b.path));
-    return out;
-  }, [active, search, sort]);
+
+    if (sort === 'alpha') list = [...list].sort((a, b) => a.label.localeCompare(b.label));
+    return list;
+  }, [active, query, sort]);
+
+  const matches = categories.reduce((n, c) => n + c.endpoints.length, 0);
 
   return (
     <div className="view">
-      <div className="view-toolbar rise rise-1">
-        <div className="tb-search small">
-          <Icon.Search size={14} />
-          <input placeholder="Search endpoints…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="ep-controls">
-          <button className="btn"><Icon.Defi size={14} /> Filter chains</button>
-          <div className="seg">
-            <button className={`seg-item ${sort === 'trending' ? 'active' : ''}`} onClick={() => setSort('trending')}>Trending</button>
-            <button className={`seg-item ${sort === 'alpha' ? 'active' : ''}`} onClick={() => setSort('alpha')}>Alphabetical</button>
-          </div>
-        </div>
-      </div>
+      <ViewToolbar
+        className="rise rise-1"
+        title="Endpoint categories"
+        count={query ? `${matches} matching` : `${unifiedEndpointCount} endpoints`}
+      >
+        <SearchInput compact value={search} onChange={setSearch} placeholder="Search endpoints…" />
+        <button className="btn"><Icon.Defi size={14} /> Filter chains</button>
+        <Segmented
+          label="Sort order"
+          value={sort}
+          onChange={setSort}
+          options={[
+            { value: 'trending', label: 'Trending' },
+            { value: 'alpha', label: 'Alphabetical' },
+          ]}
+        />
+      </ViewToolbar>
 
       <div className="chip-strip rise rise-2">
-        {catLabels.map((c) => (
-          <button key={c.id} className={`chip ${active === c.id ? 'on' : ''}`} onClick={() => setActive(c.id)}>
-            {c.label}
+        <button className={`chip ${active === 'all' ? 'on' : ''}`} onClick={() => setActive('all')}>All</button>
+        {unifiedCategories.map((category) => (
+          <button
+            key={category.id}
+            className={`chip ${active === category.id ? 'on' : ''}`}
+            onClick={() => setActive(category.id)}
+          >
+            {category.label}
           </button>
         ))}
       </div>
 
       <section className="unified-grid rise rise-3">
-        {filtered.map((e) => {
-          const { chainCount, providerCount } = coverage(e.path);
+        {categories.map((category) => {
           const shown = chains.slice(0, 4);
+          const methods = [...new Set(category.endpoints.map((e) => e.method))];
           return (
-            <button key={e.path} className="usum-card">
-              <span className={`badge ${e.method === 'GET' ? 'method-get' : 'method-post'}`} style={{ alignSelf: 'flex-start' }}>{e.method}</span>
-              <span className="mono usum-path">{e.path}</span>
-              <span className="usum-desc dim">{e.description}</span>
-              <div className="usum-foot">
-                <div className="chain-avatars">
-                  {shown.map((c) => (
-                    <img key={c.id} className="chain-avatar" src={c.icon} alt={c.name} title={c.name} />
-                  ))}
-                  {chainCount > 4 && <span className="chain-avatar more">+{chainCount - 4}</span>}
+            <button
+              key={category.id}
+              className="usum-card marks-4"
+              onClick={() =>
+                setOpen({
+                  eyebrow: 'Unified API',
+                  surface: 'unified',
+                  title: category.label,
+                  description: category.description,
+                  endpoints: unifiedCategories.find((c) => c.id === category.id)!.endpoints,
+                  docsUrl: 'https://docs.uniblock.dev/reference/unified-api/overview-unified-apis',
+                })
+              }
+            >
+              <div className="usum-head">
+                <span className="usum-path">{category.label}</span>
+                <div className="usum-methods">
+                  {methods.map((m) => <MethodBadge key={m} method={m} />)}
                 </div>
-                <span className="dim mono usum-prov">{providerCount} providers</span>
+              </div>
+              <span className="usum-desc dim">{category.description}</span>
+
+              <Spec
+                rows={[
+                  { label: 'Endpoints', value: category.endpoints.length },
+                  { label: 'Chains', value: platformStats.chains },
+                ]}
+              />
+
+              <div className="usum-foot">
+                <AvatarStack items={shown} />
+                <span className="dim mono usum-prov">
+                  View endpoints <span className="arrow">→</span>
+                </span>
               </div>
             </button>
           );
         })}
-        {filtered.length === 0 && <div className="empty">No endpoints match your filters.</div>}
+        {categories.length === 0 && <Empty>No endpoints match “{search}”.</Empty>}
       </section>
+
+      <EndpointDrawer source={open} onClose={() => setOpen(null)} />
     </div>
   );
 }

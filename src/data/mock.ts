@@ -186,7 +186,7 @@ export const team: TeamMember[] = [
   { id: 't3', name: 'Jordan Patel',    email: 'jordan@uniblock.dev',   role: 'Developer', initials: 'JP', lastActive: '1 hr ago',    status: 'active'  },
   { id: 't4', name: 'Sasha Romanova',  email: 'sasha@uniblock.dev',    role: 'Developer', initials: 'SR', lastActive: '3 hr ago',    status: 'active'  },
   { id: 't5', name: 'Diego Marín',     email: 'diego@uniblock.dev',    role: 'Viewer',    initials: 'DM', lastActive: 'yesterday',   status: 'active'  },
-  { id: 't6', name: 'pending invite',  email: 'avery@bigwallet.xyz',   role: 'Developer', initials: 'AV', lastActive: '—',           status: 'invited' },
+  { id: 't6', name: 'pending invite',  email: 'avery@bigwallet.xyz',   role: 'Developer', initials: 'AV', lastActive: '–',           status: 'invited' },
 ];
 
 export type ApiKey = {
@@ -201,10 +201,10 @@ export type ApiKey = {
 };
 
 export const apiKeys: ApiKey[] = [
-  { id: 'k1', name: 'Production — server',    env: 'prod',    prefix: 'ub_live_8f4c2a91',  scopes: ['unified', 'json-rpc', 'webhooks'], created: 'Mar 14, 2025', lastUsed: '2 sec ago',    rate: '500 req/s' },
-  { id: 'k2', name: 'Production — read-only', env: 'prod',    prefix: 'ub_live_2e91b047',  scopes: ['unified'],                          created: 'Mar 14, 2025', lastUsed: '6 min ago',    rate: '100 req/s' },
+  { id: 'k1', name: 'Production, server',    env: 'prod',    prefix: 'ub_live_8f4c2a91',  scopes: ['unified', 'json-rpc', 'webhooks'], created: 'Mar 14, 2025', lastUsed: '2 sec ago',    rate: '500 req/s' },
+  { id: 'k2', name: 'Production, read-only', env: 'prod',    prefix: 'ub_live_2e91b047',  scopes: ['unified'],                          created: 'Mar 14, 2025', lastUsed: '6 min ago',    rate: '100 req/s' },
   { id: 'k3', name: 'Staging',                env: 'staging', prefix: 'ub_test_a01f99c4',  scopes: ['unified', 'json-rpc'],              created: 'Apr 02, 2025', lastUsed: '3 hr ago',     rate: '100 req/s' },
-  { id: 'k4', name: 'Local dev — Mia',        env: 'dev',     prefix: 'ub_test_71b3ee2d',  scopes: ['unified', 'json-rpc', 'webhooks'], created: 'Apr 22, 2025', lastUsed: 'yesterday',    rate: '50 req/s'  },
+  { id: 'k4', name: 'Local dev, Mia',        env: 'dev',     prefix: 'ub_test_71b3ee2d',  scopes: ['unified', 'json-rpc', 'webhooks'], created: 'Apr 22, 2025', lastUsed: 'yesterday',    rate: '50 req/s'  },
 ];
 
 export type Invoice = {
@@ -413,47 +413,55 @@ const PROV = {
 };
 
 // A chain "group" bundles a mainnet with its related networks (devnets/testnets).
-export type RpcNetwork = { name: string; chainId: string; status: 'online' | 'offline'; lastRequest: string; wssProviders: RpcProvider[] };
+export type RpcNetwork = {
+  name: string;
+  chainId: string;
+  status: 'online' | 'offline';
+  kind: 'mainnet' | 'testnet';
+  lastRequest: string;
+  wssProviders: RpcProvider[];
+};
 export type RpcGroup = { id: string; name: string; icon: string; networks: RpcNetwork[] };
 
 const NA = 'No activity in last 7 days';
 const evmProviders = [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.chainstack, PROV.ankr, PROV.blockdaemon];
 const solProviders = [PROV.quicknode, PROV.chainstack];
 
-export const rpcNetworkCount = 217;
+/** docs.uniblock.dev advertises 300+ blockchains across 55+ JSON-RPC providers. */
+export const rpcNetworkCount = 300;
 export const rpcGroups: RpcGroup[] = [
   { id: 'solana', name: 'Solana', icon: chainIcon('solana'), networks: [
-    { name: 'Solana',        chainId: 'solana',        status: 'online', lastRequest: NA, wssProviders: solProviders },
-    { name: 'Solana Devnet', chainId: 'solana-devnet', status: 'online', lastRequest: NA, wssProviders: solProviders },
+    { name: 'Solana',        chainId: 'solana',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: solProviders },
+    { name: 'Solana Devnet', chainId: 'solana-devnet', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: solProviders },
   ]},
   { id: 'ethereum', name: 'Ethereum', icon: chainIcon(1), networks: [
-    { name: 'Ethereum',         chainId: '1',        status: 'online', lastRequest: NA, wssProviders: evmProviders },
-    { name: 'Ethereum Hoodi',   chainId: '560048',   status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.chainstack] },
-    { name: 'Ethereum Sepolia', chainId: '11155111', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura] },
+    { name: 'Ethereum',         chainId: '1',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: evmProviders },
+    { name: 'Ethereum Hoodi',   chainId: '560048',   status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.chainstack] },
+    { name: 'Ethereum Sepolia', chainId: '11155111', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura] },
   ]},
   { id: 'bnb', name: 'BNB Smart Chain', icon: chainIcon(56), networks: [
-    { name: 'BNB Smart Chain',         chainId: '56', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.chainstack, PROV.getblock] },
-    { name: 'BNB Smart Chain Testnet', chainId: '97', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
+    { name: 'BNB Smart Chain',         chainId: '56', status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.chainstack, PROV.getblock] },
+    { name: 'BNB Smart Chain Testnet', chainId: '97', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
   ]},
   { id: 'base', name: 'Base', icon: chainIcon(8453), networks: [
-    { name: 'Base',         chainId: '8453',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.chainstack, PROV.ankr] },
-    { name: 'Base Sepolia', chainId: '84532', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+    { name: 'Base',         chainId: '8453',  status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.chainstack, PROV.ankr] },
+    { name: 'Base Sepolia', chainId: '84532', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
   ]},
   { id: 'polygon', name: 'Polygon', icon: chainIcon(80002), networks: [
-    { name: 'Polygon',      chainId: '137',   status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'Polygon Amoy', chainId: '80002', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+    { name: 'Polygon',      chainId: '137',   status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'Polygon Amoy', chainId: '80002', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
   ]},
   { id: 'arbitrum', name: 'Arbitrum', icon: chainIcon(42161), networks: [
-    { name: 'Arbitrum One',     chainId: '42161',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'Arbitrum Sepolia', chainId: '421614', status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+    { name: 'Arbitrum One',     chainId: '42161',  status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'Arbitrum Sepolia', chainId: '421614', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
   ]},
   { id: 'optimism', name: 'Optimism', icon: chainIcon(10), networks: [
-    { name: 'OP Mainnet', chainId: '10',        status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'OP Sepolia', chainId: '11155420',  status: 'online', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
+    { name: 'OP Mainnet', chainId: '10',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
+    { name: 'OP Sepolia', chainId: '11155420',  status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
   ]},
   { id: 'avalanche', name: 'Avalanche', icon: chainIcon(43114), networks: [
-    { name: 'Avalanche C-Chain', chainId: '43114', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.blockdaemon] },
-    { name: 'Avalanche Fuji',    chainId: '43113', status: 'online', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
+    { name: 'Avalanche C-Chain', chainId: '43114', status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.blockdaemon] },
+    { name: 'Avalanche Fuji',    chainId: '43113', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
   ]},
 ];
 

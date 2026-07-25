@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Icon } from '../components/Icons';
-import { endpoints } from '../data/mock';
+import { TitledPanel, Field, Select, TextInput, FormActions, Badge, MethodBadge, Empty } from '../components/ui';
+import { unifiedCategories } from '../data/catalog';
 
-const testable = endpoints.filter((e) => e.method === 'GET');
+const testable = unifiedCategories.flatMap((c) => c.endpoints).filter((e) => e.method === 'GET');
 
 const sampleResponse = `{
   "chain": "ethereum",
@@ -35,73 +36,59 @@ export function ApiTester() {
   return (
     <div className="view">
       <section className="qs-grid rise rise-1">
-        <article className="panel">
-          <header className="panel-head">
-            <div>
-              <span className="eyebrow">Request</span>
-              <h2 className="panel-title">Composer</h2>
-            </div>
-          </header>
-
-          <div className="field">
-            <label className="field-label">Endpoint</label>
+        <TitledPanel eyebrow="Request" title="Composer">
+          <Field label="Endpoint">
             <div className="composer-row">
-              <span className="badge method-get">GET</span>
-              <select className="input" value={path} onChange={(e) => setPath(e.target.value)}>
-                {testable.map((e) => (
-                  <option key={e.path} value={e.path}>{e.path}</option>
-                ))}
-              </select>
+              <MethodBadge method="GET" />
+              <Select
+                label="Endpoint"
+                value={path}
+                onChange={setPath}
+                options={testable.map((e) => ({ value: e.path, label: `${e.path} · ${e.title}` }))}
+              />
             </div>
-          </div>
+          </Field>
 
           <div className="settings-grid">
-            <div className="field">
-              <label className="field-label">Chain</label>
-              <select className="input" value={chain} onChange={(e) => setChain(e.target.value)}>
-                <option value="ethereum">ethereum</option>
-                <option value="base">base</option>
-                <option value="polygon">polygon</option>
-                <option value="solana">solana</option>
-              </select>
-            </div>
-            <div className="field">
-              <label className="field-label">Address</label>
-              <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} />
-            </div>
+            <Field label="Chain" as="label">
+              <Select
+                value={chain}
+                onChange={setChain}
+                options={['ethereum', 'base', 'polygon', 'solana'].map((c) => ({ value: c, label: c }))}
+              />
+            </Field>
+            <Field label="Address" as="label">
+              <TextInput value={address} onChange={setAddress} />
+            </Field>
           </div>
 
-          <div className="form-actions">
+          <FormActions>
             <button className="btn primary" onClick={run} disabled={running}>
               {running ? <Icon.Refresh size={13} /> : <Icon.Play size={13} />}
               {running ? 'Running…' : 'Send request'}
             </button>
             <span className="form-actions-spacer" />
-            <span className="dim mono" style={{ fontSize: 12 }}>credentials prefilled</span>
-          </div>
-        </article>
+            <span className="dim mono">credentials prefilled</span>
+          </FormActions>
+        </TitledPanel>
 
-        <article className="panel">
-          <header className="panel-head">
-            <div>
-              <span className="eyebrow">Response</span>
-              <h2 className="panel-title">Result</h2>
-            </div>
-            {res && (
+        <TitledPanel
+          eyebrow="Response"
+          title="Result"
+          actions={
+            res && (
               <div className="resp-meta">
-                <span className="badge success">200 OK</span>
+                <Badge tone="success">200 OK</Badge>
                 <span className="mono dim">64 ms</span>
-                <span className="badge">alchemy</span>
+                <Badge>alchemy</Badge>
               </div>
-            )}
-          </header>
-
-          {!res && !running && (
-            <div className="empty">Send a request to see the live response.</div>
-          )}
-          {running && <div className="empty">Routing through the fastest healthy provider…</div>}
+            )
+          }
+        >
+          {!res && !running && <Empty>Send a request to see the live response.</Empty>}
+          {running && <Empty>Routing through the fastest healthy provider…</Empty>}
           {res && <pre className="code-pre response-pre">{res}</pre>}
-        </article>
+        </TitledPanel>
       </section>
     </div>
   );

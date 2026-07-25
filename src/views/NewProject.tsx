@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
+import { Segmented } from '../components/Segmented';
+import { Field, TextInput, SearchInput, Badge } from '../components/ui';
 import { chains, providers } from '../data/mock';
 
 type Capability = 'unified' | 'direct' | 'json-rpc' | 'webhooks';
 
 const capabilityList: { id: Capability; label: string; description: string; icon: keyof typeof Icon }[] = [
-  { id: 'unified', label: 'Unified APIs', description: 'Tokens, NFTs, transactions, market data — normalized across providers', icon: 'Grid' },
+  { id: 'unified', label: 'Unified APIs', description: 'Tokens, NFTs, transactions, market data, normalized across providers', icon: 'Grid' },
   { id: 'direct', label: 'Direct APIs', description: 'Provider-specific endpoints with Uniblock auth and routing', icon: 'Send' },
   { id: 'json-rpc', label: 'JSON-RPC', description: 'Standard RPC with automatic failover across the routing pool', icon: 'Code' },
   { id: 'webhooks', label: 'Webhooks', description: 'Subscribe to address activity, mints, swaps and contract events', icon: 'Webhook' },
@@ -126,45 +128,34 @@ export function NewProject({ open, onClose }: Props) {
         <div className="modal-body">
           {step === 0 && (
             <div className="form">
-              <label className="field">
-                <span className="field-label">Project name</span>
-                <input
-                  className="input"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. multi-chain-prod"
-                  autoFocus
+              <Field label="Project name" as="label">
+                <TextInput value={name} onChange={setName} placeholder="e.g. multi-chain-prod" autoFocus />
+              </Field>
+              <Field label="Environment">
+                <Segmented
+                  label="Environment"
+                  value={env}
+                  onChange={setEnv}
+                  options={[
+                    { value: 'dev', label: 'dev' },
+                    { value: 'staging', label: 'staging' },
+                    { value: 'prod', label: 'prod' },
+                  ]}
                 />
-              </label>
-              <div className="field">
-                <span className="field-label">Environment</span>
-                <div className="seg">
-                  {(['dev', 'staging', 'prod'] as const).map((e) => (
-                    <button
-                      key={e}
-                      className={`seg-item ${env === e ? 'active' : ''}`}
-                      onClick={() => setEnv(e)}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              </Field>
             </div>
           )}
 
           {step === 1 && (
             <div className="picker">
               <div className="picker-head">
-                <div className="tb-search small">
-                  <Icon.Search size={13} />
-                  <input
-                    value={chainQuery}
-                    onChange={(e) => setChainQuery(e.target.value)}
-                    placeholder="Search 280+ chains…"
-                    aria-label="Search chains"
-                  />
-                </div>
+                <SearchInput
+                  compact
+                  value={chainQuery}
+                  onChange={setChainQuery}
+                  placeholder="Search 300+ chains…"
+                  label="Search chains"
+                />
                 <span className="dim">
                   {selectedChains.size} selected
                 </span>
@@ -185,11 +176,7 @@ export function NewProject({ open, onClose }: Props) {
                             className={`chain-card ${on ? 'on' : ''}`}
                             onClick={() => setSelectedChains(toggle(selectedChains, c.id))}
                           >
-                            <span
-                              className="chain-mark"
-                              style={{ background: c.color }}
-                              aria-hidden
-                            />
+                            <span className="chain-mark" style={{ background: c.color }} aria-hidden />
                             <span className="chain-name">{c.name}</span>
                             <span className="mono dim chain-sym">{c.symbol}</span>
                             {on && <Icon.Check size={14} className="chain-check" />}
@@ -223,9 +210,7 @@ export function NewProject({ open, onClose }: Props) {
                     >
                       <div className="prov-card-head">
                         <span className="prov-name-lg">{p.name}</span>
-                        <span className={`badge ${p.status === 'operational' ? 'success' : 'danger'}`}>
-                          {p.status}
-                        </span>
+                        <Badge tone={p.status === 'operational' ? 'success' : 'danger'}>{p.status}</Badge>
                       </div>
                       <p className="prov-desc">{p.description}</p>
                       <div className="prov-meta">

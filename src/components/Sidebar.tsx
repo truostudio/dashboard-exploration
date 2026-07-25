@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icons';
 import { projects } from '../data/mock';
 import type { ViewId } from '../App';
@@ -44,6 +44,11 @@ const projectNav: NavEntry[] = [
   { id: 'api-tester', label: 'API Tester', icon: 'Beaker' },
 ];
 
+/** Internal only. Not part of the customer-facing product. */
+const devNav: NavLeaf[] = [
+  { id: 'components', label: 'Components', icon: 'Grid' },
+];
+
 const settingsNav: NavLeaf[] = [
   { id: 'settings-project', label: 'Project', icon: 'Folder' },
   { id: 'settings-team',    label: 'Team',    icon: 'Users' },
@@ -63,7 +68,7 @@ function NavLeafItem({ item, view, onNavigate }: LeafProps) {
       className={`nav-item ${view === item.id ? 'active' : ''}`}
       onClick={() => onNavigate(item.id)}
     >
-      {I && <I size={16} />}
+      {I && <I size={14} />}
       <span className="nav-label">{item.label}</span>
       {item.badge && <NavBadge badge={item.badge} />}
     </button>
@@ -90,10 +95,10 @@ function NavGroupItem({ group, view, onNavigate }: GroupProps) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
       >
-        <I size={16} />
+        <I size={14} />
         <span className="nav-label">{group.label}</span>
         {group.badge && <NavBadge badge={group.badge} />}
-        <Icon.ChevronDown size={14} className={`nav-caret ${open ? 'open' : ''}`} />
+        <Icon.ChevronDown size={12} className={`nav-caret ${open ? 'open' : ''}`} />
       </button>
 
       <div className={`nav-sub-wrap ${open ? 'open' : ''}`}>
@@ -130,6 +135,40 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
   const qsPct = Math.round((qs.done / qs.total) * 100);
   const qsActive = view === 'quickstart';
 
+  // A single marker travels to whichever row is active, matching the
+  // segmented controls elsewhere in the app.
+  const navRef = useRef<HTMLElement>(null);
+  const [marker, setMarker] = useState<{ top: number; height: number } | null>(null);
+  const [markerReady, setMarkerReady] = useState(false);
+
+  const measureMarker = useCallback(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('.nav-item.active, .nav-child.active');
+    if (!nav || !active) {
+      setMarker(null);
+      return;
+    }
+    setMarker({ top: active.offsetTop, height: active.offsetHeight });
+  }, []);
+
+  useLayoutEffect(() => {
+    measureMarker();
+    const nav = navRef.current;
+    if (!nav) return;
+    // Fires while a nav group expands or collapses, keeping the marker glued on.
+    const observer = new ResizeObserver(measureMarker);
+    observer.observe(nav);
+    for (const child of nav.querySelectorAll('.nav-sub-wrap')) observer.observe(child);
+    return () => observer.disconnect();
+  }, [measureMarker, view]);
+
+  useLayoutEffect(() => {
+    if (marker && !markerReady) {
+      const id = requestAnimationFrame(() => setMarkerReady(true));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [marker, markerReady]);
+
   return (
     <aside className={`sidebar ${drawerOpen ? 'open' : ''}`}>
       <div className="sb-top">
@@ -150,7 +189,7 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
         >
           <span className="ps-dot" aria-hidden />
           <span className="ps-name">{project}</span>
-          <Icon.ChevronDown size={14} />
+          <Icon.ChevronDown size={12} />
         </button>
 
         {open && (
@@ -179,14 +218,21 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
                 onNewProject();
               }}
             >
-              <Icon.Plus size={14} />
+              <Icon.Plus size={12} />
               <span>New project…</span>
             </button>
           </div>
         )}
       </div>
 
-      <nav className="sb-nav" aria-label="Project">
+      <nav className="sb-nav" aria-label="Project" ref={navRef}>
+        {marker && (
+          <span
+            className={`nav-marker ${markerReady ? 'ready' : ''}`}
+            aria-hidden
+            style={{ transform: `translateY(${marker.top}px)`, height: marker.height }}
+          />
+        )}
         <button
           className={`qs-card ${qsActive ? 'active' : ''}`}
           onClick={() => onNavigate('quickstart')}
@@ -199,7 +245,7 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
             <div className="qs-bar-fill" style={{ width: `${qsPct}%` }} />
           </div>
           <span className="qs-hint dim">
-            {qs.done === qs.total ? 'All set — explore the docs' : 'Make your first API call'}
+            {qs.done === qs.total ? 'All set. Explore the docs' : 'Make your first API call'}
           </span>
         </button>
 
@@ -216,11 +262,16 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
         {settingsNav.map((item) => (
           <NavLeafItem key={item.id} item={item} view={view} onNavigate={onNavigate} />
         ))}
+
+        <div className="sb-section-label">Developer</div>
+        {devNav.map((item) => (
+          <NavLeafItem key={item.id} item={item} view={view} onNavigate={onNavigate} />
+        ))}
       </nav>
 
       <div className="sb-bottom">
         <a className="sb-doc" href="#docs">
-          <Icon.Code size={13} /> Documentation
+          <Icon.Code size={14} /> Documentation
           <Icon.Chevron size={12} className="sb-doc-chev" />
         </a>
 

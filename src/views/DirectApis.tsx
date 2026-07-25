@@ -1,72 +1,171 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
-import { directProviders, directSpotlight } from '../data/mock';
+import { EndpointDrawer } from '../components/EndpointDrawer';
+import {
+  Avatar, Spec, ViewToolbar, SectionHeader, SearchInput, Empty,
+} from '../components/ui';
+import type { DrawerSource } from '../components/EndpointDrawer';
+import {
+  directProviders,
+  spotlightProviders,
+  hyperliquidProviders,
+  standardProviders,
+  directEndpointCount,
+} from '../data/catalog';
+import type { DirectProvider } from '../data/catalog';
 
-export function DirectApis() {
-  const [query, setQuery] = useState('');
-  const list = directProviders.filter((p) =>
-    p.name.toLowerCase().includes(query.toLowerCase()),
-  );
+function toDrawerSource(provider: DirectProvider): DrawerSource {
+  return {
+    eyebrow: 'Direct API',
+    surface: 'direct',
+    title: provider.name,
+    description: provider.blurb ?? provider.subtitle,
+    icon: provider.icon,
+    endpoints: provider.endpoints,
+    totalCount: provider.endpointCount,
+    categories: provider.categories,
+    docsUrl: provider.docsUrl,
+  };
+}
 
+type CardProps = {
+  provider: DirectProvider;
+  onOpen: (p: DirectProvider) => void;
+  featured?: boolean;
+};
+
+/** Large card used in the spotlight and Hyperliquid rows. */
+function FeatureCard({ provider, onOpen }: CardProps) {
   return (
-    <div className="view">
-      <article className="spotlight rise rise-1">
-        <div className="spotlight-body">
-          <span className="eyebrow">{directSpotlight.category}</span>
-          <h2 className="spotlight-title">{directSpotlight.title}</h2>
-          <p className="spotlight-desc">{directSpotlight.description}</p>
-          <div className="spotlight-actions">
-            <button className="btn primary"><Icon.External size={13} /> Explore endpoints</button>
-            <span className="dim mono" style={{ fontSize: 12 }}>{directSpotlight.endpoints} endpoints</span>
-          </div>
-        </div>
-        <span className="badge solid spotlight-tag">Spotlight</span>
-      </article>
-
-      <div className="view-toolbar rise rise-2">
-        <div className="ep-head-left">
-          <h2 className="panel-title">Providers</h2>
-          <span className="ep-count dim">{list.length} of {directProviders.length}</span>
-        </div>
-        <div className="tb-search small">
-          <Icon.Search size={14} />
-          <input
-            placeholder="Search providers…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+    <button className="prov-feature marks-4" onClick={() => onOpen(provider)}>
+      <div className="prov-feature-head">
+        <Avatar src={provider.icon} name={provider.name} size="lg" />
+        <div className="prov-feature-name">
+          <span className="prov-feature-title">{provider.name}</span>
+          <span className="prov-feature-sub dim">{provider.subtitle}</span>
         </div>
       </div>
 
-      <section className="prov-direct-grid rise rise-3">
-        {list.map((p) => {
-          const offerings = p.featured ? ['REST', 'WebSocket'] : p.endpoints > 25 ? ['REST', 'Webhooks'] : ['REST'];
-          return (
-            <button key={p.name} className={`prov-tile ${p.featured ? 'featured' : ''}`}>
-              <div className="prov-tile-head">
-                <img className="prov-avatar" src={p.icon} alt={p.name} />
-                <div className="prov-tile-name">
-                  <span className="prov-tile-title">
-                    {p.featured && <span className="spark" aria-hidden>✦</span>}
-                    {p.name}
-                  </span>
-                  <span className="prov-tile-sub dim">{p.subtitle}</span>
-                </div>
-                <Icon.Chevron size={14} className="prov-tile-chev" />
-              </div>
-              <div className="offering-chips">
-                {offerings.map((o) => <span key={o} className="offering-chip">{o}</span>)}
-              </div>
-              <div className="prov-tile-meta">
-                <span className="mono">{p.endpoints} endpoints</span>
-                <span className="dot" aria-hidden />
-                <span className="mono">{p.chains} chains</span>
-              </div>
-            </button>
-          );
-        })}
-        {list.length === 0 && <div className="empty">No providers match “{query}”.</div>}
+      {provider.blurb && <p className="prov-feature-blurb muted">{provider.blurb}</p>}
+
+      <Spec
+        rows={[
+          { label: 'Endpoints', value: provider.endpointCount },
+          { label: 'Categories', value: provider.categories.length },
+        ]}
+      />
+
+      <div className="prov-feature-cats">
+        {provider.categories.slice(0, 3).map((c) => (
+          <span key={c} className="offering-chip">{c}</span>
+        ))}
+        {provider.categories.length > 3 && (
+          <span className="offering-chip">+{provider.categories.length - 3}</span>
+        )}
+      </div>
+
+      <span className="prov-feature-cta mono">
+        View endpoints <span className="arrow">→</span>
+      </span>
+    </button>
+  );
+}
+
+/** Compact card used in the full provider list. */
+function ProviderTile({ provider, onOpen }: CardProps) {
+  return (
+    <button className="prov-tile marks" onClick={() => onOpen(provider)}>
+      <div className="prov-tile-head">
+        <Avatar src={provider.icon} name={provider.name} size="lg" />
+        <div className="prov-tile-name">
+          <span className="prov-tile-title">{provider.name}</span>
+          <span className="prov-tile-sub dim">{provider.subtitle}</span>
+        </div>
+        <Icon.Chevron size={14} className="prov-tile-chev" />
+      </div>
+      <div className="prov-tile-cats">
+        {provider.categories.slice(0, 3).map((c) => (
+          <span key={c} className="offering-chip">{c}</span>
+        ))}
+        {provider.categories.length > 3 && (
+          <span className="offering-chip">+{provider.categories.length - 3}</span>
+        )}
+      </div>
+      <div className="prov-tile-meta">
+        <span className="mono">{provider.endpointCount} endpoints</span>
+        <span className="dot" aria-hidden />
+        <span className="mono">
+          {provider.categories.length} {provider.categories.length === 1 ? 'category' : 'categories'}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+export function DirectApis() {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState<DirectProvider | null>(null);
+
+  const q = query.trim().toLowerCase();
+  const searching = q.length > 0;
+
+  const results = useMemo(() => {
+    if (!searching) return standardProviders;
+    return directProviders.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.subtitle.toLowerCase().includes(q) ||
+        p.categories.some((c) => c.toLowerCase().includes(q)),
+    );
+  }, [q, searching]);
+
+  return (
+    <div className="view">
+      {!searching && (
+        <>
+          <section className="rise rise-1">
+            <SectionHeader lead title="Spotlight" meta="Featured integrations" />
+            <div className="prov-feature-grid two">
+              {spotlightProviders.map((p) => (
+                <FeatureCard key={p.id} provider={p} onOpen={setOpen} />
+              ))}
+            </div>
+          </section>
+
+          <section className="rise rise-2">
+            <SectionHeader lead title="Best for Hyperliquid" meta={`${hyperliquidProviders.length} providers`} />
+            <div className="prov-feature-grid three">
+              {hyperliquidProviders.map((p) => (
+                <FeatureCard key={p.id} provider={p} onOpen={setOpen} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      <ViewToolbar
+        className="rise rise-3"
+        title={searching ? 'Search results' : 'All providers'}
+        count={
+          searching
+            ? `${results.length} of ${directProviders.length}`
+            : `${directProviders.length} providers · ${directEndpointCount.toLocaleString()} endpoints`
+        }
+      >
+        <SearchInput compact value={query} onChange={setQuery} placeholder="Search providers…" />
+      </ViewToolbar>
+
+      <section className="prov-direct-grid rise rise-4">
+        {results.map((p) => (
+          <ProviderTile key={p.id} provider={p} onOpen={setOpen} />
+        ))}
+        {results.length === 0 && <Empty>No providers match “{query}”.</Empty>}
       </section>
+
+      <EndpointDrawer
+        source={open ? toDrawerSource(open) : null}
+        onClose={() => setOpen(null)}
+      />
     </div>
   );
 }

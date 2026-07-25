@@ -1,4 +1,10 @@
-/* ============ Geist (sans) ============ */
+/* ============================================================
+   Uniblock Dashboard: Foundations
+   Type: Geist Sans (prose/UI) · Geist Mono (data) · Geist Pixel (numerals)
+   Rule: every font-size is a multiple of 4 · every line-height is 150%
+   ============================================================ */
+
+/* ---------- Geist Sans ---------- */
 @font-face {
   font-family: 'Geist';
   src: url('/fonts/Geist-Variable.woff2') format('woff2');
@@ -14,7 +20,7 @@
   font-display: swap;
 }
 
-/* ============ Geist Mono ============ */
+/* ---------- Geist Mono ---------- */
 @font-face {
   font-family: 'Geist Mono';
   src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
@@ -23,7 +29,7 @@
   font-display: swap;
 }
 
-/* ============ Geist Pixel — Square is the default ============ */
+/* ---------- Geist Pixel ---------- */
 @font-face {
   font-family: 'Geist Pixel';
   src: url('/fonts/GeistPixel-Square.woff2') format('woff2');
@@ -60,81 +66,186 @@
   font-display: swap;
 }
 
-/* ============ Uniblock tokens — light only, no dark mode ============ */
+/* ============================================================
+   Tokens
+   ============================================================ */
 :root {
+  color-scheme: light;
+
+  /* ---- Brand (locked) ---- */
   --ub-blue: #1FB6FF;
+  --ub-blue-ink: #0089cc;          /* AA-safe blue for text on the page bg */
+  --ub-blue-hover: #0FA9F5;
   --ub-blue-soft: rgba(31, 182, 255, 0.10);
-  --ub-blue-border: rgba(31, 182, 255, 0.45);
+  --ub-blue-wash: rgba(31, 182, 255, 0.05);
+  --ub-blue-border: rgba(31, 182, 255, 0.38);
+  --ub-blue-glow: rgba(31, 182, 255, 0.22);
 
-  --ub-black: #222222;
-  --ub-text-2: #3B3B3B;
-  --ub-text-3: #6A6A6A;
+  /* ---- Ink. --ub-black is "text", --ub-white is "the thing text sits on"
+         when inverted (solid chips, dark buttons). Both flip in dark mode. ---- */
+  --ub-black: #0B0C0E;
+  --ub-black-hover: #23262B;
+  --ub-text-2: #4B525B;
+  --ub-text-3: #838B95;
+  --ub-white: #FFFFFF;
 
-  --ub-border: #B5B5B5;
-  --ub-border-soft: #D6D6D6;
+  /* ---- Surfaces & lines ---- */
+  --ub-canvas: #F5F6F8;
+  --ub-canvas-blur: rgba(245, 246, 248, 0.82);
+  --ub-elevated: #FFFFFF;
+  --ub-sunken: #FAFBFC;
+  --ub-grid: #F1F3F5;
+  --ub-hover: rgba(11, 12, 14, 0.04);
+  --ub-hover-2: rgba(11, 12, 14, 0.07);
 
-  /* Refined chrome — hairlines instead of dashed grids */
-  --ub-line: rgba(34, 34, 34, 0.08);
-  --ub-line-strong: rgba(34, 34, 34, 0.14);
-  --ub-canvas: #f5f6f8;
-  --ub-elevated: #ffffff;
+  --ub-line: rgba(11, 12, 14, 0.08);
+  --ub-line-strong: rgba(11, 12, 14, 0.16);
+  --ub-border: #C7CCD2;
+  --ub-border-soft: #DEE2E7;
 
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --ub-scrim: rgba(11, 12, 14, 0.45);
+  --ub-blueprint: rgba(31, 182, 255, 0.06);
+  --ub-plate: transparent;         /* ring drawn over provider/chain artwork */
+  /* Registration ticks drawn on top of a solid blue fill (primary buttons):
+     --ub-blue barely shows against itself, so this is a dedicated,
+     always-legible accent rather than the brand blue. */
+  --ub-accent-on-blue: var(--ub-black);
 
-  --shadow-sm: 0 1px 2px rgba(34, 34, 34, 0.04);
-  --shadow-md: 0 4px 24px rgba(34, 34, 34, 0.06);
-  --shadow-pop: 0 12px 40px rgba(34, 34, 34, 0.1);
+  /* ---- Semantics ---- */
+  --ub-success: #12885A;
+  --ub-success-soft: rgba(18, 136, 90, 0.10);
+  --ub-warning: #B45309;
+  --ub-warning-soft: rgba(180, 83, 9, 0.10);
+  --ub-danger: #D92D20;
+  --ub-danger-soft: rgba(217, 45, 32, 0.10);
+  --ub-violet: #7C5CFF;
 
-  --ub-white: #ffffff;
-  --ub-grid: #f4f5f7;
-  --ub-hover: #eef0f3;
+  /* ---- Radius ----
+     The system is square. Every corner is 0 so the registration ticks on
+     .marks line up with the surface they annotate. Kept as tokens (rather
+     than deleting them) so the whole system can be re-rounded from here. */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-pill: 0px;
 
-  --ub-success: #16a34a;
-  --ub-success-soft: rgba(22, 163, 74, 0.10);
-  --ub-warning: #d97706;
-  --ub-warning-soft: rgba(217, 119, 6, 0.10);
-  --ub-danger: #dc2626;
-  --ub-danger-soft: rgba(220, 38, 38, 0.10);
+  /* ---- Elevation (restrained) ---- */
+  --shadow-sm: 0 1px 2px rgba(11, 12, 14, 0.05);
+  --shadow-md: 0 8px 28px -10px rgba(11, 12, 14, 0.16);
+  --shadow-pop: 0 24px 64px -20px rgba(11, 12, 14, 0.28);
+  /* Popovers use a hard offset instead of a blur, so edges stay crisp. */
+  --shadow-hard: 4px 4px 0 rgba(11, 12, 14, 0.08);
+  --ub-pop-shadow: var(--shadow-pop);
 
-  /* Only flat offset shadow allowed (menus/popovers). */
-  --ub-pop-shadow: 4px 4px 0 rgba(0, 0, 0, 0.08);
-
-  --font-sans: 'Geist', 'Inter', 'Helvetica', 'Arial', sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, Consolas, monospace;
+  /* ---- Fonts ---- */
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font-pixel: 'Geist Pixel', 'Geist Mono', monospace;
 
-  /* ---- Type scale (editorial, restrained) ---- */
-  --t-display: clamp(32px, 3.6vw, 46px);
-  --t-h1: clamp(26px, 2.6vw, 32px);
-  --t-h2: 17px;
-  --t-eyebrow: 11px;
+  /* ---- Type scale · size is a multiple of 4 · line-height is 150% ---- */
+  --fs-micro: 12px;  --lh-micro: 18px;
+  --fs-body:  16px;  --lh-body:  24px;
+  --fs-lg:    20px;  --lh-lg:    30px;
+  --fs-xl:    24px;  --lh-xl:    36px;
+  --fs-2xl:   32px;  --lh-2xl:   48px;
+  --fs-3xl:   48px;  --lh-3xl:   72px;
 
-  /* ---- Space scale (8pt rhythm) ---- */
+  --t-display: var(--fs-2xl);
+  --t-h1: var(--fs-xl);
+  --t-h2: var(--fs-lg);
+  --t-eyebrow: var(--fs-micro);
+
+  /* ---- Space (4pt) ---- */
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
   --s-4: 16px;
-  --s-5: 24px;
-  --s-6: 32px;
-  --s-7: 48px;
-  --s-8: 64px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 48px;
+  --s-10: 64px;
 
+  /* ---- Controls ---- */
+  --ctl-h: 32px;
+  --ctl-h-sm: 28px;
+
+  /* ---- Motion ---- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
 
-  --sidebar-w: 264px;
+  /* ---- Shell ---- */
+  --sidebar-w: 240px;
+  --topbar-h: 88px;
+  --content-max: 1240px;
 
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--ub-black);
   background: var(--ub-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Dark theme: same token names, inverted values.
+   Applied by an inline script in index.html before first paint,
+   so there is no flash of the wrong theme.
+   ============================================================ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Brand blue is unchanged; only the text-safe variant lightens. */
+  --ub-blue-ink: #5CC8FF;
+  --ub-blue-hover: #45C1FF;
+  --ub-blue-soft: rgba(31, 182, 255, 0.14);
+  --ub-blue-wash: rgba(31, 182, 255, 0.07);
+  --ub-blue-border: rgba(31, 182, 255, 0.32);
+  --ub-blue-glow: rgba(31, 182, 255, 0.26);
+
+  --ub-black: #F2F4F7;
+  --ub-black-hover: #DDE1E7;
+  --ub-text-2: #A3ACB7;
+  --ub-text-3: #737C87;
+  --ub-white: #0B0C0E;
+
+  --ub-canvas: #0B0C0E;
+  --ub-canvas-blur: rgba(11, 12, 14, 0.82);
+  --ub-elevated: #141619;
+  --ub-sunken: #101215;
+  --ub-grid: #1C1F24;
+  --ub-hover: rgba(255, 255, 255, 0.05);
+  --ub-hover-2: rgba(255, 255, 255, 0.09);
+
+  --ub-line: rgba(255, 255, 255, 0.09);
+  --ub-line-strong: rgba(255, 255, 255, 0.16);
+  --ub-border: #3C434C;
+  --ub-border-soft: #272C33;
+
+  --ub-scrim: rgba(0, 0, 0, 0.66);
+  --ub-blueprint: rgba(31, 182, 255, 0.08);
+  --ub-plate: rgba(255, 255, 255, 0.14);
+  --ub-accent-on-blue: #FFFFFF;
+
+  --ub-success: #35C77E;
+  --ub-success-soft: rgba(53, 199, 126, 0.14);
+  --ub-warning: #E8A33C;
+  --ub-warning-soft: rgba(232, 163, 60, 0.14);
+  --ub-danger: #FF6B60;
+  --ub-danger-soft: rgba(255, 107, 96, 0.14);
+  --ub-violet: #9E86FF;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 8px 28px -10px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 24px 64px -20px rgba(0, 0, 0, 0.9);
+  --shadow-hard: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  --ub-pop-shadow: var(--shadow-pop);
 }
 
 *,
@@ -155,7 +266,10 @@ body,
 body {
   color: var(--ub-black);
   font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   background: var(--ub-canvas);
+  overflow-x: hidden;
 }
 
 a {
@@ -165,6 +279,8 @@ a {
 
 button {
   font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   color: inherit;
   background: none;
   border: none;
@@ -176,97 +292,399 @@ input,
 select,
 textarea {
   font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   color: inherit;
   background: var(--ub-elevated);
 }
 
-/* Scrollbars — square, neutral */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--ub-grid);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--ub-border-soft);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ub-border);
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
-/* Selection */
+/* Scrollbars: thin, quiet */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--ub-border-soft);
+  border-radius: 0;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ub-border); background-clip: content-box; }
+
 ::selection {
   background: var(--ub-blue);
   color: var(--ub-white);
 }
 
-/* Utility classes */
-.muted   { color: var(--ub-text-2); }
-.dim     { color: var(--ub-text-3); }
-.mono    { font-family: var(--font-mono); font-feature-settings: 'liga' 0, 'tnum' 1; }
-.pixel   { font-family: var(--font-pixel); letter-spacing: 0.02em; }
-/* Tabular lining figures — precise number alignment everywhere data lives */
-.tnum    { font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
+/* Focus: one consistent blue ring */
+:focus-visible {
+  outline: 2px solid var(--ub-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
 
-/* Blueprint grid (used in modal/empty surfaces) */
+/* ============================================================
+   Utilities
+   ============================================================ */
+.muted { color: var(--ub-text-2); }
+.dim   { color: var(--ub-text-3); }
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0, 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+.pixel {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+.tnum {
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Faint engineering grid: used behind empty / hero surfaces */
 .blueprint-bg {
   background-color: var(--ub-elevated);
   background-image:
-    linear-gradient(rgba(31, 182, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 182, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(var(--ub-blueprint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ub-blueprint) 1px, transparent 1px);
   background-size: 32px 32px;
+  background-position: -1px -1px;
 }
 
-/* ============ Atoms ============ */
+/* ---- Signature: technical registration ticks ----
+   .marks   → two diagonal corners (top-left, bottom-right)
+   .marks-4 → all four corners, drawn as one pseudo-element of 8 hairlines
+              so no extra DOM is needed and the card background shows through */
+.marks { position: relative; }
+.marks::before,
+.marks::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  border-color: var(--ub-blue);
+  opacity: 0.55;
+}
+.marks::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.marks::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* ---- Corner accents on interactive elements ----
+   The same L-shaped registration brackets the cards use, sized down and shown
+   on interaction. One recipe, one selector list: nothing re-implements it. */
+.btn,
+.sgm-seg,
+.chip,
+.tb-search,
+.input,
+.nav-item,
+.nav-child,
+.sb-doc,
+.qs-card,
+.ps-menu,
+.wss-menu,
+.wss-select-btn,
+.explore-card,
+.usum-card,
+.prov-feature,
+.prov-tile,
+.plan-card,
+.chain-card,
+.prov-card,
+.cap-card,
+.manage-row,
+.chart-tip,
+.site-banner { position: relative; }
+
+.btn::after,
+.sgm-seg::after,
+.chip::after,
+.tb-search::after,
+.input::after,
+.nav-item::after,
+.nav-child::after,
+.sb-doc::after,
+.qs-card::after,
+.ps-menu::after,
+.wss-menu::after,
+.wss-select-btn::after,
+.explore-card::after,
+.usum-card::after,
+.prov-feature::after,
+.prov-tile::after,
+.plan-card::after,
+.chain-card::after,
+.prov-card::after,
+.cap-card::after,
+.manage-row::after,
+.chart-tip::after,
+.site-banner::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s var(--ease-io);
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0);
+  background-size:
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px;
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+}
+
+/* Primary (solid blue) buttons: the brand-blue tick is invisible on a
+   brand-blue fill, so swap in the always-legible on-blue accent. */
+.btn.primary::after {
+  background-image:
+    linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0),
+    linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0),
+    linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0),
+    linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0);
+}
+
+/* Larger surfaces get longer arms, matching the card treatment. */
+.explore-card::after,
+.usum-card::after,
+.prov-feature::after,
+.prov-tile::after,
+.plan-card::after,
+.ps-menu::after,
+.wss-menu::after,
+.chart-tip::after {
+  inset: 5px;
+  background-size:
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px;
+}
+
+/* Brackets light up where the pointer or keyboard is. */
+.btn:hover::after,
+.btn:focus-visible::after,
+.sgm-seg:hover::after,
+.chip:hover::after,
+.chip.on::after,
+.tb-search:focus-within::after,
+.input:focus::after,
+.nav-item:hover::after,
+.nav-child:hover::after,
+.sb-doc:hover::after,
+.qs-card:hover::after,
+.wss-select-btn:hover::after,
+.explore-card:hover::after,
+.usum-card:hover::after,
+.prov-feature:hover::after,
+.prov-tile:hover::after,
+.plan-card:hover::after,
+.chain-card:hover::after,
+.prov-card:hover::after,
+.cap-card:hover::after,
+.manage-row:hover::after { opacity: 0.9; }
+
+/* Transient surfaces carry them permanently: they are already an event. */
+.ps-menu::after,
+.wss-menu::after,
+.chart-tip::after,
+.site-banner::after { opacity: 0.55; }
+
+/* Selected pickers keep them lit so the state is unmistakable. */
+.chain-card.on::after,
+.prov-card.on::after,
+.cap-card.on::after,
+.plan-card.current::after { opacity: 0.9; }
+
+.btn[disabled]::after { opacity: 0 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn::after, .sgm-seg::after, .chip::after { transition: none; }
+}
+
+/* Any surface that should carry four registration ticks joins this list.
+   Grouped so the eight-hairline recipe is defined exactly once. */
+.marks-4,
+.explore-card,
+.plan-card.current,
+.chain-card.on,
+.prov-card.on,
+.cap-card.on,
+.getstarted,
+.keystrip,
+.empty { position: relative; }
+
+.marks-4::after,
+.explore-card::after,
+.plan-card.current::after,
+.chain-card.on::after,
+.prov-card.on::after,
+.cap-card.on::after,
+.getstarted::after,
+.keystrip::after,
+.empty::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.2s var(--ease-out);
+  background-image:
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0);
+  background-repeat: no-repeat;
+  background-size:
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px,
+    9px 1px, 1px 9px;
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+}
+
+/* ============================================================
+   Atoms
+   ============================================================ */
+
+/* ============================================================
+   Interactive text: ONE size, no exceptions.
+
+   Every control and every nav row is 12px/500 Geist Sans. Data and meta
+   are 12px Geist MONO (badges, keycaps, eyebrows, table headers, paths,
+   spec values): same size, different family, which is what separates
+   them. Anything larger than 12px is content, not chrome: panel titles,
+   page headings, prose, and the big pixel figures.
+   ============================================================ */
+.btn,
+.sgm-item,
+.chip,
+.input,
+.tb-search input,
+.nav-item,
+.nav-child,
+.sb-doc,
+.project-switcher,
+.ps-name,
+.ps-item,
+.wss-select-btn,
+.wss-menu-item,
+.code-copy {
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Tabs are the one place chrome carries a little more presence. */
+.sgm-tab .sgm-item { font-size: var(--fs-micro); }
+
+/* Uniform control height so nothing sits inside anything else. */
+.btn,
+.input,
+.sgm-seg,
+.seg,
+.tb-search {
+  height: var(--ctl-h);
+}
+
+/* ---- Eyebrow / overline ---- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+}
+.eyebrow::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--ub-blue);
+  flex: none;
+}
+
+/* ---- Buttons ---- */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 32px;
+  height: var(--ctl-h);
   padding: 0 12px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-sans);
-  border: 1px solid var(--ub-line);
+  border: 1px solid var(--ub-line-strong);
   background: var(--ub-elevated);
   color: var(--ub-black);
-  box-shadow: none;
-  transition:
-    background-color 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease,
-    filter 0.1s ease;
   white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color 0.15s var(--ease-io),
+    border-color 0.15s var(--ease-io),
+    color 0.15s var(--ease-io),
+    box-shadow 0.15s var(--ease-io),
+    transform 0.08s var(--ease-io);
 }
 .btn:hover {
-  background: var(--ub-hover);
-  border-color: var(--ub-line-strong);
+  background: var(--ub-sunken);
+  border-color: var(--ub-border);
 }
-.btn:active {
-  filter: brightness(0.92);
-}
+.btn:active { transform: translateY(1px); }
+
 .btn.primary {
   background: var(--ub-blue);
-  border: 1px solid var(--ub-blue);
+  border-color: var(--ub-blue);
   color: var(--ub-white);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 2px rgba(11, 12, 14, 0.08);
 }
 .btn.primary:hover {
-  background: var(--ub-blue);
-  border-color: var(--ub-blue);
-  filter: brightness(1.03);
+  background: var(--ub-blue-hover);
+  border-color: var(--ub-blue-hover);
+  box-shadow: 0 1px 2px rgba(11, 12, 14, 0.08);
 }
+
 .btn.dark {
   background: var(--ub-black);
-  border: 1px solid var(--ub-black);
+  border-color: var(--ub-black);
   color: var(--ub-white);
 }
-.btn.dark:hover {
-  background: var(--ub-black);
-  filter: brightness(1.15);
-}
+.btn.dark:hover { background: var(--ub-black-hover); border-color: var(--ub-black-hover); }
+
 .btn.ghost {
   background: transparent;
   border-color: transparent;
@@ -275,116 +693,312 @@ textarea {
 }
 .btn.ghost:hover {
   background: var(--ub-hover);
-  color: var(--ub-black);
   border-color: transparent;
-  box-shadow: none;
-}
-.btn.icon-only {
-  width: 32px;
-  padding: 0;
-  justify-content: center;
-}
-.btn[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
-  filter: none;
-}
-.btn.danger {
-  background: var(--ub-danger);
-  border: 1px solid var(--ub-danger);
-  color: var(--ub-white);
-}
-.btn.danger:hover {
-  filter: brightness(0.95);
+  color: var(--ub-black);
 }
 
+.btn.danger {
+  background: var(--ub-danger);
+  border-color: var(--ub-danger);
+  color: var(--ub-white);
+}
+.btn.danger:hover { filter: brightness(0.94); }
+
+.btn.icon-only {
+  width: var(--ctl-h);
+  padding: 0;
+  flex: none;
+}
+.btn.small {
+  height: var(--ctl-h-sm);
+  padding: 0 12px;
+}
+.btn.small.icon-only { width: var(--ctl-h-sm); }
+
+.btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn svg { flex: none; }
+
+/* ---- Badges ---- */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 20px;
-  padding: 0 7px;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
   border-radius: var(--radius-xs);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   background: var(--ub-grid);
   color: var(--ub-text-2);
-  border: none;
-  font-family: var(--font-sans);
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
-.badge.method-get {
-  background: var(--ub-blue-soft);
-  color: var(--ub-blue);
-}
-.badge.method-post {
-  background: var(--ub-success-soft);
-  color: var(--ub-success);
-}
-.badge.method-ws {
-  background: var(--ub-grid);
-  color: var(--ub-black);
-}
-.badge.new {
-  background: var(--ub-blue-soft);
-  color: var(--ub-blue);
-}
-.badge.success {
-  background: var(--ub-success-soft);
-  color: var(--ub-success);
-}
-.badge.warning {
-  background: var(--ub-warning-soft);
-  color: var(--ub-warning);
-}
-.badge.danger {
-  background: var(--ub-danger-soft);
-  color: var(--ub-danger);
-}
-.badge.solid {
-  background: var(--ub-black);
-  color: var(--ub-white);
-  border: 1px solid var(--ub-black);
-}
+.badge svg { flex: none; }
 
+.badge.method-get  { background: var(--ub-blue-soft);    color: var(--ub-blue-ink); border-color: var(--ub-blue-border); }
+.badge.method-post { background: var(--ub-success-soft); color: var(--ub-success);  border-color: rgba(18, 136, 90, 0.28); }
+.badge.method-ws   { background: rgba(124, 92, 255, 0.10); color: var(--ub-violet); border-color: rgba(124, 92, 255, 0.28); }
+
+.badge.new     { background: var(--ub-blue-soft);    color: var(--ub-blue-ink); border-color: var(--ub-blue-border); }
+.badge.success { background: var(--ub-success-soft); color: var(--ub-success);  border-color: rgba(18, 136, 90, 0.24); }
+.badge.warning { background: var(--ub-warning-soft); color: var(--ub-warning);  border-color: rgba(180, 83, 9, 0.24); }
+.badge.danger  { background: var(--ub-danger-soft);  color: var(--ub-danger);   border-color: rgba(217, 45, 32, 0.24); }
+.badge.solid   { background: var(--ub-black);        color: var(--ub-white);    border-color: var(--ub-black); }
+
+/* ---- Keycap ---- */
 .kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
   border-radius: var(--radius-xs);
-  background: var(--ub-grid);
-  border: 1px solid var(--ub-line);
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line-strong);
+  box-shadow: 0 1px 0 var(--ub-line-strong);
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ub-text-2);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
 }
 
-/* ============ Eyebrow / overline label ============ */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
+/* ---- Status dot ---- */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 0;
+  background: var(--ub-border);
+  flex: none;
+}
+.dot.ok   { background: var(--ub-success); box-shadow: 0 0 0 3px var(--ub-success-soft); }
+.dot.warn { background: var(--ub-warning); box-shadow: 0 0 0 3px var(--ub-warning-soft); }
+
+/* ---- Inputs ---- */
+.input {
+  height: var(--ctl-h);
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--ub-line-strong);
+  background: var(--ub-elevated);
+  color: var(--ub-black);
+  width: 100%;
+  min-width: 0;
+  transition: border-color 0.15s var(--ease-io), box-shadow 0.15s var(--ease-io);
+}
+.input::placeholder { color: var(--ub-text-3); }
+.input:hover { border-color: var(--ub-border); }
+.input:focus {
+  outline: none;
+  border-color: var(--ub-blue);
+  box-shadow: 0 0 0 3px var(--ub-blue-soft);
+}
+
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ub-text-3) 50%),
+    linear-gradient(135deg, var(--ub-text-3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% + 1px), calc(100% - 13px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.field-label {
   font-family: var(--font-mono);
-  font-size: var(--t-eyebrow);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ub-text-3);
 }
 
-/* .marks is a no-op now (kept so existing markup is harmless) */
-.marks { position: relative; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.form-actions-spacer { flex: 1; }
 
-/* ============ Signature: choreographed entrance ============ */
+/* ============================================================
+   Segmented control: the marker travels between options
+   ============================================================ */
+.sgm {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.sgm-marker {
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  /* No transition until the first measurement lands, so it doesn't fly in. */
+  transition: none;
+}
+.sgm-marker.ready {
+  transition:
+    transform 0.34s var(--ease-out),
+    width 0.34s var(--ease-out),
+    background-color 0.18s var(--ease-io);
+}
+
+.sgm-item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  color: var(--ub-text-3);
+  transition: color 0.16s var(--ease-io), opacity 0.1s var(--ease-io);
+}
+.sgm-item:hover { color: var(--ub-black); }
+.sgm-item:active { opacity: 0.6; }
+.sgm-item.on { color: var(--ub-black); }
+.sgm-item svg { flex: none; }
+
+/* ---- seg: one bordered row of cells, divided by hairlines.
+        The active cell fills with ink: no box inside a box. ---- */
+.sgm-seg {
+  max-width: 100%;
+  padding: 0;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line-strong);
+  overflow: hidden;
+}
+/* The marker is a bracketed cell, not a filled slab: a solid fill inverts to
+   a glaring white block in dark mode, which is far more emphasis than a sort
+   control deserves. The brackets travel with it. */
+.sgm-seg .sgm-marker {
+  top: 0;
+  bottom: 0;
+  background-color: var(--ub-blue-wash);
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0);
+  background-size:
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px;
+  background-position:
+    left 3px top 3px,     left 3px top 3px,
+    right 3px top 3px,    right 3px top 3px,
+    left 3px bottom 3px,  left 3px bottom 3px,
+    right 3px bottom 3px, right 3px bottom 3px;
+}
+.sgm-seg .sgm-item {
+  height: 100%;
+  padding: 0 12px;
+  border-left: 1px solid var(--ub-line);
+}
+.sgm-seg .sgm-item:first-of-type { border-left: none; }
+.sgm-seg .sgm-item.on { color: var(--ub-black); }
+.sgm-seg .sgm-item:not(.on):hover { background: var(--ub-hover); }
+
+/* The container already frames the control; its own brackets would double up. */
+.sgm-seg:hover::after { opacity: 0; }
+
+/* ---- tab: a blue rule slides along the baseline ---- */
+.sgm-tab {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--ub-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+  width: 100%;
+}
+.sgm-tab::-webkit-scrollbar { display: none; }
+.sgm-tab .sgm-marker {
+  bottom: -1px;
+  height: 2px;
+  background: var(--ub-blue);
+}
+.sgm-tab .sgm-item {
+  height: 38px;
+  padding: 0 12px;
+}
+.sgm-tab .sgm-item.on { color: var(--ub-black); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sgm-marker.ready { transition: none; }
+}
+
+
+/* ---- Chip ---- */
+.chip {
+  height: var(--ctl-h);
+  padding: 0 12px;
+  border-radius: 0;
+  border: 1px solid var(--ub-line-strong);
+  background: var(--ub-elevated);
+  color: var(--ub-text-2);
+  white-space: nowrap;
+  transition: all 0.15s var(--ease-io);
+}
+.chip:hover { border-color: var(--ub-border); color: var(--ub-black); }
+.chip.on {
+  background: var(--ub-black);
+  border-color: var(--ub-black);
+  color: var(--ub-white);
+}
+
+/* ---- Avatar ---- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  background: var(--ub-grid);
+  border: 1px solid var(--ub-line);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  color: var(--ub-text-2);
+  flex: none;
+}
+
+/* ============================================================
+   Entrance choreography
+   ============================================================ */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .rise {
   opacity: 0;
-  animation: rise 0.55s var(--ease-out) forwards;
+  animation: rise 0.6s var(--ease-out) forwards;
 }
 .rise-1 { animation-delay: 0.02s; }
 .rise-2 { animation-delay: 0.08s; }
@@ -395,12 +1009,8 @@ textarea {
 
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none; opacity: 1; }
-  body { background-attachment: scroll; }
-}
-
-/* Focus visibility — consistent blue ring */
-:focus-visible {
-  outline: 2px solid var(--ub-blue);
-  outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

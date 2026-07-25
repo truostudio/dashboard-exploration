@@ -1,9 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
+import { Segmented } from '../components/Segmented';
+import {
+  Panel, Table, ViewToolbar, SectionHeader, SearchInput, Avatar, Empty, useCopy,
+  FilterPopover, FilterGroup,
+} from '../components/ui';
 import { rpcGroups, rpcNetworkCount } from '../data/mock';
+import type { RpcNetwork } from '../data/mock';
 
 const HTTP = 'https://api.uniblock.dev/uni/v1/json-rpc';
 const WSS = 'wss://api.uniblock.dev/uni/v1/json-rpc';
+
+const KIND_LABEL: Record<RpcNetwork['kind'], string> = { mainnet: 'Mainnet', testnet: 'Testnet' };
+const ALL_PROVIDERS = [...new Set(rpcGroups.flatMap((g) => g.networks.flatMap((n) => n.wssProviders.map((p) => p.name))))].sort();
 
 export function JsonRpc() {
   const [search, setSearch] = useState('');
@@ -11,87 +20,134 @@ export function JsonRpc() {
   const [ep, setEp] = useState<Record<string, 'https' | 'wss'>>({});
   const [wssProv, setWssProv] = useState<Record<string, string>>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [kindFilter, setKindFilter] = useState<RpcNetwork['kind'][]>([]);
+  const [providerFilter, setProviderFilter] = useState<string[]>([]);
+  const { copy, isCopied } = useCopy();
+
+  const toggleKind = (k: RpcNetwork['kind']) => {
+    setKindFilter((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  };
+  const toggleProvider = (p: string) => {
+    setProviderFilter((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
+  };
+  const clearFilters = () => {
+    setKindFilter([]);
+    setProviderFilter([]);
+  };
 
   const groups = useMemo(() => {
     const q = search.toLowerCase();
     let gs = rpcGroups
       .map((g) => ({
         ...g,
-        networks: g.networks.filter(
-          (n) => !q || n.name.toLowerCase().includes(q) || n.chainId.includes(q) || g.name.toLowerCase().includes(q),
-        ),
+        networks: g.networks.filter((n) => {
+          if (!(!q || n.name.toLowerCase().includes(q) || n.chainId.includes(q) || g.name.toLowerCase().includes(q))) return false;
+          if (kindFilter.length && !kindFilter.includes(n.kind)) return false;
+          if (providerFilter.length && !n.wssProviders.some((p) => providerFilter.includes(p.name))) return false;
+          return true;
+        }),
       }))
       .filter((g) => g.networks.length);
     if (sort === 'az') gs = [...gs].sort((a, b) => a.name.localeCompare(b.name));
     return gs;
-  }, [search, sort]);
-
-  function copy(id: string, url: string) {
-    navigator.clipboard?.writeText(url);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 1200);
-  }
+  }, [search, sort, kindFilter, providerFilter]);
 
   return (
     <div className="view">
-      <p className="dim rise rise-1" style={{ fontSize: 13, lineHeight: '20px', maxWidth: '88ch' }}>
+      <p className="dim rise rise-1 prose">
         Each chain groups its mainnet and related networks. Switch HTTPS or WebSockets to view the matching URL,
-        and open a row for RPC tools and supported methods. WebSocket routing needs a provider selected; until
-        then the row shows as offline.
+        and open a row for RPC tools and supported methods. WebSocket routing needs a provider selected before
+        the URL can be copied.
       </p>
 
-      <div className="view-toolbar rise rise-2">
-        <div className="tb-search" style={{ flex: 1 }}>
-          <Icon.Search size={15} />
-          <input placeholder="Search networks by name or chain ID…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="ep-controls">
-          <button className="btn"><Icon.Settings size={14} /> Filters</button>
-          <div className="seg">
-            <button className={`seg-item ${sort === 'trending' ? 'active' : ''}`} onClick={() => setSort('trending')}>Trending</button>
-            <button className={`seg-item ${sort === 'az' ? 'active' : ''}`} onClick={() => setSort('az')}>A–Z</button>
-          </div>
-        </div>
+      <ViewToolbar
+        className="rise rise-2"
+        lead={
+          <SearchInput
+            grow
+            value={search}
+            onChange={setSearch}
+            placeholder="Search networks by name or chain ID…"
+          />
+        }
+      >
+        <FilterPopover activeCount={kindFilter.length + providerFilter.length} onClear={clearFilters}>
+          <FilterGroup label="Network">
+            {(Object.keys(KIND_LABEL) as RpcNetwork['kind'][]).map((k) => (
+              <button
+                key={k}
+                type="button"
+                className={`chip ${kindFilter.includes(k) ? 'on' : ''}`}
+                onClick={() => toggleKind(k)}
+              >
+                {KIND_LABEL[k]}
+              </button>
+            ))}
+          </FilterGroup>
+          <FilterGroup label="WebSocket provider">
+            {ALL_PROVIDERS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`chip ${providerFilter.includes(p) ? 'on' : ''}`}
+                onClick={() => toggleProvider(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </FilterGroup>
+        </FilterPopover>
+        <Segmented
+          label="Sort order"
+          value={sort}
+          onChange={setSort}
+          options={[
+            { value: 'trending', label: 'Trending' },
+            { value: 'az', label: 'A–Z' },
+          ]}
+        />
+      </ViewToolbar>
+
+      <div className="rise rise-3">
+        <SectionHeader
+          title={sort === 'az' ? 'All networks' : 'Popular networks'}
+          meta={`${rpcNetworkCount} networks`}
+        />
       </div>
 
-      <div className="section-row rise rise-3">
-        <h3 className="section-h">{sort === 'az' ? 'All networks' : 'Popular networks'}</h3>
-        <span className="dim mono" style={{ fontSize: 12 }}>{rpcNetworkCount} networks</span>
-      </div>
-
-      {groups.length === 0 && <div className="empty">No networks match your filters.</div>}
+      {groups.length === 0 && <Empty>No networks match your filters.</Empty>}
 
       {groups.map((g) => {
         const type = ep[g.id] ?? 'https';
         const wss = type === 'wss';
         const base = wss ? WSS : HTTP;
         return (
-          <article key={g.id} className="panel rpc-group rise rise-3">
+          <Panel key={g.id} className="rpc-group rise rise-3">
             <header className="rpc-group-head">
               <img className="rpc-group-icon" src={g.icon} alt="" />
               <h2 className="rpc-group-name">{g.name}</h2>
               <div className="endpoint-toggle">
                 <span className="dim endpoint-label">Endpoint type</span>
-                <div className="ep-pill">
-                  <button className={!wss ? 'on' : ''} onClick={() => setEp((s) => ({ ...s, [g.id]: 'https' }))}>HTTPS</button>
-                  <button className={wss ? 'on' : ''} onClick={() => setEp((s) => ({ ...s, [g.id]: 'wss' }))}>WebSockets</button>
-                </div>
+                <Segmented
+                  label={`${g.name} endpoint type`}
+                  value={type}
+                  onChange={(next) => setEp((s) => ({ ...s, [g.id]: next }))}
+                  options={[
+                    { value: 'https', label: 'HTTPS' },
+                    { value: 'wss', label: 'WebSockets' },
+                  ]}
+                />
               </div>
             </header>
 
-            <div className="table-wrap" style={{ margin: 0 }}>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Network</th>
-                    {wss && <th>Provider</th>}
-                    <th>{wss ? 'WebSocket URL' : 'HTTPS URL'}</th>
-                    <th>Last request</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Table
+              columns={[
+                { key: 'network', header: 'Network' },
+                ...(wss ? [{ key: 'provider', header: 'Provider' }] : []),
+                { key: 'url', header: wss ? 'WebSocket URL' : 'HTTPS URL' },
+                { key: 'last', header: 'Last request' },
+              ]}
+            >
                   {g.networks.map((n) => {
                     const rowKey = `${g.id}-${n.chainId}`;
                     const provider = wssProv[rowKey];
@@ -100,13 +156,12 @@ export function JsonRpc() {
                         ? `${base}?chainId=${n.chainId}&provider=${provider}`
                         : `${base}?chainId=${n.chainId}`
                       : `${base}?chainId=${n.chainId}`;
-                    const online = !wss || !!provider;
                     const sel = n.wssProviders.find((p) => p.name === provider);
                     return (
                       <tr key={n.chainId}>
                         <td>
                           <span className="member-cell">
-                            <img className="rpc-net-icon" src={g.icon} alt="" />
+                            <Avatar src={g.icon} name={n.name} size="sm" />
                             {n.name}
                           </span>
                         </td>
@@ -150,26 +205,22 @@ export function JsonRpc() {
                         <td>
                           <div className="rpc-url">
                             <span className={`mono rpc-url-text ${wss && !provider ? 'dim' : ''}`}>{url}</span>
-                            <button className="rpc-url-copy" aria-label="Copy URL" disabled={wss && !provider} onClick={() => copy(rowKey, url)}>
-                              {copied === rowKey ? <Icon.Check size={14} /> : <Icon.Copy size={14} />}
+                            <button
+                              className="rpc-url-copy"
+                              aria-label="Copy URL"
+                              disabled={wss && !provider}
+                              onClick={() => copy(url, rowKey)}
+                            >
+                              {isCopied(rowKey) ? <Icon.Check size={14} /> : <Icon.Copy size={14} />}
                             </button>
                           </div>
                         </td>
                         <td className="dim">{n.lastRequest}</td>
-                        <td>
-                          {online ? (
-                            <span className="badge success"><span className="dot ok" /> Online</span>
-                          ) : (
-                            <span className="badge"><span className="dot" /> Offline</span>
-                          )}
-                        </td>
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </article>
+            </Table>
+          </Panel>
         );
       })}
 
