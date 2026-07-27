@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icons';
-import { projects } from '../data/mock';
+import { projects, cuUsed, cuLimit } from '../data/mock';
 import type { ViewId } from '../App';
 
 type Badge = { text: string; tone?: 'blue' | 'orange' | 'green' };
@@ -54,6 +54,12 @@ const settingsNav: NavLeaf[] = [
   { id: 'settings-team',    label: 'Team',    icon: 'Users' },
   { id: 'settings-billing', label: 'Billing', icon: 'Card' },
 ];
+
+/** Compute units run to the millions, so the rail shows them abbreviated. */
+function formatCu(n: number) {
+  const m = n / 1_000_000;
+  return `${m >= 10 ? Math.round(m) : m.toFixed(1)}M`;
+}
 
 function NavBadge({ badge }: { badge: Badge }) {
   return <span className={`nav-badge ${badge.tone ?? 'blue'}`}>{badge.text}</span>;
@@ -134,6 +140,7 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
   const qs = quickstartProgress;
   const qsPct = Math.round((qs.done / qs.total) * 100);
   const qsActive = view === 'quickstart';
+  const cuPct = Math.round((cuUsed / cuLimit) * 100);
 
   // A single marker travels to whichever row is active, matching the
   // segmented controls elsewhere in the app.
@@ -275,20 +282,13 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
           <Icon.Chevron size={12} className="sb-doc-chev" />
         </a>
 
-        <div className="sb-plan">
-          <div className="sb-plan-row">
-            <span className="sb-plan-name">Startup Plan</span>
-            <span className="badge new">FREE</span>
+        <div className="sb-usage">
+          <div className="sb-usage-row">
+            <span className="dim">{formatCu(cuUsed)} / {formatCu(cuLimit)} CUs</span>
+            <span className="dim">{cuPct}%</span>
           </div>
-          <button className="btn primary sb-upgrade">Upgrade</button>
-          <div className="sb-usage">
-            <div className="sb-usage-row">
-              <span className="dim">40 / 40M CUs</span>
-              <span className="dim">0%</span>
-            </div>
-            <div className="sb-usage-bar" aria-hidden>
-              <div className="sb-usage-fill" style={{ width: '2%' }} />
-            </div>
+          <div className="sb-usage-bar" aria-hidden>
+            <div className="sb-usage-fill" style={{ width: `${cuPct}%` }} />
           </div>
         </div>
       </div>

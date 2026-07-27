@@ -367,29 +367,9 @@
 .sb-doc svg { flex: none; color: var(--ub-text-3); }
 .sb-doc-chev { margin-left: auto; }
 
-.sb-plan {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--ub-line);
-  background: var(--ub-sunken);
-}
-.sb-plan-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.sb-plan-name {
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  font-weight: 600;
-}
-.sb-upgrade { width: 100%; }
-
-.sb-usage { display: flex; flex-direction: column; gap: 6px; }
+/* Plan usage: a bare label row and bar. The rail states consumption; acting
+   on it belongs to Settings → Billing, not here. */
+.sb-usage { display: flex; flex-direction: column; gap: 6px; padding: 0 4px; }
 .sb-usage-row {
   display: flex;
   justify-content: space-between;
