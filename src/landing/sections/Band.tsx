@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 
 /**
  * A full-bleed section with a capped inner column. Bands are separated by a
- * hairline rather than whitespace alone, matching how the dashboard divides
- * its own regions.
+ * hairline drawn on the container box rather than a border on the section, so
+ * the rule obeys the same measure as everything else on the page.
  */
 export function Band({
   id,
@@ -21,15 +21,34 @@ export function Band({
   );
 }
 
-/** Eyebrow + title + lede, with an optional right-hand action on wide screens. */
+/**
+ * The section divider: a dither field.
+ *
+ * This replaces a strip of mono chrome — `04 · THE FULL STACK · 3 LAYERS` —
+ * that announced three things nobody asked for and coloured one of them.
+ *
+ * What replaced it was a ticked scale bar, which was still just an unrounded
+ * hairline used as ornament. This is a dither field instead: the section
+ * number set oversized in the pixel face, and a band of ordered dither
+ * thinning out across the measure beside it. Dither is the identity, so the
+ * seam between two sections is made of it rather than of a drawn line.
+ */
+export function SectionRule({ index }: { index: string }) {
+  return (
+    <div className="lp-divider" aria-hidden>
+      <span className="lp-divider-num">{index}</span>
+      <span className="lp-divider-field dither" />
+    </div>
+  );
+}
+
+/** Title + lede, with an optional right-hand action on wide screens. */
 export function BandHead({
-  eyebrow,
   title,
   lede,
   actions,
   wide,
 }: {
-  eyebrow?: ReactNode;
   title: ReactNode;
   lede?: ReactNode;
   actions?: ReactNode;
@@ -38,7 +57,6 @@ export function BandHead({
 }) {
   const head = (
     <>
-      {eyebrow && <span className="eyebrow">{eyebrow}</span>}
       <h2 className={`lp-title ${wide ? 'lp-title-wide' : ''}`.trim()}>{title}</h2>
       {lede && <p className="lp-lede">{lede}</p>}
     </>

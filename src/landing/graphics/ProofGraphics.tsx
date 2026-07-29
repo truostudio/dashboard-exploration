@@ -15,36 +15,40 @@ import { directProviders } from '../../data/catalog';
    A mesh of every provider, with the health scan running across it.
    ============================================================ */
 
-const MESH = directProviders.filter((p) => p.icon).slice(0, 24);
+/* Eight bricks per course, so the count has to be a multiple of eight or the
+   wall ends ragged — which is the whole point of building it out of blocks. */
+const MESH = directProviders.filter((p) => p.icon);
 
-export function ProviderMesh() {
+/**
+ * The scan does not walk the mesh in reading order — a left-to-right sweep
+ * looks like a loading bar. It hops, the way a health check polls.
+ */
+export function ProviderMesh({ cols = 7, rows = 2 }: { cols?: number; rows?: number }) {
+  const count = cols * rows;
+  const bricks = MESH.slice(0, count);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const id = setInterval(() => setActive((i) => (i + 1) % MESH.length), 900);
+    const id = setInterval(
+      () => setActive((i) => (i + 5) % count),
+      760,
+    );
     return () => clearInterval(id);
-  }, []);
+  }, [count]);
 
   return (
-    <div className="pg pg-mesh">
-      <div className="pg-mesh-grid">
-        {MESH.map((provider, i) => (
-          <span
-            key={provider.id}
-            className={`pg-mesh-cell ${i === active ? 'on' : ''}`.trim()}
-            title={provider.name}
-          >
-            <Avatar src={provider.icon} name={provider.name} size="md" />
-          </span>
-        ))}
-      </div>
-      <div className="pg-foot">
-        <span className="pg-foot-live">
-          <i /> HEALTH SCAN
+    <div className="lp-lattice" style={{ '--cols': cols } as CSSProperties}>
+      {bricks.map((provider, i) => (
+        <span
+          key={provider.id}
+          className={`lp-brick pg-mesh-cell ${i === active ? 'on' : ''}`.trim()}
+          style={{ '--i': (i % cols) + Math.floor(i / cols) } as CSSProperties}
+          title={provider.name}
+        >
+          <Avatar src={provider.icon} name={provider.name} size="md" />
         </span>
-        <span>{MESH.length} of 55+ shown · all operational</span>
-      </div>
+      ))}
     </div>
   );
 }
@@ -61,9 +65,15 @@ const RACE = [
   { id: 'ankr', latency: 48, cost: 88, reliability: 81 },
 ];
 
-export function RouteRace() {
+/**
+ * With the window focused the scores re-run, so you watch the decision being
+ * made rather than reading its result. Keying the wrapper on `on` remounts the
+ * bars, which restarts their fill animation from zero — no state needed, and
+ * no effect that writes state during render.
+ */
+export function RouteRace({ on = false }: { on?: boolean }) {
   return (
-    <div className="pg pg-race">
+    <div className="pg-race" key={on ? 'scoring' : 'idle'}>
       <div className="pg-race-head">
         <span>Provider</span>
         <span>Latency</span>
@@ -91,12 +101,6 @@ export function RouteRace() {
           </div>
         );
       })}
-      <div className="pg-foot">
-        <span className="pg-foot-live">
-          <i /> SCORED PER REQUEST
-        </span>
-        <span>hedged if the winner slows</span>
-      </div>
     </div>
   );
 }
@@ -116,7 +120,7 @@ const BILLS = [
 
 export function BillingSplit() {
   return (
-    <div className="pg pg-bill">
+    <div className="pg-bill">
       <div className="pg-bill-side">
         <span className="pg-bill-label">Before</span>
         <ul className="pg-bill-list">
@@ -177,9 +181,9 @@ export function CapacityBars() {
           ))}
         </span>
       </div>
-      <div className="pg-foot">
-        <span>p99 latency under sustained load</span>
-      </div>
+      {/* No footer here: the block it sits in already carries the label, and
+          printing it twice was the graphic and its container disagreeing about
+          whose job that is. */}
     </div>
   );
 }

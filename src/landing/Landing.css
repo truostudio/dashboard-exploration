@@ -20,10 +20,44 @@
   --lh-3xl: 52px;
   --lh-2xl: 36px;
 
-  --lp-band-y: 128px;
+  --lp-band-y: 112px;
   --lp-gutter: 40px;
-  --lp-max: 1240px;
+  /* One measure for the whole page. Nav, hero, every band and the footer all
+     resolve to this box, so the logo, the headline and every section label
+     hang off the same left rail — the single biggest difference between a
+     page that looks composed and one that looks stacked. Divisible by 6 and
+     12, so the column rails land on whole pixels. */
+  --lp-max: 1344px;
+  --lp-cols: 12;
+  /* How far content is held off the rail it sits against. */
+  --lp-pad: var(--s-6);
 
+  /* ---- The module ----
+     One column of twelve, and one row of the same height: the unit is a
+     SQUARE, not a column. Every block on the page is a whole number of
+     squares in each direction, so a "shape" is just an arrangement of units
+     — 4×4, 8×3, 2×2, 12×3 — rather than a rectangle at an arbitrary size.
+     This is the whole basis of the layout.
+
+     Derived from the live inner width so the squares stay square at any
+     viewport, without needing to know the number in pixels anywhere. */
+  --lp-row: calc(min(100vw - var(--lp-gutter) * 2, var(--lp-max)) / var(--lp-cols));
+  /* The seam between two blocks. */
+  --lp-seam: var(--s-4);
+  /* The one inset used inside every block. It equals --lp-pad, so text in a
+     bordered block and text in a flat block start on the same vertical —
+     which is the difference between a system and a pile of one-offs. */
+  --lp-inset: var(--lp-pad);
+  /* Vertical rhythm for repeated rows inside a block. */
+  --lp-rowy: var(--s-4);
+
+  /* There are no rails drawn behind the content any more. Ruling the whole
+     page and then floating content over it reads as a wireframe: the grid is
+     visible but nothing is holding onto it. Instead the blocks themselves
+     carry the edges, so the grid is something the page is built out of. */
+  --lp-rail: rgba(13, 14, 13, 0.12);
+
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -32,26 +66,136 @@
   overflow-x: clip;
 }
 
+.lp-invert,
+:root[data-theme='dark'] .landing {
+  --lp-rail: rgba(250, 255, 250, 0.12);
+}
+
+/* ---- The scene ----
+   The signature artifact sits fixed behind the whole document. It is scenery:
+   it never receives pointer events and no content depends on it, so a machine
+   without WebGL gets the same page minus the atmosphere. */
+.lp-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Invert plate: transparent GL discards reveal this instead of the page
+     canvas. RequestStream fades opacity with hero/footer presence. */
+  background: #0D0E0D;
+}
+.lp-scene canvas { display: block; width: 100%; height: 100%; }
+/* Bands sit above the scene; the inverted ones let it through. */
+/* Footer sits above the scene; the plate is solid so type stays clean. */
+.lp-band,
+.lp-hero,
+.lp-footer { position: relative; z-index: 1; }
+
+/* No WebGL: invert bands still need a dark plate (scene normally paints it). */
+.landing:not(:has(.lp-scene canvas)) .lp-hero.lp-invert,
+.landing:not(:has(.lp-scene canvas)) .lp-footer.lp-invert {
+  background: var(--ub-canvas);
+}
+
+/* ============================================================
+   Dither
+   Part of the identity, so it belongs in the page's own surfaces and not
+   only inside the WebGL pass. Three dot fields at 1x, 2x and 4x the cell,
+   each masked to a different reach, so density steps down in discrete
+   bands the way an ordered dither does — never a smooth fade, which would
+   just be a gradient wearing a costume.
+   ============================================================ */
+/* Dot colour follows the surface, not the section: `.lp-band` matched in dark
+   mode too, which painted near-black dots onto a near-black band. */
+.landing {
+  --dither-cell: 4px;
+  --dither-dot: rgba(13, 14, 13, 0.38);
+}
+:root[data-theme='dark'] .landing,
+.landing .lp-invert {
+  --dither-dot: rgba(250, 255, 250, 0.5);
+}
+
+/* Three fields at 4x, 2x and 1x the cell, each on its own layer with its own
+   reach. Mask layers on one element composite into a single mask, so stacking
+   them as background layers produced one flat texture — the steps only exist
+   if the fields are separate boxes. Where all three overlap the field is
+   solid; where only the coarse one survives it is sparse. */
+.dither {
+  position: relative;
+  isolation: isolate;
+  background-image: radial-gradient(circle at center, var(--dither-dot) 0.7px, transparent 0.8px);
+  background-size: calc(var(--dither-cell) * 4) calc(var(--dither-cell) * 4);
+  -webkit-mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 62%, transparent 96%);
+  mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 62%, transparent 96%);
+}
+.dither::before,
+.dither::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at center, var(--dither-dot) 0.7px, transparent 0.8px);
+}
+.dither::before {
+  background-size: calc(var(--dither-cell) * 2) calc(var(--dither-cell) * 2);
+  background-position: 1px 1px;
+  -webkit-mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 26%, transparent 58%);
+  mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 26%, transparent 58%);
+}
+.dither::after {
+  background-size: var(--dither-cell) var(--dither-cell);
+  -webkit-mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 8%, transparent 30%);
+  mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 8%, transparent 30%);
+}
+
+/* A band of dither used as an edge — the join between two sections, and the
+   thing that replaces a hairline rule. */
+.dither-edge {
+  height: calc(var(--lp-row) * 0.75);
+  grid-column: 1 / -1;
+  padding-inline: 0;
+}
+.dither-edge.up { --dither-to: 0deg; }
+
+/* ---- Grain ----
+   A flat fill of any near-black reads as a void, which is what makes a dark
+   page look cheap. A few percent of monochrome noise gives the ground a
+   material — it is the difference between "unlit" and "matte". Absolute
+   rather than fixed so it travels with the page like paper stock. */
+.landing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Behind the content, never over it. Grain laid on top of text and marks
+     makes them muddier to read — it textures the surface, not the page. */
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* ---- Inverted band ----
    Same token names, dark values, regardless of the visitor's theme. This is
    how the page gets contrast without a second palette. */
 .lp-invert {
   color-scheme: dark;
-  --ub-black: #F2F4F7;
-  --ub-black-hover: #DDE1E7;
-  --ub-text-2: #A3ACB7;
-  --ub-text-3: #737C87;
-  --ub-white: #0B0C0E;
-  --ub-canvas: #08090B;
-  --ub-elevated: #101215;
-  --ub-sunken: #0C0E11;
-  --ub-grid: #1C1F24;
-  --ub-hover: rgba(255, 255, 255, 0.05);
-  --ub-hover-2: rgba(255, 255, 255, 0.09);
-  --ub-line: rgba(255, 255, 255, 0.09);
-  --ub-line-strong: rgba(255, 255, 255, 0.16);
-  --ub-border: #3C434C;
-  --ub-border-soft: #272C33;
+  --ub-black: #F1F3F1;
+  --ub-black-hover: #DDDFDD;
+  --ub-text-2: #A7AAA7;
+  --ub-text-3: #7F827F;
+  --ub-white: #0D0E0D;
+  /* Match :root[data-theme='dark'] so invert bands and dark theme share a plate. */
+  --ub-canvas: #0D0E0D;
+  --ub-elevated: #171817;
+  --ub-sunken: #121312;
+  --ub-grid: #222422;
+  --ub-hover: rgba(250, 255, 250, 0.05);
+  --ub-hover-2: rgba(250, 255, 250, 0.09);
+  --ub-line: rgba(250, 255, 250, 0.09);
+  --ub-line-strong: rgba(250, 255, 250, 0.16);
+  --ub-border: #474947;
+  --ub-border-soft: #2B2D2B;
   --ub-blue-ink: #5CC8FF;
   --ub-blue-soft: rgba(31, 182, 255, 0.14);
   --ub-blue-wash: rgba(31, 182, 255, 0.07);
@@ -67,29 +211,30 @@
 /* ============================================================
    Scroll choreography
    ============================================================ */
+/* Content is visible by default. This used to start at opacity 0 and wait for
+   an IntersectionObserver — which meant any section whose reveal never fired
+   rendered as an empty void, and it did exactly that during screenshot passes.
+   The entrance now animates position only: if the observer never runs, the
+   text is still fully readable, just not offset. */
 [data-reveal] {
-  opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity 0.75s var(--ease-out),
-    transform 0.75s var(--ease-out);
+  transform: translateY(20px);
+  transition: transform 0.7s var(--ease-out);
 }
-[data-reveal][data-revealed] {
-  opacity: 1;
-  transform: none;
-}
+[data-reveal][data-revealed] { transform: none; }
 /* Children of a revealed container stagger by position. */
 [data-reveal-group] > * { transition-delay: calc(var(--i, 0) * 0.07s); }
 
-/* Headline lines rise out of a mask, one after the other. */
+/* Headline lines rise, one after the other. They used to sit at translateY(105%)
+   inside an overflow:hidden mask — which renders the entire headline INVISIBLE
+   if the reveal never fires. The rise is now a short offset with no clip, so
+   the worst case is type that never animated, not type that never appeared. */
 .lp-line {
   display: block;
-  overflow: hidden;
   padding-bottom: 0.06em;
 }
 .lp-line > span {
   display: block;
-  transform: translateY(105%);
+  transform: translateY(0.24em);
   transition: transform 0.9s var(--ease-out);
 }
 [data-revealed] .lp-line > span { transform: none; }
@@ -103,18 +248,216 @@
   position: relative;
   padding: var(--lp-band-y) var(--lp-gutter);
 }
-.lp-band + .lp-band:not(.lp-invert) { border-top: 1px solid var(--ub-line); }
+/* The rule between two bands belongs to the container, not the viewport. As a
+   border on .lp-band it ran the full width of the window and cut straight
+   across the gutter, ignoring the measure everything else on the page obeys.
+   It is drawn on the container box instead — see .lp-band::before below. */
+.lp-band + .lp-band:not(.lp-invert)::before { border-top: 1px solid var(--ub-line); }
+
+/* The page's outer edge is the only rule drawn behind content — it is the
+   plate the blocks are set into. Everything else you can see of the grid is
+   an edge of an actual block. */
+.lp-band::before,
+.lp-hero::before,
+.lp-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--lp-gutter);
+  z-index: 0;
+  pointer-events: none;
+  max-width: var(--lp-max);
+  margin-inline: auto;
+  border-left: 1px solid var(--lp-rail);
+  border-right: 1px solid var(--lp-rail);
+}
+.lp-band.lp-no-rails::before { display: none; }
+
+/* ---- The grid ----
+   .lp-inner *is* the twelve columns the rails draw. Every direct child spans
+   whole columns, so section edges land on rails by construction rather than
+   by coincidence. Children carry the inset themselves, which is what lets a
+   block sit against a rail without touching it. */
 .lp-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--lp-max);
   margin: 0 auto;
 }
+.lp-inner > * {
+  min-width: 0;
+  padding-inline: var(--lp-pad);
+}
+
+/* Below the breakpoint there are no rails and nothing to align to, so the
+   whole grid is scoped to the widths where it actually means something. */
+@media (min-width: 1001px) {
+
+.lp-inner {
+  display: grid;
+  grid-template-columns: repeat(var(--lp-cols), minmax(0, 1fr));
+  align-content: start;
+}
+.lp-inner > * { grid-column: 1 / -1; }
+
+/* Section grids re-use the parent's columns rather than inventing their own,
+   so a two-up row divides on a rail instead of on a gap. */
+.lp-sub,
+.lp-integration-grid,
+.lp-infra-grid,
+.lp-story-grid,
+.lp-blog-grid,
+.lp-pricing-grid,
+.lp-stats,
+.lp-proofs,
+.lp-proof,
+.lp-ledger,
+.lp-ledger-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  gap: 0;
+  padding-inline: 0;
+}
+.lp-sub > *,
+.lp-integration-grid > *,
+.lp-infra-grid > *,
+.lp-story-grid > *,
+.lp-blog-grid > *,
+.lp-pricing-grid > *,
+.lp-stats > *,
+.lp-proof > *,
+.lp-ledger-row > * {
+  padding-inline: var(--lp-pad);
+  min-width: 0;
+}
+
+/* ---- Column assignments ----
+   Sections that are not block fields still hang off the twelve columns.
+   Everything that *is* a block field sizes itself in square units instead —
+   see .lp-blocks. */
+.lp-head { grid-column: 1 / 9; }
+.lp-head-split { grid-column: 1 / -1; }
+
+
+.lp-hero-inner {
+  display: grid;
+  grid-template-columns: repeat(var(--lp-cols), minmax(0, 1fr));
+}
+/* Copy takes seven of twelve, the diagram the remaining five: the headline
+   breaks on a rail, and the diagram's left edge is a rail. */
+
+}
+/* ---- end grid ---- */
+
+/* Stacked layout below the breakpoint. */
+@media (max-width: 1000px) {
+  .lp-integration-grid,
+  .lp-infra-grid,
+  .lp-story-grid,
+  .lp-blog-grid,
+  .lp-proof,
+  .lp-ledger-row,
+  .lp-hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+  }
+  .lp-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: var(--s-5);
+  }
+  .lp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+}
+
+/* ---- Section divider ----
+   A scale bar. The old divider was a strip of mono chrome announcing an index,
+   a name and a count, with one of them coloured brand blue for no reason.
+
+   This draws the page's own grid instead: a baseline across the full measure,
+   ticked at each of the twelve column boundaries, with the section number set
+   oversized in the pixel face sitting on the line. It divides, it counts, and
+   it is made of the same twelve columns the section below is built on. No
+   colour — the number is line ink, so it reads as structure, not as an accent. */
+.lp-divider {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-5);
+  margin-bottom: var(--s-9);
+}
+.lp-divider-num {
+  flex: none;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-3xl);
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  color: var(--ub-line-strong);
+}
+/* A band of dither running out across the measure, thinning to nothing. */
+.lp-divider-field {
+  flex: 1;
+  align-self: stretch;
+  min-height: 44px;
+  --dither-to: 90deg;
+}
+
+/* Stacked layout below the breakpoint. */
+@media (max-width: 1000px) {
+  .lp-integration-grid,
+  .lp-infra-grid,
+  .lp-story-grid,
+  .lp-blog-grid,
+  .lp-proof,
+  .lp-ledger-row,
+  .lp-hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-8);
+  }
+  .lp-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+    gap: var(--s-5);
+  }
+  .lp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+}
+
+/* ---- Section spec row ----
+   The dashboard labels every surface it draws; the landing page did not, so
+   sections read as free-floating text blocks. This is the same device as a
+   panel header: index, name, and a rule that runs the full measure. */
+.lp-spec {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding-bottom: var(--s-3);
+  margin-bottom: var(--s-8);
+  border-bottom: 1px solid var(--ub-line-strong);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+}
+/* The section number is not the Uniblock path, a live signal or a chosen
+   option — it is a number. Colouring it brand blue was the same arbitrary
+   accent as the focus cycle. Hierarchy here comes from brightness against the
+   rest of the row, which is already the quietest text on the page. */
+.lp-spec-idx { color: var(--ub-black); }
+.lp-spec-rule {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--ub-line-strong) 0 2px, transparent 2px 6px);
+}
+.lp-spec-meta { flex: none; color: var(--ub-text-3); }
 
 .lp-head {
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
-  margin-bottom: var(--s-10);
+  margin-bottom: var(--s-9);
 }
 .lp-head-flush { margin-bottom: 0; }
 .lp-title {
@@ -151,158 +494,152 @@
 }
 .lp-head-split .lp-head-actions { margin-top: 0; flex: none; }
 
-/* ---- Oversized control for hero and closing CTAs ----
-   Presence comes from the box, not the label: chrome stays 12px mono. */
+/* ---- Oversized control for closing CTAs ----
+   Same .btn system; only the box grows. Label stays the product sans. */
 .btn-lg {
   height: 48px;
   padding: 0 var(--s-6);
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
 }
 
 /* ============================================================
    Nav
    ============================================================ */
+/* ---- Nav ----
+   Sticky on the page rails — same L/R edges as every band. Not a nested card
+   floating inside the measure. Transparent over the hero; opaque once you leave. */
 .lp-nav-wrap {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--ub-canvas-blur);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--ub-line);
-  transition:
-    background-color 0.35s var(--ease-io),
-    border-color 0.35s var(--ease-io);
+  padding: 0 var(--lp-gutter);
+  transition: background-color 0.2s var(--ease-io);
 }
-/* The bar sits in normal flow, so it can't be transparent over the hero —
-   a transparent bar would show the page canvas, not the hero behind it.
-   Instead it takes the hero's own dark surface and reads as one field, then
-   resolves into the usual blurred canvas bar once you scroll away. */
-.lp-nav-wrap.on-hero {
-  background: var(--ub-canvas);
-  backdrop-filter: none;
+.lp-nav-wrap.on-hero { background: transparent; }
+.lp-nav-wrap:not(.on-hero) { background: var(--ub-canvas); }
+
+.lp-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  height: 52px;
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  padding: 0 var(--lp-pad);
+  border-left: 1px solid var(--lp-rail);
+  border-right: 1px solid var(--lp-rail);
+  border-bottom: 1px solid var(--ub-line);
+}
+.lp-nav-wrap.on-hero .lp-nav {
   border-bottom-color: transparent;
 }
 
-.lp-backed {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-3);
-  height: 34px;
-  padding: 0 var(--lp-gutter);
-  border-bottom: 1px solid var(--ub-line);
-  /* The wash is translucent, so it needs an opaque base of its own palette —
-     otherwise an inverted strip lets the light page canvas through. */
-  background-color: var(--ub-canvas);
-  background-image: linear-gradient(var(--ub-blue-wash), var(--ub-blue-wash));
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-}
-.lp-backed-label { letter-spacing: 0.14em; color: var(--ub-text-3); }
-.lp-backed-msg { color: var(--ub-blue-ink); }
-.lp-backed-msg:hover { text-decoration: underline; }
-
-.lp-nav {
-  display: flex;
-  align-items: center;
-  gap: var(--s-6);
-  height: 72px;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--lp-gutter);
-}
-.lp-brand { display: flex; align-items: center; flex: none; }
-.lp-brand img { display: block; width: 112px; height: auto; }
-
-.lp-nav-links { display: flex; align-items: center; gap: var(--s-1); }
-.lp-nav-link {
-  position: relative;
+.lp-brand {
   display: inline-flex;
   align-items: center;
-  height: var(--ctl-h);
+  flex: none;
+  min-width: 0;
+}
+.lp-brand img { display: block; width: 88px; height: auto; }
+
+.lp-nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.lp-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: var(--ctl-h-sm);
   padding: 0 var(--s-3);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   font-weight: 500;
   color: var(--ub-text-2);
   transition: color 0.15s var(--ease-io);
-}
-.lp-nav-link::before {
-  content: '';
-  position: absolute;
-  left: var(--s-3);
-  right: var(--s-3);
-  bottom: 4px;
-  height: 1px;
-  background: var(--ub-blue);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.28s var(--ease-out);
+  white-space: nowrap;
 }
 .lp-nav-link:hover { color: var(--ub-black); }
-.lp-nav-link:hover::before { transform: none; }
 
-.lp-nav-actions { display: flex; align-items: center; gap: var(--s-2); margin-left: auto; }
+.lp-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+  flex: none;
+}
+.lp-nav-actions .btn {
+  height: var(--ctl-h-sm);
+  transition:
+    background-color 0.08s var(--ease-out),
+    border-color 0.08s var(--ease-out),
+    color 0.08s var(--ease-out),
+    box-shadow 0.08s var(--ease-out),
+    transform 0.06s var(--ease-out);
+}
+.lp-nav-actions .btn::after {
+  transition: opacity 0.08s var(--ease-out);
+}
 .lp-nav-toggle { display: none; }
 .lp-nav-scrim { position: fixed; inset: 0; z-index: 39; background: var(--ub-scrim); }
 
 /* ============================================================
    1 · Hero
    ============================================================ */
+/* Transparent so the network reads through — this is the one place the
+   signature artifact gets the whole frame. The WebGL pass clears to the
+   invert plate (see RequestStream) so light theme never shows through the
+   dither holes while type still uses invert ink. */
+.lp-hero { background: transparent; }
 .lp-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  /* The announcement strip (34px) and nav (72px) sit above this in flow. */
-  min-height: calc(100svh - 106px);
+  /* The nav is 52px flush to the top — no floating wrap padding. */
+  min-height: calc(100svh - 52px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 var(--lp-gutter);
 }
 
-/* Engineering grid, faded out at the edges so it never becomes wallpaper. */
-.lp-hero-field {
-  position: absolute;
-  inset: -1px;
-  z-index: -2;
-  background-image:
-    linear-gradient(var(--ub-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ub-line) 1px, transparent 1px);
-  background-size: 64px 64px;
-  -webkit-mask-image: radial-gradient(ellipse 78% 62% at 50% 42%, #000 25%, transparent 78%);
-  mask-image: radial-gradient(ellipse 78% 62% at 50% 42%, #000 25%, transparent 78%);
-}
-/* Brand light behind the routing field. */
-.lp-hero-glow {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 46% 44% at 74% 46%, var(--ub-blue-glow), transparent 68%),
-    radial-gradient(ellipse 60% 50% at 12% 88%, rgba(124, 92, 255, 0.10), transparent 70%);
-  filter: blur(30px);
-  animation: lpDrift 18s var(--ease-io) infinite alternate;
-}
-@keyframes lpDrift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
-}
 
 .lp-hero-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 1400px;
+  max-width: var(--lp-max);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--s-9);
   flex: 1;
-  padding: var(--s-9) 0;
+  display: flex;
+  flex-direction: column;
+  /* Type on the floor, so the network keeps the open space above it. */
+  justify-content: flex-end;
+  padding-block: var(--s-9);
 }
-.lp-hero-copy { display: flex; flex-direction: column; gap: var(--s-7); }
+.lp-hero-inner > * { min-width: 0; padding-inline: var(--lp-pad); }
+
+.lp-hero-title { max-width: 16ch; }
+.lp-hero-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-6);
+  margin-top: var(--s-7);
+  max-width: 42rem;
+}
+.lp-hero-act { display: flex; align-items: center; gap: var(--s-3); flex: none; flex-wrap: wrap; }
+.lp-caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--ub-blue);
+  animation: lpBlink 1.05s steps(1) infinite;
+}
+@keyframes lpBlink { 50% { opacity: 0; } }
 .lp-hero h1 {
   font-size: var(--fs-6xl);
   line-height: var(--lh-6xl);
@@ -316,6 +653,20 @@
   color: var(--ub-text-2);
   max-width: 54ch;
 }
+/* The request, typed. Sits on the same left edge as the headline. */
+.lp-hero-cmd {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 20px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .lp-hero-cta { display: flex; flex-wrap: wrap; gap: var(--s-3); }
 .lp-hero-graphic { min-width: 0; }
 
@@ -362,15 +713,17 @@
 
 /* ---- Hero instrument strip ---- */
 .lp-hero-status {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: var(--s-6);
   flex-wrap: wrap;
-  max-width: 1400px;
+  max-width: var(--lp-max);
   width: 100%;
   margin: 0 auto;
-  padding: var(--s-5) 0;
-  border-top: 1px solid var(--ub-line);
+  padding: var(--s-5) var(--s-6);
+  border-top: 1px solid var(--ub-line-strong);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
@@ -391,12 +744,7 @@
 /* ============================================================
    2 · Optimized integration
    ============================================================ */
-.lp-integration-grid {
-  display: grid;
-  grid-template-columns: minmax(min(380px, 100%), 1fr) minmax(min(440px, 100%), 1.15fr);
-  gap: var(--s-10);
-  align-items: center;
-}
+.lp-integration-grid { align-items: start; }
 .lp-figure {
   display: block;
   font-family: var(--font-pixel);
@@ -411,9 +759,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-6);
-  padding: var(--s-7);
-  border: 1px solid var(--ub-line-strong);
-  background-color: var(--ub-elevated);
+  padding: var(--lp-inset);
 }
 .lp-gantt-title {
   font-family: var(--font-mono);
@@ -465,21 +811,25 @@
 /* ============================================================
    3 · We run the infra
    ============================================================ */
-.lp-infra-grid {
-  display: grid;
-  grid-template-columns: minmax(min(420px, 100%), 1.3fr) minmax(min(260px, 100%), 1fr);
-  gap: var(--s-10);
-  align-items: center;
-}
+.lp-infra-grid { align-items: start; }
+/* The panel it sits in already draws the box and the corner ticks. A second
+   border and a second set of marks inside it was the nested-frame look. */
+/* Without this the block's flex column shrink-wraps the gauge to its content
+   width and `align-items: center` centres nothing — the whole graphic sat
+   left of centre inside its block. */
 .lp-infra-gauge {
+  width: 100%;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--s-5);
-  padding: var(--s-9) var(--s-6);
-  border: 1px solid var(--ub-line-strong);
-  background-color: var(--ub-elevated);
+  height: 100%;
+  padding: var(--lp-inset);
 }
+.lp-infra-gauge::before,
+.lp-infra-gauge::after { display: none; }
 .lp-infra-gauge .meter-num {
   font-family: var(--font-pixel);
   font-size: var(--fs-2xl);
@@ -519,17 +869,31 @@
   to   { transform: translate3d(-50%, 0, 0); }
 }
 
-.lp-trusted { padding-top: var(--s-10); padding-bottom: var(--s-10); }
-.lp-trusted-title {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.lp-trusted { padding-top: var(--s-9); padding-bottom: var(--s-9); }
+
+/* ---- Customer wall ----
+   Six blocks of 2×2 units: twelve across, two down, no remainder. */
+.lp-wall {
+  border-top: 1px solid var(--ub-line);
+  border-left: 1px solid var(--ub-line);
+}
+.lp-wall-brick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--s-3);
+  border-right: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--ub-text-3);
   text-align: center;
-  margin-bottom: var(--s-8);
+  overflow-wrap: anywhere;
+  transition: background-color 0.2s var(--ease-io), color 0.2s var(--ease-io);
 }
+.lp-wall-brick:hover { background: var(--ub-sunken); color: var(--ub-black); }
+
 .lp-logo {
   display: inline-flex;
   align-items: center;
@@ -557,6 +921,536 @@
   background-color: var(--ub-elevated);
   box-shadow: var(--shadow-md);
 }
+
+/* ============================================================
+   Blocks
+   The product is called Uniblock, so the page is built the way the name
+   says: one module square is the brick, and every surface is a whole
+   number of bricks snapped into the twelve columns. Nothing is sized to
+   fit its contents — contents are sized to fit the block.
+   ============================================================ */
+
+/* ============================================================
+   Windows
+   Every drawn surface is a window in a tiling manager: title bar, body,
+   status line. They share edges instead of floating, exactly one is focused,
+   and focus is what animates. Blocks, but not a symmetrical grid of them.
+   ============================================================ */
+.win {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: border-color 0.3s var(--ease-io), box-shadow 0.3s var(--ease-io);
+}
+/* Drawn blocks. `flat` gets neither, because prose does not need a box. */
+.win-panel {
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line-strong);
+}
+
+
+/* There is no focus state. Blue is reserved for what blue means everywhere
+   else on the page: the Uniblock path. A block does not go blue for its turn. */
+
+/* ---- Figure caption ----
+   A graphic with no words is naked. This is a real explanation of what the
+   thing below shows — not a title bar, which is why it has no rule, no badge
+   and no controls. */
+.win-cap {
+  flex: none;
+  padding: var(--lp-inset) var(--lp-inset) 0;
+}
+.win-cap-title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.win-cap-text {
+  margin-top: var(--s-1);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+  max-width: 62ch;
+}
+
+.win-body { flex: 1; min-width: 0; min-height: 0; }
+.win-body.bare { display: flex; flex-direction: column; justify-content: center; }
+.win-body:not(.bare) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--lp-inset);
+}
+
+.win-status {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex: none;
+  padding: var(--s-3) var(--lp-inset);
+  border-top: 1px solid var(--ub-line);
+  background: var(--ub-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+}
+.win-status > :last-child { margin-left: auto; text-align: right; }
+
+/* ---- Text buffers ---- */
+.win-note-title {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.win-note-body {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+}
+.win-note .lp-proof-cta { margin-top: var(--s-2); }
+/* Inside a drawn window, a short buffer centres — that is what an editor does
+   with a short file. A flat block has no box, so centring just makes the text
+   float in the middle of nothing: it starts at the top edge, level with
+   whatever it sits beside. */
+.win-panel.win-note .win-body { justify-content: center; }
+.win-flat .win-body { justify-content: flex-start; padding: var(--lp-inset); }
+
+/* ---- Block field ----
+   A grid whose rows are exactly as tall as its columns are wide, so every
+   cell is a square. Children declare how many squares they occupy with --w
+   and --h; nothing is ever sized to its contents. Arrangements of squares
+   make the shapes. */
+.lp-blocks {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  /* The square is the *minimum*, not a cage. A row that has to hold more than
+     its units allow grows rather than clipping its contents — the alternative
+     is silently cropped graphics, which is worse than a block that is one
+     unit and a bit tall. */
+  /* Width is the module; height is the content.
+
+     Blocks used to be a fixed number of units tall in both directions, which
+     is why graphics sat in acres of nothing — a 3-unit box holding 180px of
+     diagram. The square unit is what the page is measured across; forcing it
+     vertically as well only produced empty boxes. Rows now take the height of
+     the tallest block in them, and blocks in a row match. */
+  grid-auto-rows: auto;
+
+  /* ---- The seam ----
+     Blocks are set apart rather than butted edge to edge. But `column-gap` on
+     a subgrid resizes its tracks, which walks every block off the page's
+     column lines — that is why nothing looked aligned. So the columns keep
+     zero gap and stay exactly where the parent put them, and each block insets
+     itself by half a seam instead. The field bleeds outward by the same half,
+     so the outermost block edges land back on the column lines.
+
+     Row gaps are safe: they do not touch column geometry. */
+  column-gap: 0;
+  row-gap: var(--lp-seam);
+  margin-inline: calc(var(--lp-seam) / -2);
+  padding-inline: 0;
+}
+.lp-blocks > * { margin-inline: calc(var(--lp-seam) / 2); }
+/* The workspace carries the most blocks, so its rows need more between them
+   than a two-block row does. */
+.lp-workspace { row-gap: var(--s-8); }
+
+/* A wall, a course of figures and a plan row are each meant to be continuous —
+   their internal rules divide one object rather than separating several. */
+.lp-wall,
+.lp-stats,
+.lp-pricing-grid { row-gap: 0; margin-inline: 0; }
+.lp-wall > *,
+.lp-stats > *,
+.lp-pricing-grid > * { margin-inline: 0; }
+.lp-blocks > * {
+  grid-column: span var(--w, 12);
+  padding-inline: 0;
+  min-width: 0;
+  min-height: 0;
+}
+/* The two things that genuinely are squares stay squares, by ratio rather
+   than by row count: a wall brick and a lattice cell. */
+.lp-wall-brick { aspect-ratio: 1; }
+/* Blocks that are bare prose rather than a drawn window still need their
+   text held off the unit edge. */
+.lp-blocks > .lp-story-figures,
+.lp-blocks > .lp-story-body,
+.lp-blocks > .lp-stat,
+.lp-blocks > .lp-lead,
+.lp-blocks > .lp-blog-rest { padding-inline: var(--lp-pad); }
+
+/* ============================================================
+   Dithered block rule
+   The join between sections, spelled in blue pixels on an 8× subdivision of
+   the module. See BlockRule.tsx.
+   ============================================================ */
+.lp-rule {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-auto-rows: var(--lp-row);
+  padding-inline: 0;
+}
+/* Each cell is one module; the block inside it is sized by its level, so
+   full-size neighbours meet with no seam and read as a single larger block. */
+.lp-rule i {
+  display: block;
+  align-self: center;
+  justify-self: center;
+  width: var(--s, 0%);
+  aspect-ratio: 1;
+  background: var(--ub-blue);
+  transition: width 0.55s var(--ease-out);
+}
+
+.lp-rule-band {
+  padding-block: var(--s-9);
+  border: none !important;
+}
+.lp-rule-band::before { display: none; }
+
+/* ---- Plan table ----
+   Plans across, capabilities down. Every value shares a baseline because it
+   shares a row — the ragged-column problem in a four-card pricing block cannot
+   happen in a table. */
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.plan-table th,
+.plan-table td {
+  padding: var(--lp-rowy) var(--lp-inset);
+  text-align: left;
+  vertical-align: baseline;
+  border-top: 1px solid var(--ub-line);
+}
+.plan-table thead th { border-top: none; padding-top: var(--lp-inset); }
+.plan-table tbody th {
+  font-weight: 400;
+  color: var(--ub-text-3);
+  white-space: nowrap;
+}
+.plan-table td { font-family: var(--font-mono); color: var(--ub-black); }
+.plan-th-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ub-text-3);
+}
+.plan-name {
+  display: block;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+}
+.plan-price {
+  display: block;
+  margin-top: var(--s-1);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+}
+.plan-price em {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-style: normal;
+  color: var(--ub-text-3);
+  margin-left: var(--s-1);
+}
+.plan-act td { padding-top: var(--lp-inset); padding-bottom: var(--lp-inset); }
+.plan-cta { width: 100%; }
+.lp-bill-toggle { gap: var(--s-4); }
+
+/* ---- Uptime strip ---- */
+.up { display: flex; flex-direction: column; gap: var(--s-5); padding: var(--lp-inset); }
+.up-read { display: flex; align-items: baseline; gap: var(--s-3); }
+.up-num {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-2xl);
+  line-height: 1;
+}
+.up-unit {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+}
+.up-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 84px;
+}
+.up-strip i {
+  flex: 1;
+  min-width: 0;
+  height: var(--h, 100%);
+  background: var(--ub-border);
+  transform-origin: bottom center;
+  /* Instant ink, short physical punch — scrubbing 90 days should feel like
+     a readout, not a crossfade. */
+  transition: transform 0.1s var(--ease-out);
+}
+.up-strip i.down { background: var(--ub-warning); }
+.up-strip i:hover {
+  background: var(--ub-blue);
+  transform: scaleY(1.16);
+}
+.up-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+}
+
+/* Chain bricks carry artwork, so they sit on a plate rather than a fill. */
+.lp-chain-brick img { width: 22px; height: 22px; background: var(--ub-plate); }
+.lp-chain-brick { filter: grayscale(1); opacity: 0.6; transition: filter 0.3s var(--ease-io), opacity 0.3s var(--ease-io); }
+.lp-chain-brick:hover { filter: none; opacity: 1; }
+
+/* ---- Live log ---- */
+.log {
+  display: flex;
+  flex-direction: column;
+  /* Newest at the bottom, buffer anchored there — the way a tail fills. */
+  justify-content: flex-end;
+  height: 100%;
+  padding: var(--lp-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: 20px;
+  white-space: nowrap;
+}
+.log-line {
+  display: grid;
+  grid-template-columns: 92px 34px minmax(0, 210px) minmax(0, 104px) minmax(0, 104px) minmax(0, 1fr) 62px 64px;
+  gap: var(--s-3);
+  /* Each line arrives already in place; the buffer scrolls, the text doesn't
+     slide, which is how a real tail reads. */
+  animation: logIn 0.22s var(--ease-out);
+}
+@keyframes logIn { from { opacity: 0; } }
+.log-at { color: var(--ub-text-3); }
+.log-verb { color: var(--ub-text-3); }
+.log-route { color: var(--ub-black); overflow: hidden; text-overflow: ellipsis; }
+.log-chain,
+.log-prov { color: var(--ub-text-2); overflow: hidden; text-overflow: ellipsis; }
+.log-bar { align-self: center; height: 4px; background: var(--ub-grid); }
+.log-bar i { display: block; height: 100%; background: var(--ub-border); }
+.log-line:last-child .log-bar i { background: var(--ub-blue); }
+.log-ms { color: var(--ub-text-3); text-align: right; font-variant-numeric: tabular-nums; }
+.log-flag { color: var(--ub-success); text-align: right; }
+.log-flag.hedge { color: var(--ub-blue-ink); }
+
+
+
+/* ---- Lattice ----
+   A field of module-square bricks with shared hairline edges. Used for the
+   provider mesh, the customer wall and the chain field, so those three read
+   as the same construction at different scales rather than three graphics. */
+.lp-lattice {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
+  border-top: 1px solid var(--ub-line);
+  border-left: 1px solid var(--ub-line);
+}
+.lp-brick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-right: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+  transition:
+    background-color 0.4s var(--ease-io),
+    box-shadow 0.4s var(--ease-io);
+}
+/* A brick that is set rather than empty. */
+.lp-brick.set { background: var(--ub-sunken); }
+.lp-brick.on {
+  background: var(--ub-blue-wash);
+  box-shadow: inset 0 0 0 1px var(--ub-blue-border);
+}
+
+/* ---- Assembly ----
+   The one piece of motion the name earns: a wall does not fade in, it gets
+   built. Bricks drop the last few pixels into place on a diagonal stagger,
+   so the eye reads courses being laid rather than a graphic appearing. Used
+   by every lattice on the page, which is what ties them together as one
+   construction rather than three unrelated diagrams. */
+.lp-brick,
+.lp-wall-brick {
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 0.5s var(--ease-out),
+    transform 0.5s var(--ease-out),
+    background-color 0.4s var(--ease-io),
+    box-shadow 0.4s var(--ease-io);
+  transition-delay: calc(var(--i, 0) * 0.028s);
+}
+[data-revealed] .lp-brick,
+[data-revealed] .lp-wall-brick { transform: none; }
+/* The container still needs [data-reveal] so the observer marks it, but the
+   bricks carry the entrance — the wall itself must not also slide. */
+.lp-wall[data-reveal] { transform: none; }
+
+/* ---- One box per block ----
+   These graphics predate the window system and each drew its own frame. Inside
+   a window that frame is a second box around the first, which is what made the
+   page look wrapped in itself. The window owns the border, the fill and the
+   corner ticks; the graphic owns only its contents. */
+.win-body .pg,
+.win-body .lp-gantt,
+.win-body .lp-infra-gauge,
+.win-body .lp-enterprise {
+  border: none;
+  background: none;
+  box-shadow: none;
+  height: 100%;
+}
+.win-body .pg::before, .win-body .pg::after,
+.win-body .lp-gantt::before, .win-body .lp-gantt::after,
+.win-body .lp-infra-gauge::before, .win-body .lp-infra-gauge::after,
+.win-body .lp-enterprise::before, .win-body .lp-enterprise::after,
+/* The lattice keeps its rules — they divide bricks, they are not a frame —
+   but the corner ticks belong to the window around it. */
+.win-body .lp-lattice::before, .win-body .lp-lattice::after {
+  display: none;
+}
+
+/* ---- Registration ticks ----
+   The dashboard marks every drawn surface at its corners, and the landing
+   page does the same. All four corners, so a block reads as a placed object. */
+.win-panel,
+.lp-quote,
+.lp-media-lead,
+.lp-faq { position: relative; }
+.win-panel::before, .win-panel::after,
+.lp-quote::before, .lp-quote::after,
+.lp-media-lead::before, .lp-media-lead::after,
+.lp-faq::before, .lp-faq::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid var(--ub-blue);
+  opacity: 0.5;
+}
+/* Two pseudo-elements, four corners: each clips a full-size box down to a
+   10px L at two opposite corners. */
+.win-panel::before, .lp-quote::before, .lp-media-lead::before, .lp-faq::before {
+  clip-path: polygon(
+    0 0, 10px 0, 10px 1px, 1px 1px, 1px 10px, 0 10px,
+    0 100%, 10px 100%, 10px calc(100% - 1px), 1px calc(100% - 1px), 1px calc(100% - 10px), 0 calc(100% - 10px)
+  );
+}
+.win-panel::after, .lp-quote::after, .lp-media-lead::after, .lp-faq::after {
+  clip-path: polygon(
+    100% 0, calc(100% - 10px) 0, calc(100% - 10px) 1px, calc(100% - 1px) 1px, calc(100% - 1px) 10px, 100% 10px,
+    100% 100%, calc(100% - 10px) 100%, calc(100% - 10px) calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) calc(100% - 10px), 100% calc(100% - 10px)
+  );
+}
+
+/* ---- Lattice ----
+   A field of module-square bricks with shared hairline edges. Used for the
+   provider mesh, the customer wall and the chain field, so those three read
+   as the same construction at different scales rather than three graphics. */
+.lp-lattice {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
+  border-top: 1px solid var(--ub-line);
+  border-left: 1px solid var(--ub-line);
+}
+.lp-brick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border-right: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+  transition:
+    background-color 0.4s var(--ease-io),
+    box-shadow 0.4s var(--ease-io);
+}
+/* A brick that is set rather than empty. */
+.lp-brick.set { background: var(--ub-sunken); }
+.lp-brick.on {
+  background: var(--ub-blue-wash);
+  box-shadow: inset 0 0 0 1px var(--ub-blue-border);
+}
+
+/* ---- Assembly ----
+   The one piece of motion the name earns: a wall does not fade in, it gets
+   built. Bricks drop the last few pixels into place on a diagonal stagger,
+   so the eye reads courses being laid rather than a graphic appearing. Used
+   by every lattice on the page, which is what ties them together as one
+   construction rather than three unrelated diagrams. */
+.lp-brick,
+.lp-wall-brick {
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 0.5s var(--ease-out),
+    transform 0.5s var(--ease-out),
+    background-color 0.4s var(--ease-io),
+    box-shadow 0.4s var(--ease-io);
+  transition-delay: calc(var(--i, 0) * 0.028s);
+}
+[data-revealed] .lp-brick,
+[data-revealed] .lp-wall-brick { transform: none; }
+/* The container still needs [data-reveal] so the observer marks it, but the
+   bricks carry the entrance — the wall itself must not also slide. */
+.lp-wall[data-reveal] { transform: none; }
+
+/* ---- One box per block ----
+   These graphics predate the window system and each drew its own frame. Inside
+   a window that frame is a second box around the first, which is what made the
+   page look wrapped in itself. The window owns the border, the fill and the
+   corner ticks; the graphic owns only its contents. */
+.win-body .pg,
+.win-body .lp-gantt,
+.win-body .lp-infra-gauge,
+.win-body .lp-enterprise {
+  border: none;
+  background: none;
+  box-shadow: none;
+  height: 100%;
+}
+.win-body .pg::before, .win-body .pg::after,
+.win-body .lp-gantt::before, .win-body .lp-gantt::after,
+.win-body .lp-infra-gauge::before, .win-body .lp-infra-gauge::after,
+.win-body .lp-enterprise::before, .win-body .lp-enterprise::after,
+/* The lattice keeps its rules — they divide bricks, they are not a frame —
+   but the corner ticks belong to the window around it. */
+.win-body .lp-lattice::before, .win-body .lp-lattice::after {
+  display: none;
+}
+
+/* ---- Registration ticks ----
+   The dashboard marks every drawn surface at its corners; the landing page
+   was the only place in the system where a panel had an unannotated edge.
+   All four corners, not two, so a block reads as a placed object. Applied
+   from the stylesheet rather than by adding .marks in a dozen components,
+   because "which things are instruments" is a system-level decision. */
+/* Blocks that need a positioning context keep one; none of them draw ticks. */
+.pg,
+.lp-gantt,
+.lp-infra-gauge,
+.lp-enterprise,
+.lp-plan,
+.lp-lattice,
+.lp-quote,
+.lp-faq { position: relative; }
+
 .pg-foot {
   display: flex;
   align-items: center;
@@ -574,24 +1468,15 @@
 .pg-foot-live i { width: 6px; height: 6px; background: var(--ub-blue); animation: lpPulse 2s var(--ease-io) infinite; }
 .pg-foot > span:last-child { margin-left: auto; }
 
-/* ---- Provider mesh ---- */
-.pg-mesh-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(72px, 100%), 1fr));
-  border-top: 1px solid var(--ub-line);
-  border-left: 1px solid var(--ub-line);
+/* ---- Provider mesh ----
+   The panel spans eight columns and the mesh is eight bricks wide, so a
+   brick edge is a column edge. Twenty-four providers fill three whole rows:
+   no ragged last row, which is most of what "snappy" means here. */
+.pg-mesh-cell .avatar-art {
+  filter: grayscale(1);
+  opacity: 0.55;
+  transition: filter 0.4s var(--ease-io), opacity 0.4s var(--ease-io);
 }
-.pg-mesh-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  border-right: 1px solid var(--ub-line);
-  border-bottom: 1px solid var(--ub-line);
-  transition: background-color 0.4s var(--ease-io);
-}
-.pg-mesh-cell .avatar-art { filter: grayscale(1); opacity: 0.55; transition: filter 0.4s var(--ease-io), opacity 0.4s var(--ease-io); }
-.pg-mesh-cell.on { background: var(--ub-blue-wash); box-shadow: inset 0 0 0 1px var(--ub-blue-border); }
 .pg-mesh-cell.on .avatar-art,
 .pg-mesh-cell:hover .avatar-art { filter: none; opacity: 1; }
 
@@ -602,7 +1487,7 @@
   grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)) 76px;
   align-items: center;
   gap: var(--s-3);
-  padding: var(--s-3) var(--s-5);
+  padding: var(--lp-rowy) var(--lp-inset);
 }
 .pg-race-head {
   border-bottom: 1px solid var(--ub-line);
@@ -626,16 +1511,23 @@
   min-width: 0;
 }
 .pg-score { height: 6px; background: var(--ub-grid); display: block; }
+/* An animation rather than a transition, because the race is remounted every
+   time its window takes focus and a transition would already be at its end
+   state on the first paint — nothing would move. */
 .pg-score-fill {
   display: block;
   height: 100%;
   background: var(--ub-border);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.8s var(--ease-out);
-  transition-delay: var(--d, 0s);
 }
-[data-revealed] .pg-score-fill { transform: none; }
+[data-revealed] .pg-score-fill {
+  animation: pgScore 0.8s var(--ease-out) var(--d, 0s) both;
+}
+@keyframes pgScore {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
 .pg-race-row.on .pg-score-fill { background: var(--ub-blue); }
 .pg-race-flag {
   font-family: var(--font-mono);
@@ -652,7 +1544,7 @@
   /* Both labels start at the same baseline; only the arrow centres. */
   align-items: start;
   gap: var(--s-4);
-  padding: var(--s-6);
+  padding: var(--lp-inset);
 }
 .pg-bill-arrow { align-self: center; }
 .pg-bill-side { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
@@ -705,7 +1597,7 @@
 
 /* ---- Capacity bars ---- */
 .pg-cap { display: flex; flex-direction: column; }
-.pg-cap-row { display: flex; align-items: flex-end; gap: var(--s-4); padding: var(--s-5) var(--s-5) 0; }
+.pg-cap-row { display: flex; align-items: flex-end; gap: var(--s-4); padding: var(--lp-inset) var(--lp-inset) 0; }
 .pg-cap-label {
   width: 72px;
   flex: none;
@@ -729,7 +1621,7 @@
 .pg-cap .pg-foot { margin-top: var(--s-5); }
 
 /* ---- Agent flow ---- */
-.pg-flow { display: flex; align-items: stretch; padding: var(--s-6); gap: 0; }
+.pg-flow { display: flex; align-items: stretch; padding: var(--lp-inset); gap: 0; }
 .pg-flow-stage {
   position: relative;
   flex: 1;
@@ -762,7 +1654,7 @@
 .pg-flow { gap: var(--s-4); }
 
 /* ---- Event normalisation ---- */
-.pg-norm { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); align-items: center; gap: var(--s-3); padding: var(--s-6); }
+.pg-norm { display: grid; grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr); align-items: center; gap: var(--s-3); padding: var(--lp-inset); }
 .pg-norm-in { display: flex; flex-direction: column; gap: var(--s-2); }
 .pg-norm-out { display: flex; flex-direction: column; gap: var(--s-2); align-items: flex-start; }
 .pg-norm-chip {
@@ -780,19 +1672,28 @@
 .pg-norm-rail { height: 1px; background: var(--ub-line-strong); }
 .pg-norm-sig { font-family: var(--font-mono); font-size: var(--fs-micro); line-height: var(--lh-micro); color: var(--ub-text-3); }
 
-.lp-explorer-tabs { padding: 0 var(--s-5); }
+.lp-explorer-tabs { padding: 0 var(--lp-inset); }
 .lp-explorer-tabs .sgm-tab { border-bottom-color: var(--ub-line); }
 .lp-endpoint {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, 1fr);
   align-items: start;
+  justify-items: start;
   gap: var(--s-4);
-  padding: var(--s-4) var(--s-5);
+  padding: var(--lp-rowy) var(--lp-inset);
   border-top: 1px solid var(--ub-line);
   transition: background-color 0.16s var(--ease-io);
 }
 .lp-endpoint:first-of-type { border-top: none; }
 .lp-endpoint:hover { background: var(--ub-hover); }
+/* The badge fills its column and centres its own label, so the column of
+   badges reads as one aligned run rather than four ragged chips. */
+.lp-endpoint > .badge {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .lp-endpoint-path {
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
@@ -811,18 +1712,18 @@
 /* ---- Proof rows ----
    Four claims, four demonstrations, alternating sides. No card chrome: the
    visual carries the argument and the copy annotates it. */
-.lp-proofs {
-  display: flex;
-  flex-direction: column;
-  gap: 120px;
-}
+/* Proofs are separated by a rule and even padding rather than a 120px void.
+   The gap was reading as "we ran out of content" instead of as a beat. */
+.lp-proofs { border-top: 1px solid var(--ub-line-strong); }
+/* Copy and demonstration start on the same line. Centring them meant every
+   row registered differently against the one above, which is what made the
+   page read as loose even where the columns were right. */
 .lp-proof {
-  display: grid;
-  grid-template-columns: minmax(min(320px, 100%), 0.85fr) minmax(min(440px, 100%), 1.15fr);
-  gap: var(--s-10);
-  align-items: center;
+  position: relative;
+  align-items: start;
+  padding-block: var(--s-10);
+  border-bottom: 1px solid var(--ub-line);
 }
-.lp-proof.lp-flip > .lp-proof-copy { order: 2; }
 .lp-proof-copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s-4); }
 .lp-proof-index {
   font-family: var(--font-pixel);
@@ -850,11 +1751,8 @@
    A different shape again: oversized figure, claim, diagram, hairline-ruled. */
 .lp-ledger { border-top: 1px solid var(--ub-line-strong); }
 .lp-ledger-row {
-  display: grid;
-  grid-template-columns: 128px minmax(min(300px, 100%), 1fr) minmax(min(320px, 100%), 1.1fr);
-  gap: var(--s-8);
   align-items: start;
-  padding: var(--s-10) 0;
+  padding-block: var(--s-10);
   border-bottom: 1px solid var(--ub-line);
 }
 .lp-ledger-num {
@@ -908,22 +1806,27 @@
 .lp-coverage-marquees {
   display: flex;
   flex-direction: column;
-  gap: var(--s-3);
   margin-bottom: var(--s-9);
 }
+.lp-coverage-marquees .lp-marquee + .lp-marquee { border-top: none; }
+/* Chains travel as a continuous course of bricks with shared edges, rather
+   than as detached chips with a gap between them. */
 .lp-chain {
   display: inline-flex;
   align-items: center;
   gap: var(--s-3);
   flex: none;
-  height: 56px;
+  height: 72px;
   padding: 0 var(--s-5);
-  margin-right: var(--s-3);
-  border: 1px solid var(--ub-line);
+  border-right: 1px solid var(--ub-line);
   background: var(--ub-elevated);
-  transition: border-color 0.2s var(--ease-io), background-color 0.2s var(--ease-io);
+  transition: background-color 0.2s var(--ease-io), color 0.2s var(--ease-io);
 }
-.lp-chain:hover { border-color: var(--ub-blue-border); background: var(--ub-sunken); }
+.lp-chain:hover { background: var(--ub-sunken); }
+.lp-coverage-marquees .lp-marquee {
+  border-top: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+}
 .lp-chain img { width: 22px; height: 22px; flex: none; background: var(--ub-plate); }
 .lp-chain-name {
   font-size: var(--fs-micro);
@@ -939,13 +1842,9 @@
 }
 
 /* ---- Oversized figures ---- */
-.lp-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  border-top: 1px solid var(--ub-line-strong);
-}
+.lp-stats { border-top: 1px solid var(--ub-line-strong); }
 .lp-stat {
-  padding: var(--s-7) var(--s-6) var(--s-6) 0;
+  padding-block: var(--s-7) var(--s-6);
   border-right: 1px solid var(--ub-line);
 }
 .lp-stat:last-child { border-right: none; }
@@ -970,13 +1869,7 @@
 /* ============================================================
    8 · Customer story (inverted)
    ============================================================ */
-.lp-story-grid {
-  display: grid;
-  grid-template-columns: minmax(min(280px, 100%), 0.8fr) minmax(min(420px, 100%), 1.2fr);
-  gap: var(--s-10);
-  align-items: start;
-  margin-bottom: var(--s-10);
-}
+.lp-story-grid { align-items: start; margin-bottom: var(--s-10); }
 /* The result is the headline, so the figures get display scale. */
 .lp-story-figures { display: flex; flex-direction: column; gap: var(--s-8); }
 .lp-story-figure { display: flex; flex-direction: column; gap: var(--s-2); }
@@ -1001,7 +1894,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-6);
-  padding: var(--s-9) var(--s-8);
+  padding: var(--lp-inset);
   border-top: 1px solid var(--ub-line-strong);
   border-bottom: 1px solid var(--ub-line-strong);
 }
@@ -1039,19 +1932,20 @@
    9 · Pricing
    ============================================================ */
 .lp-billing { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
-.lp-pricing-calc { margin: calc(var(--s-10) * -1) 0 var(--s-8); }
-.lp-pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
-  gap: var(--s-5);
-  margin-bottom: var(--s-5);
-}
+/* The calculator used to be pulled up under the lede with a -64px margin,
+   which collided with a three-line lede. It now follows the head normally. */
+.lp-pricing .lp-head { margin-bottom: var(--s-5); }
+.lp-pricing-calc { margin: 0 0 var(--s-8); }
+/* The plans butt against each other and share a hairline, the way rows in a
+   dashboard table do, rather than floating as four separate cards. */
+.lp-pricing-grid { margin-bottom: var(--s-5); }
+.lp-pricing-grid > .lp-plan + .lp-plan { margin-left: -1px; }
 .lp-plan {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
-  padding: var(--s-6);
+  padding: var(--lp-inset);
   border: 1px solid var(--ub-line-strong);
   background-color: var(--ub-elevated);
   transition: border-color 0.2s var(--ease-io), transform 0.3s var(--ease-out);
@@ -1097,7 +1991,7 @@
   grid-template-columns: minmax(min(320px, 100%), 1fr) auto;
   align-items: center;
   gap: var(--s-8);
-  padding: var(--s-8);
+  padding: var(--lp-inset);
   border: 1px solid var(--ub-line-strong);
   background-color: var(--ub-sunken);
 }
@@ -1121,12 +2015,7 @@
 .lp-media-portrait { flex: none; width: 44px; height: 44px; align-items: center; justify-content: center; }
 .lp-media-portrait .empty-title, .lp-media-thumb .empty-title { display: none; }
 
-.lp-blog-grid {
-  display: grid;
-  grid-template-columns: minmax(min(400px, 100%), 1.15fr) minmax(min(320px, 100%), 0.85fr);
-  gap: var(--s-9);
-  align-items: start;
-}
+.lp-blog-grid { align-items: start; }
 .lp-lead { display: flex; flex-direction: column; gap: var(--s-5); }
 .lp-lead-copy { display: flex; flex-direction: column; gap: var(--s-3); }
 .lp-lead-title {
@@ -1182,6 +2071,10 @@
 /* ============================================================
    11 · FAQ
    ============================================================ */
+/* The row is the full width of the section — the hover state runs edge to
+   edge and only the text is inset. A highlight that stops short of the
+   section's own edge reads as a card, which this is not. */
+.lp-inner > .lp-faq { padding-inline: 0; }
 .lp-faq { border-top: 1px solid var(--ub-line-strong); border-bottom: 1px solid var(--ub-line-strong); }
 .lp-faq-item { border-bottom: 1px solid var(--ub-line); }
 .lp-faq-item:last-child { border-bottom: none; }
@@ -1190,7 +2083,7 @@
   align-items: center;
   gap: var(--s-4);
   width: 100%;
-  padding: var(--s-6) var(--s-4);
+  padding: var(--s-6) var(--lp-pad);
   text-align: left;
   font-size: var(--fs-lg);
   line-height: var(--lh-lg);
@@ -1223,7 +2116,7 @@
 .lp-faq-a-wrap.open { grid-template-rows: 1fr; }
 .lp-faq-a-inner { overflow: hidden; }
 .lp-faq-a {
-  padding: 0 var(--s-4) var(--s-6) 48px;
+  padding: 0 var(--lp-pad) var(--s-6) calc(var(--lp-pad) + 48px);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--ub-text-2);
@@ -1232,72 +2125,115 @@
 }
 
 /* ============================================================
-   12 · Closing CTA (inverted)
+   12 · Footer — mini-hero
+   Last viewport mirrors the opening: brand-scale type, CTAs, and
+   navigation as composition. Closing CTA lives here so the page
+   ends once. Routing volume reconstitutes behind the type.
    ============================================================ */
-.lp-closing {
+.lp-footer {
   position: relative;
+  z-index: 1;
   isolation: isolate;
   overflow: hidden;
-  padding: 160px var(--lp-gutter);
-  text-align: center;
-}
-.lp-closing .lp-hero-field { -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%); }
-.lp-closing-inner {
+  /* Same as hero: scene paints the invert plate; keep the band open. */
+  background: transparent;
+  min-height: min(100svh, 920px);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--s-6);
+  justify-content: flex-end;
+  padding: 120px var(--lp-gutter) var(--s-7);
+}
+.lp-footer-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-areas:
+    'hero nav'
+    'meta meta';
+  column-gap: var(--s-9);
+  row-gap: var(--s-8);
+  align-items: end;
   max-width: var(--lp-max);
+  width: 100%;
   margin: 0 auto;
 }
-.lp-closing h2 {
-  font-size: var(--fs-4xl);
-  line-height: var(--lh-4xl);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  max-width: 16ch;
-}
-.lp-closing p { font-size: var(--fs-lg); line-height: var(--lh-lg); color: var(--ub-text-2); max-width: 56ch; }
+.lp-footer-inner > * { min-width: 0; }
 
-/* ============================================================
-   13 · Footer
-   ============================================================ */
-.lp-footer { border-top: 1px solid var(--ub-line); background: var(--ub-elevated); padding: var(--s-10) var(--lp-gutter) var(--s-6); }
-.lp-footer-inner { max-width: var(--lp-max); margin: 0 auto; }
-.lp-footer-top {
-  display: grid;
-  grid-template-columns: minmax(min(280px, 100%), 1.4fr) repeat(auto-fit, minmax(min(140px, 100%), 1fr));
-  gap: var(--s-8);
-  padding-bottom: var(--s-8);
-  border-bottom: 1px solid var(--ub-line);
+.lp-footer-hero {
+  grid-area: hero;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-6);
+  max-width: 34rem;
 }
-.lp-footer-tagline { font-size: var(--fs-2xl); line-height: var(--lh-2xl); font-weight: 600; letter-spacing: -0.03em; }
-.lp-footer-tagline span { display: block; }
-.lp-footer-tagline span:last-child { color: var(--ub-text-3); }
-.lp-footer-brand { display: flex; flex-direction: column; gap: var(--s-5); }
-.lp-footer-brand img { width: 112px; height: auto; }
-.lp-footer-col { display: flex; flex-direction: column; gap: var(--s-3); }
-.lp-footer-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.14em;
-  color: var(--ub-text-3);
+.lp-footer-logo img {
+  width: 120px;
+  height: auto;
+  display: block;
 }
-.lp-footer-link { font-size: var(--fs-micro); line-height: var(--lh-micro); color: var(--ub-text-2); transition: color 0.15s var(--ease-io); }
-.lp-footer-link:hover { color: var(--ub-blue-ink); }
-.lp-footer-bottom {
+.lp-footer-title {
+  font-size: clamp(40px, 6vw, var(--fs-5xl));
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  max-width: 11ch;
+}
+.lp-footer-title .lp-line { display: block; }
+.lp-footer-title .lp-line:last-child { color: var(--ub-text-3); }
+.lp-footer-body {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  color: var(--ub-text-2);
+  max-width: 36ch;
+}
+.lp-footer-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.lp-footer-nav {
+  grid-area: nav;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+.lp-footer-link {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ub-text-2);
+  transition: color 0.1s var(--ease-out), transform 0.1s var(--ease-out);
+}
+.lp-footer-link:hover {
+  color: var(--ub-black);
+  transform: translateX(4px);
+}
+
+.lp-footer-meta {
+  grid-area: meta;
   display: flex;
   align-items: center;
   gap: var(--s-4);
   flex-wrap: wrap;
   padding-top: var(--s-5);
+  border-top: 1px solid var(--ub-line);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   color: var(--ub-text-3);
 }
-.lp-footer-legal { display: flex; gap: var(--s-4); flex-wrap: wrap; margin-left: auto; }
+.lp-footer-legal {
+  display: flex;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-left: auto;
+}
 .lp-footer-legal a:hover { color: var(--ub-black); }
 
 /* ============================================================
@@ -1323,8 +2259,22 @@
   .lp-hero h1 { font-size: 56px; line-height: 60px; }
   .lp-hero-body { font-size: var(--fs-body); line-height: var(--lh-body); }
   .lp-figure { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }
-  .lp-closing { padding: 104px var(--lp-gutter); }
-  .lp-closing h2 { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }
+  .lp-footer {
+    min-height: 0;
+    padding: 96px var(--lp-gutter) var(--s-6);
+  }
+  .lp-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'nav'
+      'meta';
+    row-gap: var(--s-7);
+  }
+  .lp-footer-hero { max-width: none; }
+  .lp-footer-title { font-size: var(--fs-3xl); max-width: none; }
+  .lp-footer-nav { flex-direction: row; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
+  .lp-footer-link { font-size: var(--fs-lg); line-height: var(--lh-lg); }
   .lp-integration-grid,
   .lp-infra-grid,
   .lp-story-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
@@ -1356,6 +2306,7 @@
     border-right: 1px solid var(--ub-line);
     transform: translateX(-100%);
     transition: transform 0.24s var(--ease-out);
+    overflow: auto;
   }
   .lp-nav-links.open { transform: none; }
   .lp-nav-link { height: 44px; }
@@ -1364,7 +2315,7 @@
 @media (max-width: 760px) {
   .landing { --lp-band-y: 64px; --lp-gutter: 20px; }
   .lp-hero h1 { font-size: 40px; line-height: 44px; letter-spacing: -0.035em; }
-  .lp-title, .lp-closing h2 { font-size: var(--fs-2xl); line-height: var(--lh-2xl); max-width: none; }
+  .lp-title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); max-width: none; }
   .lp-figure { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
   .lp-head { margin-bottom: var(--s-8); }
   .lp-head-split { flex-direction: column; align-items: stretch; }
@@ -1386,15 +2337,17 @@
   .lp-quote-text { font-size: var(--fs-body); line-height: var(--lh-body); }
   .lp-faq-q { font-size: var(--fs-body); line-height: var(--lh-body); padding: var(--s-5) var(--s-2); }
   .lp-faq-a { padding-left: 40px; }
-  .lp-footer-top { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); }
+  .lp-footer { padding-top: 72px; }
+  .lp-footer-legal { margin-left: 0; }
+  .lp-footer-meta { flex-direction: column; align-items: flex-start; }
   .lp-logo { height: 64px; padding: 0 var(--s-6); font-size: var(--fs-body); line-height: var(--lh-body); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .lp-brick, .lp-wall-brick { opacity: 1; transform: none; transition: none; }
   .lp-line > span { transform: none; transition: none; }
   .lp-marquee-track { animation: none; }
-  .lp-hero-glow { animation: none; }
   .lp-status-live i { animation: none; }
   .lp-gantt-fill { transform: none; transition: none; }
   .lp-card:hover, .lp-plan:hover, .lp-post:hover { transform: none; }

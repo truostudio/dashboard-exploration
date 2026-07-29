@@ -9,12 +9,13 @@ import { CustomerStory } from '../sections/CustomerStory';
 import { Pricing } from '../sections/Pricing';
 import { Blog } from '../sections/Blog';
 import { Faq } from '../sections/Faq';
-import { Closing } from '../sections/Closing';
+import { RequestStream } from '../scene/RequestStream';
 
 /** Sections in the same order the live marketing site presents them. */
 export function Home() {
   return (
     <main>
+      <RequestStream />
       <Hero />
       <Integration />
       <Infra />
@@ -26,7 +27,6 @@ export function Home() {
       <Pricing />
       <Blog />
       <Faq />
-      <Closing />
     </main>
   );
 }

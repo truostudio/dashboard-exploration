@@ -21,7 +21,7 @@ const slowest = Math.max(...candidates.map((c) => c.latency));
 
 export function RouteReadout() {
   return (
-    <figure className="lp-route marks-4">
+    <figure className="lp-route">
       <div className="lp-route-head">
         <Badge tone="new">GET</Badge>
         <span className="lp-route-path">/uni/v1/token/price</span>

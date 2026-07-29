@@ -1,6 +1,6 @@
 import { Icon } from '../../components/Icons';
 import { Empty } from '../../components/ui';
-import { Band, BandHead } from './Band';
+import { Band, BandHead, SectionRule } from './Band';
 import { customerStory } from '../content/home';
 
 /**
@@ -11,10 +11,11 @@ import { customerStory } from '../content/home';
 export function CustomerStory() {
   return (
     <Band className="lp-story lp-invert">
-      <BandHead eyebrow={customerStory.eyebrow} wide title={customerStory.title} />
+      <SectionRule index="06" />
+      <BandHead wide title={customerStory.title} />
 
-      <div className="lp-story-grid">
-        <div className="lp-story-figures" data-reveal>
+      <div className="lp-blocks lp-story-grid">
+        <div className="lp-story-figures" style={{ '--w': 4, '--h': 3 } as React.CSSProperties} data-reveal>
           {customerStory.stats.map((stat) => (
             <div key={stat.id} className="lp-story-figure">
               <span className="lp-story-num">{stat.value}</span>
@@ -23,7 +24,7 @@ export function CustomerStory() {
           ))}
         </div>
 
-        <div className="lp-story-body" data-reveal>
+        <div className="lp-story-body" style={{ '--w': 8, '--h': 3 } as React.CSSProperties} data-reveal>
           {customerStory.paragraphs.map((paragraph, i) => (
             <p key={i}>{paragraph}</p>
           ))}

@@ -1,49 +1,89 @@
 import { Icon } from '../../components/Icons';
-import { Band, BandHead } from './Band';
+import { Band, BandHead, SectionRule } from './Band';
+import { Win } from '../graphics/Window';
 import { CapacityBars, AgentFlow, EventNormalize } from '../graphics/ProofGraphics';
 import { fullStack } from '../content/home';
 
-/**
- * Three capabilities as numbered ledger rows rather than three matching cards:
- * an oversized figure, the claim, and a diagram of the thing it describes,
- * separated by hairlines instead of boxed off from each other.
- */
 const diagrams: Record<string, () => React.ReactElement> = {
   nodes: CapacityBars,
   mcp: AgentFlow,
   webhooks: EventNormalize,
 };
 
+/** What each diagram is showing, since a diagram alone is naked. */
+const CAPTIONS: Record<string, { title: string; caption: string; label: string }> = {
+  nodes: {
+    title: 'Dedicated against shared capacity',
+    caption: 'The same workload on shared infrastructure and on nodes reserved for you.',
+    label: 'p99 latency under sustained load',
+  },
+  mcp: {
+    title: 'An agent reaching onchain state',
+    caption: 'One governed interface between the tool call and 300+ chains.',
+    label: 'tool call → onchain state',
+  },
+  webhooks: {
+    title: 'Provider events, normalised',
+    caption: 'Four provider-specific event shapes arriving as one signed, versioned payload.',
+    label: 'signed · retried · versioned',
+  },
+};
+
+/**
+ * Three layers, three arrangements of the same units: 5+7, then 7+5 with the
+ * diagram rendered first so it takes the left, then 4+8. Same block, three
+ * shapes — which is the point of building from a square unit.
+ */
+const SHAPES = [
+  { note: 5, viz: 7, flip: false },
+  { note: 5, viz: 7, flip: true },
+  { note: 4, viz: 8, flip: false },
+];
+
 export function FullStack() {
   return (
     <Band className="lp-stack">
-      <BandHead eyebrow={fullStack.eyebrow} wide title={fullStack.title} lede={fullStack.body} />
+      <SectionRule index="04" />
+      <BandHead
+        wide
+        title={fullStack.title}
+        lede={fullStack.body}
+      />
 
-      <div className="lp-ledger">
+      <div className="lp-blocks" data-reveal>
         {fullStack.cards.map((card, i) => {
           const Diagram = diagrams[card.id];
-          return (
-            <article key={card.id} className="lp-ledger-row" data-reveal>
-              <span className="lp-ledger-num">{String(i + 1).padStart(2, '0')}</span>
+          const shape = SHAPES[i];
+          const cap = CAPTIONS[card.id];
 
-              <div className="lp-ledger-copy">
-                <span className="eyebrow">{card.eyebrow}</span>
-                <h3 className="lp-ledger-title">{card.title}</h3>
-                <p className="lp-ledger-body">{card.body}</p>
-                <ul className="lp-points">
-                  {card.points.map((point) => (
-                    <li key={point}>
-                      <Icon.Check size={13} /> {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="lp-ledger-visual">
-                <Diagram />
-              </div>
-            </article>
+          const note = (
+            <Win key={`${card.id}-note`} w={shape.note} variant="flat" className="win-note">
+              <h3 className="win-note-title">{card.title}</h3>
+              <p className="win-note-body">{card.body}</p>
+              <ul className="lp-points">
+                {card.points.map((point) => (
+                  <li key={point}>
+                    <Icon.Check size={13} /> {point}
+                  </li>
+                ))}
+              </ul>
+            </Win>
           );
+
+          const viz = (
+            <Win
+              key={`${card.id}-viz`}
+              w={shape.viz}
+              bare
+              title={cap.title}
+              caption={cap.caption}
+              label={cap.label}
+            >
+              <Diagram />
+            </Win>
+          );
+
+          return shape.flip ? [viz, note] : [note, viz];
         })}
       </div>
     </Band>

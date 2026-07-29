@@ -10,7 +10,7 @@ export function IntegrationGantt() {
   const { chartTitle, bars, ticks } = integration;
 
   return (
-    <figure className="lp-gantt marks-4">
+    <figure className="lp-gantt">
       <figcaption className="lp-gantt-title">{chartTitle}</figcaption>
 
       {bars.map((bar, i) => (

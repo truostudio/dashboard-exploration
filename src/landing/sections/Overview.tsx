@@ -1,22 +1,32 @@
 import { useState } from 'react';
 import { Segmented } from '../../components/Segmented';
 import { MethodBadge } from '../../components/ui';
-import { Band, BandHead } from './Band';
+import { Band, BandHead, SectionRule } from './Band';
+import { Win } from '../graphics/Window';
+import { LogStream } from '../graphics/LogStream';
 import { ProviderMesh, RouteRace, BillingSplit } from '../graphics/ProofGraphics';
 import { overview } from '../content/home';
 
 /**
- * The four claims used to be four identical cards. Each one now gets its own
- * demonstration and its own side of the page: the argument is made by the
- * visual, and the copy annotates it.
+ * Four claims, each with a demonstration beside it.
+ *
+ * There used to be a focus that advanced on a timer, lighting one block's
+ * border and label blue in turn. From the outside that reads as things going
+ * blue at random — a viewer has no idea what "focused" means or why it moved.
+ * It is gone. Blue now marks only what it marks everywhere else on the page:
+ * the Uniblock path — the provider that won, the single invoice, the live tail.
  */
+
+const FEATURES = Object.fromEntries(overview.features.map((f) => [f.id, f]));
+
+type Tab = (typeof overview.tabs)[number];
 
 /** The endpoint surface, browsable — the proof for "3,000+ APIs". */
 function Explorer() {
-  const [tab, setTab] = useState(overview.tabs[0]);
+  const [tab, setTab] = useState<Tab>(overview.tabs[0]);
 
   return (
-    <div className="pg pg-explorer">
+    <>
       <div className="lp-explorer-tabs">
         <Segmented
           variant="tab"
@@ -27,43 +37,37 @@ function Explorer() {
         />
       </div>
 
-      {tab === overview.tabs[0] ? (
-        overview.endpoints.map((endpoint) => (
-          <div key={endpoint.path} className="lp-endpoint">
-            <MethodBadge method={endpoint.method} />
-            <span>
-              <span className="lp-endpoint-path">{endpoint.path}</span>
-              <span className="lp-endpoint-desc">{endpoint.title}</span>
-            </span>
-          </div>
-        ))
-      ) : (
-        <div className="lp-endpoint">
-          <MethodBadge method="GET" />
+      {overview.endpoints[tab].map((endpoint) => (
+        <div key={endpoint.path} className="lp-endpoint">
+          <MethodBadge method={endpoint.method} />
           <span>
-            <span className="lp-endpoint-path">uni/v1/{tab.toLowerCase().replace(/\W+/g, '-')}/…</span>
-            <span className="lp-endpoint-desc">
-              Browse the full {tab.toLowerCase()} surface in the endpoint reference.
-            </span>
+            <span className="lp-endpoint-path">{endpoint.path}</span>
+            <span className="lp-endpoint-desc">{endpoint.title}</span>
           </span>
         </div>
-      )}
-    </div>
+      ))}
+    </>
   );
 }
 
-const visuals: Record<string, () => React.ReactElement> = {
-  apis: Explorer,
-  orchestrated: ProviderMesh,
-  routing: RouteRace,
-  billing: BillingSplit,
-};
+/** A feature's prose, as its own block. */
+function Note({ id, w }: { id: string; w: number }) {
+  const feature = FEATURES[id];
+
+  return (
+    <Win w={w} variant="flat" className="win-note">
+      <h3 className="win-note-title">{feature.title}</h3>
+      <p className="win-note-body">{feature.body}</p>
+      <button className="btn lp-proof-cta">{feature.cta}</button>
+    </Win>
+  );
+}
 
 export function Overview() {
   return (
     <Band className="lp-overview">
+      <SectionRule index="03" />
       <BandHead
-        eyebrow={overview.eyebrow}
         wide
         title={
           <>
@@ -73,25 +77,77 @@ export function Overview() {
         lede={overview.body}
       />
 
-      <div className="lp-proofs">
-        {overview.features.map((feature, i) => {
-          const Visual = visuals[feature.id];
-          // Every landing class stays `lp-`-prefixed: the dashboard's global
-          // stylesheet is loaded too, and it already owns names like `.flip`.
-          return (
-            <section key={feature.id} className={`lp-proof ${i % 2 ? 'lp-flip' : ''}`.trim()}>
-              <div className="lp-proof-copy" data-reveal>
-                <span className="lp-proof-index">{String(i + 1).padStart(2, '0')}</span>
-                <h3 className="lp-proof-title">{feature.title}</h3>
-                <p className="lp-proof-body">{feature.body}</p>
-                <button className="btn btn-lg lp-proof-cta">{feature.cta}</button>
-              </div>
-              <div className="lp-proof-visual" data-reveal>
-                <Visual />
-              </div>
-            </section>
-          );
-        })}
+      <div className="lp-blocks lp-workspace" data-reveal>
+        <Note id="apis" w={4} />
+
+        <Win
+          w={8}
+          bare
+          title="The endpoint surface"
+          caption="Every category resolves to the same request shape and the same response contract."
+          label="4 of 3,000+ shown"
+          meta="one contract"
+        >
+          <Explorer />
+        </Win>
+
+        <Win
+          w={7}
+          bare
+          title="Every provider, health-checked"
+          caption="Uniblock polls all 55+ providers continuously. The highlight is that check moving through them."
+          label="55+ connected"
+          meta="all operational"
+        >
+          <ProviderMesh cols={7} rows={2} />
+        </Win>
+
+        <Note id="orchestrated" w={5} />
+
+        <Note id="routing" w={5} />
+
+        <Win
+          w={7}
+          bare
+          title="How a provider is chosen"
+          caption="Latency, cost and reliability are scored on every request. Blue is the provider that won this one."
+          label="scored per request"
+          meta="hedged if the winner slows"
+        >
+          <RouteRace />
+        </Win>
+
+        <Win
+          w={7}
+          bare
+          title="Five contracts become one"
+          caption="The same spend, billed once. Blue is what you actually receive."
+          label="5 invoices → 1"
+          meta="one relationship"
+        >
+          <BillingSplit />
+        </Win>
+
+        <Note id="billing" w={5} />
+
+        {/* Last, and full width. The four claims above are paired blocks; a
+            12-wide block between them broke that rhythm and read as a one-off.
+            At the end it is a closing statement instead — the four arguments,
+            then the traffic they are arguing about. */}
+        <Win
+          w={12}
+          bare
+          title="The routing layer, live"
+          caption="All four of the above, on real traffic: the request, the chain, the provider that served it, and how long it took."
+          label={
+            <span className="pg-foot-live">
+              <i /> live tail
+            </span>
+          }
+          meta="roughly 1 in 9 requests is hedged"
+        >
+          <LogStream />
+        </Win>
       </div>
     </Band>
   );

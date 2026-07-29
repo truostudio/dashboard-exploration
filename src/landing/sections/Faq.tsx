@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Icon } from '../../components/Icons';
-import { Band, BandHead } from './Band';
+import { Band, BandHead, SectionRule } from './Band';
 import { faq } from '../content/home';
 
 export function Faq() {
@@ -10,7 +10,8 @@ export function Faq() {
 
   return (
     <Band className="lp-faq-band">
-      <BandHead eyebrow={faq.eyebrow} title={faq.title} lede={faq.body} />
+      <SectionRule index="09" />
+      <BandHead title={faq.title} lede={faq.body} />
 
       <div className="lp-faq" data-reveal>
         {faq.items.map((item, i) => {

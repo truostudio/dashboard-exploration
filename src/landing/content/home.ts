@@ -27,12 +27,10 @@ export const nav = {
 
 export const hero = {
   title: ['Unified Blockchain API', 'for 300+ chains'],
-  body:
-    'Unified Web3 API layer for multi-chain development. Access 300+ blockchains including ' +
-    'Ethereum, Solana, Hyperliquid, and 55+ providers through a single, reliable interface. ' +
-    'Simple integration, enterprise-grade infrastructure, best price-to-performance ratio.',
-  primary: 'GET YOUR API KEY',
-  secondary: 'VIEW DOCS',
+  // One load-bearing sentence. The three-sentence version was filler.
+  body: 'One endpoint. 55+ providers, 300+ chains, scored and routed per request.',
+  primary: 'Get your API key',
+  secondary: 'Read the docs',
 };
 
 /* ---------------- 2 · Optimized integration ---------------- */
@@ -80,13 +78,39 @@ export const overview = {
     'API. Switch blockchain providers instantly, compare real-time performance and pricing, ' +
     'and eliminate vendor lock-in without changing code.',
   /** The explorer's tab strip, exactly as the site labels it. */
-  tabs: ['MARKET DATA', 'NFT', 'SCAN', 'TOKEN', '+ MORE'],
-  endpoints: [
-    { method: 'GET' as const, path: 'uni/v1/market-data/price', title: 'Gets the price of a token.' },
-    { method: 'GET' as const, path: 'uni/v1/market-data/market-cap', title: 'Gets the market cap of a token.' },
-    { method: 'GET' as const, path: 'uni/v1/market-data/24-hour-volume', title: 'Gets the 24 hour volume of a token.' },
-    { method: 'GET' as const, path: 'uni/v1/market-data/history', title: 'Gets the price, volume, market cap of a token at a given date.' },
-  ],
+  tabs: ['MARKET DATA', 'NFT', 'SCAN', 'TOKEN'] as const,
+  /**
+   * Four endpoints per tab, taken from the categories in the public reference
+   * at docs.uniblock.dev. The index there lists page slugs rather than request
+   * paths, so the paths below follow the `uni/v1/<category>/<name>` shape the
+   * site already uses — the names are real, the prefix is the house style.
+   */
+  endpoints: {
+    'MARKET DATA': [
+      { method: 'GET' as const, path: 'uni/v1/market-data/token-price', title: 'Get the current price of a token.' },
+      { method: 'GET' as const, path: 'uni/v1/market-data/token-market-cap', title: 'Get the current market capitalisation.' },
+      { method: 'GET' as const, path: 'uni/v1/market-data/token-24-hour-volume', title: 'Get 24-hour trading volume for a token.' },
+      { method: 'GET' as const, path: 'uni/v1/market-data/trending-tokens', title: 'List the tokens trending right now.' },
+    ],
+    NFT: [
+      { method: 'GET' as const, path: 'uni/v1/nft/nft-metadata', title: 'Get the metadata for an individual NFT.' },
+      { method: 'GET' as const, path: 'uni/v1/nft/collection-floor-prices', title: 'Get minimum prices across a collection.' },
+      { method: 'GET' as const, path: 'uni/v1/nft/contract-nft-owners', title: 'Identify the current holders of a contract.' },
+      { method: 'GET' as const, path: 'uni/v1/nft/wallet-nft-balances', title: 'Check the NFT holdings of an address.' },
+    ],
+    SCAN: [
+      { method: 'GET' as const, path: 'uni/v1/scan/address-transactions', title: 'Retrieve the transaction history of an address.' },
+      { method: 'GET' as const, path: 'uni/v1/scan/address-erc-20-balance', title: 'Query the ERC-20 balance of an address.' },
+      { method: 'GET' as const, path: 'uni/v1/scan/contract-abi', title: 'Retrieve the interface of a verified contract.' },
+      { method: 'GET' as const, path: 'uni/v1/scan/gas-price-tiers', title: 'Read the current fee tiers for a chain.' },
+    ],
+    TOKEN: [
+      { method: 'GET' as const, path: 'uni/v1/token/address-token-balances', title: 'Snapshot the token balances of an address.' },
+      { method: 'GET' as const, path: 'uni/v1/token/token-metadata', title: 'Access the properties of a token.' },
+      { method: 'GET' as const, path: 'uni/v1/token/token-usd-price', title: 'Get the fiat conversion rate for a token.' },
+      { method: 'GET' as const, path: 'uni/v1/token/address-allowances', title: 'Check outstanding approval amounts.' },
+    ],
+  },
   features: [
     {
       id: 'apis',
@@ -457,7 +481,7 @@ export const faq = {
   ],
 };
 
-/* ---------------- 12 · Closing CTA + footer ---------------- */
+/* ---------------- 12 · Footer mini-hero ---------------- */
 
 export const closing = {
   title: 'Build with a team you can reach',
@@ -469,37 +493,27 @@ export const closing = {
 
 export const footer = {
   tagline: ['Every Blockchain API.', 'One Interface.'],
-  columns: [
-    {
-      id: 'quick',
-      label: 'QUICK LINKS',
-      links: [
-        { label: 'Glossary', href: 'https://www.uniblock.dev/glossary' },
-        { label: 'Contact', href: 'https://www.uniblock.dev/contact' },
-        { label: 'About', href: 'https://www.uniblock.dev/about' },
-        { label: 'Docs', href: 'https://docs.uniblock.dev/' },
-        { label: 'Branding', href: 'https://www.uniblock.dev/branding' },
-      ],
-    },
-    {
-      id: 'nav',
-      label: 'NAVIGATIONS',
-      links: [
-        { label: 'Pricing', href: 'https://www.uniblock.dev/pricing' },
-        { label: 'Integrations', href: 'https://www.uniblock.dev/integrations' },
-        { label: 'Chains', href: 'https://www.uniblock.dev/chains' },
-        { label: 'Blog', href: 'https://www.uniblock.dev/blog' },
-        { label: 'Nodes', href: 'https://www.uniblock.dev/nodes' },
-      ],
-    },
+  primary: [
+    { label: 'Docs', href: 'https://docs.uniblock.dev/' },
+    { label: 'Pricing', href: 'https://www.uniblock.dev/pricing' },
+    { label: 'Integrations', href: 'https://www.uniblock.dev/integrations' },
+    { label: 'Chains', href: 'https://www.uniblock.dev/chains' },
+    { label: 'Nodes', href: 'https://www.uniblock.dev/nodes' },
+    { label: 'Blog', href: 'https://www.uniblock.dev/blog' },
+  ],
+  company: [
+    { label: 'About', href: 'https://www.uniblock.dev/about' },
+    { label: 'Contact', href: 'https://www.uniblock.dev/contact' },
+    { label: 'Glossary', href: 'https://www.uniblock.dev/glossary' },
+    { label: 'Branding', href: 'https://www.uniblock.dev/branding' },
   ],
   social: [
-    { label: 'Linkedin', href: 'https://www.linkedin.com/company/uniblock' },
-    { label: 'Twitter (X)', href: 'https://x.com/uniblockdev' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/uniblock' },
+    { label: 'X', href: 'https://x.com/uniblockdev' },
   ],
   copyright: '©2026 Uniblock',
   legal: [
-    { label: 'Privacy Policy', href: 'https://www.uniblock.dev/privacy-policy' },
-    { label: 'Terms of Service', href: 'https://www.uniblock.dev/terms-of-service' },
+    { label: 'Privacy', href: 'https://www.uniblock.dev/privacy-policy' },
+    { label: 'Terms', href: 'https://www.uniblock.dev/terms-of-service' },
   ],
 };

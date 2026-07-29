@@ -1,6 +1,6 @@
 import { Icon } from '../../components/Icons';
 import { Empty } from '../../components/ui';
-import { Band, BandHead } from './Band';
+import { Band, BandHead, SectionRule } from './Band';
 import { blog } from '../content/home';
 
 /**
@@ -13,8 +13,8 @@ export function Blog() {
 
   return (
     <Band className="lp-blog">
+      <SectionRule index="08" />
       <BandHead
-        eyebrow={blog.eyebrow}
         wide
         title={blog.title}
         lede={blog.body}
@@ -25,7 +25,7 @@ export function Blog() {
         }
       />
 
-      <div className="lp-blog-grid">
+      <div className="lp-blocks lp-blog-grid">
         <article className="lp-lead" data-reveal>
           <div className="lp-media lp-media-lead">
             <Empty icon={<Icon.Image size={20} />} title="Article image">
@@ -44,7 +44,7 @@ export function Blog() {
           </div>
         </article>
 
-        <div className="lp-blog-rest">
+        <div className="lp-blog-rest" style={{ '--w': 5, '--h': 5 } as React.CSSProperties}>
           {rest.map((post) => (
             <article key={post.id} className="lp-post-row" data-reveal>
               <div className="lp-media lp-media-thumb">

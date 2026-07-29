@@ -82,28 +82,35 @@
   --ub-blue-glow: rgba(31, 182, 255, 0.22);
 
   /* ---- Ink. --ub-black is "text", --ub-white is "the thing text sits on"
-         when inverted (solid chips, dark buttons). Both flip in dark mode. ---- */
-  --ub-black: #0B0C0E;
-  --ub-black-hover: #23262B;
-  --ub-text-2: #4B525B;
-  --ub-text-3: #838B95;
+         when inverted (solid chips, dark buttons). Both flip in dark mode.
+
+         The neutral ramp is graphite, not slate. A blue-derived near-black
+         reads as a dim version of the brand rather than a ground for it, and
+         it is the house style of every AI product page. Achromatic grey is
+         the terminal register instead — the one deviation is a single point
+         of green over red and blue at each step, which is phosphor, not hue.
+         Too small to name as a colour; enough that the ramp isn't dead. ---- */
+  --ub-black: #0D0E0D;
+  --ub-black-hover: #232523;
+  --ub-text-2: #4E514E;
+  --ub-text-3: #848784;
   --ub-white: #FFFFFF;
 
   /* ---- Surfaces & lines ---- */
-  --ub-canvas: #F5F6F8;
-  --ub-canvas-blur: rgba(245, 246, 248, 0.82);
+  --ub-canvas: #F3F4F3;
+  --ub-canvas-blur: rgba(243, 244, 243, 0.82);
   --ub-elevated: #FFFFFF;
-  --ub-sunken: #FAFBFC;
-  --ub-grid: #F1F3F5;
-  --ub-hover: rgba(11, 12, 14, 0.04);
-  --ub-hover-2: rgba(11, 12, 14, 0.07);
+  --ub-sunken: #F9FAF9;
+  --ub-grid: #EDEFED;
+  --ub-hover: rgba(13, 14, 13, 0.04);
+  --ub-hover-2: rgba(13, 14, 13, 0.07);
 
-  --ub-line: rgba(11, 12, 14, 0.08);
-  --ub-line-strong: rgba(11, 12, 14, 0.16);
-  --ub-border: #C7CCD2;
-  --ub-border-soft: #DEE2E7;
+  --ub-line: rgba(13, 14, 13, 0.08);
+  --ub-line-strong: rgba(13, 14, 13, 0.16);
+  --ub-border: #C5C8C5;
+  --ub-border-soft: #DFE1DF;
 
-  --ub-scrim: rgba(11, 12, 14, 0.45);
+  --ub-scrim: rgba(13, 14, 13, 0.45);
   --ub-blueprint: rgba(31, 182, 255, 0.06);
   --ub-plate: transparent;         /* ring drawn over provider/chain artwork */
   /* Registration ticks drawn on top of a solid blue fill (primary buttons):
@@ -132,11 +139,11 @@
   --radius-pill: 0px;
 
   /* ---- Elevation (restrained) ---- */
-  --shadow-sm: 0 1px 2px rgba(11, 12, 14, 0.05);
-  --shadow-md: 0 8px 28px -10px rgba(11, 12, 14, 0.16);
-  --shadow-pop: 0 24px 64px -20px rgba(11, 12, 14, 0.28);
+  --shadow-sm: 0 1px 2px rgba(13, 14, 13, 0.05);
+  --shadow-md: 0 8px 28px -10px rgba(13, 14, 13, 0.16);
+  --shadow-pop: 0 24px 64px -20px rgba(13, 14, 13, 0.28);
   /* Popovers use a hard offset instead of a blur, so edges stay crisp. */
-  --shadow-hard: 4px 4px 0 rgba(11, 12, 14, 0.08);
+  --shadow-hard: 4px 4px 0 rgba(13, 14, 13, 0.08);
   --ub-pop-shadow: var(--shadow-pop);
 
   /* ---- Fonts ---- */
@@ -209,26 +216,27 @@
   --ub-blue-border: rgba(31, 182, 255, 0.32);
   --ub-blue-glow: rgba(31, 182, 255, 0.26);
 
-  --ub-black: #F2F4F7;
-  --ub-black-hover: #DDE1E7;
-  --ub-text-2: #A3ACB7;
-  --ub-text-3: #737C87;
-  --ub-white: #0B0C0E;
+  /* Same graphite ramp, inverted, same one point of green per step. */
+  --ub-black: #F1F3F1;
+  --ub-black-hover: #DDDFDD;
+  --ub-text-2: #A7AAA7;
+  --ub-text-3: #7F827F;
+  --ub-white: #0D0E0D;
 
-  --ub-canvas: #0B0C0E;
-  --ub-canvas-blur: rgba(11, 12, 14, 0.82);
-  --ub-elevated: #141619;
-  --ub-sunken: #101215;
-  --ub-grid: #1C1F24;
-  --ub-hover: rgba(255, 255, 255, 0.05);
-  --ub-hover-2: rgba(255, 255, 255, 0.09);
+  --ub-canvas: #0D0E0D;
+  --ub-canvas-blur: rgba(13, 14, 13, 0.82);
+  --ub-elevated: #171817;
+  --ub-sunken: #121312;
+  --ub-grid: #222422;
+  --ub-hover: rgba(250, 255, 250, 0.05);
+  --ub-hover-2: rgba(250, 255, 250, 0.09);
 
-  --ub-line: rgba(255, 255, 255, 0.09);
-  --ub-line-strong: rgba(255, 255, 255, 0.16);
-  --ub-border: #3C434C;
-  --ub-border-soft: #272C33;
+  --ub-line: rgba(250, 255, 250, 0.09);
+  --ub-line-strong: rgba(250, 255, 250, 0.16);
+  --ub-border: #474947;
+  --ub-border-soft: #2B2D2B;
 
-  --ub-scrim: rgba(0, 0, 0, 0.66);
+  --ub-scrim: rgba(4, 5, 4, 0.66);
   --ub-blueprint: rgba(31, 182, 255, 0.08);
   --ub-plate: rgba(255, 255, 255, 0.14);
   --ub-accent-on-blue: #FFFFFF;
@@ -932,7 +940,11 @@ select.input {
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--ub-line);
+  /* overflow-x alone would compute overflow-y to auto — and the underline
+     marker sits 1px below the baseline, so the row becomes vertically
+     scrollable. Lock the Y axis. */
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   width: 100%;
 }

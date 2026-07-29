@@ -1,25 +1,28 @@
-import { Marquee } from '../graphics/Marquee';
+import type { CSSProperties } from 'react';
+import { Band, SectionRule } from './Band';
 import { trusted } from '../content/home';
 
 /**
- * The site runs a static row of customer logo SVGs. Rebuilt as a slow marquee
- * of wordmarks in the system's own pixel face — the names are the content, and
- * six foreign logo treatments would be the one thing on the page not drawn by
- * this design system. Hovering pauses the travel.
+ * Six customers, each a 2×2 block: twelve across, two down, no remainder.
+ * The names stay set in the system's own pixel face rather than as six
+ * foreign logo treatments.
  */
 export function Trusted() {
   return (
-    <section className="lp-band lp-trusted">
-      <h2 className="lp-trusted-title" data-reveal>
-        {trusted.title}
-      </h2>
-      <Marquee duration={44}>
-        {trusted.customers.map((name) => (
-          <span key={name} className="lp-logo">
+    <Band className="lp-trusted">
+      <SectionRule index="—" />
+
+      <div className="lp-blocks lp-wall" data-reveal>
+        {trusted.customers.map((name, i) => (
+          <span
+            key={name}
+            className="lp-wall-brick"
+            style={{ '--w': 2, '--h': 2, '--i': i } as CSSProperties}
+          >
             {name}
           </span>
         ))}
-      </Marquee>
-    </section>
+      </div>
+    </Band>
   );
 }
