@@ -100,7 +100,9 @@ function NodesOptions() {
       </p>
       <div className="lp-nodes-split" data-reveal>
         {n.options.items.map((item) => (
-          <TitledPanel key={item.id} eyebrow={item.num} title={item.title} sub={item.body} marks={4} />
+          <Panel key={item.id} marks={4}>
+            <PanelHead eyebrow={item.num} title={item.title} sub={item.body} />
+          </Panel>
         ))}
       </div>
     </Band>
