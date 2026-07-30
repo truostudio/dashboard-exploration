@@ -43,7 +43,7 @@ const SHAPES = [
 export function FullStack() {
   return (
     <Band className="lp-stack">
-      <SectionRule index="04" />
+      <SectionRule index="05" />
       <BandHead
         wide
         title={fullStack.title}

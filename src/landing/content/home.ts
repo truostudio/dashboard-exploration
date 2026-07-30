@@ -74,10 +74,25 @@ export const infra = {
 
 /* ---------------- 4 · Trusted by ---------------- */
 
+/* ---------------- 4 · Trusted by ---------------- */
+
 export const trusted = {
   title: 'Trusted by serious Web3 teams',
-  // Set as wordmarks in the system's own type rather than imported logo art.
-  customers: ['Polymarket', 'Hypernative', 'Stellar', 'pump.fun', 'plume', 'terrace'],
+  /** Live site order: left stack (top→bottom, outer→inner), then right stack. */
+  customers: [
+    { id: 'apechain', name: 'APECHAIN', src: '/customers/apechain.svg' },
+    { id: 'kraken', name: 'kraken', src: '/customers/kraken.svg' },
+    { id: 'moonpay', name: 'MoonPay', src: '/customers/moonpay.svg' },
+    { id: 'tatum', name: 'TATUM', src: '/customers/tatum.svg' },
+    { id: 'oku', name: 'oku', src: '/customers/oku.svg' },
+    { id: 'sqd', name: 'sqd', src: '/customers/sqd.svg' },
+    { id: 'polymarket', name: 'Polymarket', src: '/customers/polymarket.svg' },
+    { id: 'stellar', name: 'Stellar', src: '/customers/stellar.svg' },
+    { id: 'plume', name: 'plume', src: '/customers/plume.svg' },
+    { id: 'terrace', name: 'terrace', src: '/customers/terrace.svg' },
+    { id: 'pumpfun', name: 'Pump.fun', src: '/customers/pumpfun.svg' },
+    { id: 'hypernative', name: 'Hypernative', src: '/customers/hypernative.svg' },
+  ],
 };
 
 /* ---------------- 5 · Overview ---------------- */
@@ -237,31 +252,88 @@ export const coverage = {
   ],
 };
 
-/* ---------------- 8 · Customer story ---------------- */
+/* ---------------- 8 · Customer stories ---------------- */
 
-export const customerStory = {
-  eyebrow: 'CUSTOMER STORY',
-  title: 'Oku Trade consolidated their RPC traffic on Uniblock. Costs dropped 30%.',
-  paragraphs: [
-    'Oku had built and operated their own RPC routing layer to manage reliability and control ' +
-      'costs across multiple providers. It worked, but it required ongoing engineering time and ' +
-      'active relationship management with each provider.',
-    'After moving the majority of their RPC traffic to Uniblock, that overhead was absorbed by ' +
-      'the platform. Engineering time was redirected. RPC costs fell 30%, not counting the hours ' +
-      'recovered. Oku also consolidated additional API integrations through Uniblock, reducing ' +
-      'the total number of external relationships their team maintains.',
-  ],
-  quote:
-    '"Uniblock powers Oku\'s indexers with high quality data at competitive prices. Since we met ' +
-    "their team we've been able to spend less time on managing our RPCs and more time focusing " +
-    'on improving Oku for our users"',
-  attribution: '- Getty Hill, Co-Founder @ Oku Trade',
-  author: { name: 'Getty Hill', role: 'Co-Founder at Oku Trade' },
-  stats: [
-    { id: 'cost', label: 'RPC cost reduction', value: '30%' },
-    { id: 'layer', label: 'Routing layers retired', value: '1' },
-  ],
+export type CustomerStory = {
+  id: string;
+  company: string;
+  title: string;
+  paragraphs: string[];
+  quote: string;
+  attribution: string;
+  author: { name: string; role: string };
+  /** Square portrait; omit until the photograph lands. */
+  portrait?: string;
+  stats: { id: string; label: string; value: string }[];
 };
+
+export const customerStories: CustomerStory[] = [
+  {
+    id: 'oku',
+    company: 'Oku Trade',
+    title: 'Oku Trade consolidated their RPC traffic on Uniblock. Costs dropped 30%.',
+    paragraphs: [
+      'Oku had built and operated their own RPC routing layer to manage reliability and control ' +
+        'costs across multiple providers. It worked, but it required ongoing engineering time and ' +
+        'active relationship management with each provider.',
+      'After moving the majority of their RPC traffic to Uniblock, that overhead was absorbed by ' +
+        'the platform. Engineering time was redirected. RPC costs fell 30%, not counting the hours ' +
+        'recovered. Oku also consolidated additional API integrations through Uniblock, reducing ' +
+        'the total number of external relationships their team maintains.',
+    ],
+    quote:
+      '"Uniblock powers Oku\'s indexers with high quality data at competitive prices. Since we met ' +
+      "their team we've been able to spend less time on managing our RPCs and more time focusing " +
+      'on improving Oku for our users"',
+    attribution: '- Getty Hill, Co-Founder @ Oku Trade',
+    author: { name: 'Getty Hill', role: 'Co-Founder at Oku Trade' },
+    portrait: '/customers/getty-hill.png',
+    stats: [
+      { id: 'cost', label: 'RPC cost reduction', value: '30%' },
+      { id: 'layer', label: 'Routing layers retired', value: '1' },
+    ],
+  },
+  {
+    id: 'polymarket',
+    company: 'Polymarket',
+    title: 'Polymarket routes prediction-market reads through one scored endpoint.',
+    paragraphs: [
+      'Prediction markets spike hard around events. Polymarket needed read latency that held under ' +
+        'burst traffic without babysitting a stack of provider contracts when volume moved.',
+      'Uniblock became the single routing layer for chain reads. Failover and scoring sit in the ' +
+        'platform, so the team ships market features instead of re-tuning RPC pools every cycle.',
+    ],
+    quote:
+      '"One endpoint that holds when the market moves is the difference between a clean feed and ' +
+      'a war room. Uniblock took the routing problem off our plate."',
+    attribution: '- Leadership @ Polymarket',
+    author: { name: 'Portrait pending', role: 'Leadership at Polymarket' },
+    stats: [
+      { id: 'endpoint', label: 'Routing endpoints', value: '1' },
+      { id: 'providers', label: 'Providers behind the score', value: '55+' },
+    ],
+  },
+  {
+    id: 'hypernative',
+    company: 'Hypernative',
+    title: 'Hypernative cut multi-chain monitoring sprawl down to a single integration.',
+    paragraphs: [
+      'Security monitoring across chains meant a different vendor conversation for every network ' +
+        'Hypernative needed to watch. The surface area grew faster than the team wanted to staff.',
+      'With Uniblock, chain coverage expands without a new integration project. One contract, one ' +
+        'invoice, scored routes — the monitoring stack stays lean as the chain list grows.',
+    ],
+    quote:
+      '"We stopped treating RPC access like a fleet of one-offs. Uniblock is the layer we point ' +
+      'everything at, and coverage just shows up."',
+    attribution: '- Leadership @ Hypernative',
+    author: { name: 'Portrait pending', role: 'Leadership at Hypernative' },
+    stats: [
+      { id: 'chains', label: 'Chains on one contract', value: '300+' },
+      { id: 'vendors', label: 'Vendor relationships retired', value: '12' },
+    ],
+  },
+];
 
 /* ---------------- 9 · Pricing ---------------- */
 

@@ -1,27 +1,45 @@
-import type { CSSProperties } from 'react';
 import { Band, SectionRule } from './Band';
 import { trusted } from '../content/home';
 
 /**
- * Six customers, each a 2×2 block: twelve across, two down, no remainder.
- * The names stay set in the system's own pixel face rather than as six
- * foreign logo treatments.
+ * Customers field — numbered chapter in the page sequence. Static board:
+ * six logos left, six right, title in the centre. Page rails own the L/R
+ * edges so the board never doubles them.
  */
 export function Trusted() {
+  const left = trusted.customers.slice(0, 6);
+  const right = trusted.customers.slice(6);
+
   return (
     <Band className="lp-trusted">
-      <SectionRule index="—" />
+      <SectionRule index="03" />
 
-      <div className="lp-blocks lp-wall" data-reveal>
-        {trusted.customers.map((name, i) => (
-          <span
-            key={name}
-            className="lp-wall-brick"
-            style={{ '--w': 2, '--h': 2, '--i': i } as CSSProperties}
-          >
-            {name}
-          </span>
-        ))}
+      <div className="lp-trusted-board" data-reveal aria-label="Customers">
+        <div className="lp-trusted-logos">
+          {left.map((c) => (
+            <div key={c.id} className="lp-trusted-cell">
+              <img className="lp-trusted-logo" src={c.src} alt={c.name} />
+            </div>
+          ))}
+        </div>
+
+        <div className="lp-trusted-center">
+          <img
+            className="lp-trusted-badge"
+            src="/customers/verified.webp"
+            alt=""
+            aria-hidden
+          />
+          <h2 className="lp-title">{trusted.title}</h2>
+        </div>
+
+        <div className="lp-trusted-logos">
+          {right.map((c) => (
+            <div key={c.id} className="lp-trusted-cell">
+              <img className="lp-trusted-logo" src={c.src} alt={c.name} />
+            </div>
+          ))}
+        </div>
       </div>
     </Band>
   );

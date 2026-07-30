@@ -10,7 +10,7 @@ export function Faq() {
 
   return (
     <Band className="lp-faq-band">
-      <SectionRule index="09" />
+      <SectionRule index="10" />
       <BandHead title={faq.title} lede={faq.body} />
 
       <div className="lp-faq" data-reveal>

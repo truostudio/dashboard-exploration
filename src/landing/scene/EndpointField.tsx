@@ -11,13 +11,13 @@ import * as THREE from 'three';
  */
 
 const RINGS = [
-  { r: 0.55, n: 48, tilt: 0.15, yaw: 0.0, speed: 0.22 },
-  { r: 0.95, n: 64, tilt: -0.4, yaw: 0.7, speed: -0.14 },
-  { r: 1.35, n: 80, tilt: 0.55, yaw: -0.35, speed: 0.09 },
-  { r: 1.8, n: 96, tilt: -0.25, yaw: 1.1, speed: -0.06 },
+  { r: 0.85, n: 56, tilt: 0.15, yaw: 0.0, speed: 0.22 },
+  { r: 1.45, n: 72, tilt: -0.4, yaw: 0.7, speed: -0.14 },
+  { r: 2.1, n: 88, tilt: 0.55, yaw: -0.35, speed: 0.09 },
+  { r: 2.85, n: 104, tilt: -0.25, yaw: 1.1, speed: -0.06 },
 ];
-const CORE = 160;
-const SPARKS = 28;
+const CORE = 200;
+const SPARKS = 36;
 const TRAIL = 5;
 
 type Spark = {
@@ -49,7 +49,7 @@ export function EndpointField() {
     el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(34, el.clientWidth / el.clientHeight, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(42, el.clientWidth / el.clientHeight, 0.1, 100);
 
     const CELL = 3;
     const rt = new THREE.WebGLRenderTarget(1, 1, {
@@ -104,11 +104,11 @@ export function EndpointField() {
           float lum = max(max(s.r, s.g), s.b) * s.a;
           float ramp = pow(clamp(lum * 4.5, 0.0, 1.0), 0.58) * uFade;
 
-          // Nucleus sits mid-right; keep the closing copy readable on the left.
-          float clear = smoothstep(0.28, 0.62, vUv.x);
-          clear *= mix(0.35, 1.0, smoothstep(0.0, 0.22, vUv.y));
-          ramp *= clear;
-          ramp *= smoothstep(0.0, 0.06, vUv.y) * smoothstep(1.0, 0.9, vUv.y);
+          // Soft radial field centred on the stage; only the lower copy/CTA
+          // band clears so type stays readable.
+          float mid = 1.0 - smoothstep(0.08, 0.52, length(vUv - vec2(0.5, 0.52)));
+          float floorClear = smoothstep(0.0, 0.22, vUv.y);
+          ramp *= mix(0.05, 1.0, mid) * mix(0.2, 1.0, floorClear);
           if (ramp < bayer(cell)) discard;
 
           vec3 col = s.rgb / max(lum, 1e-4);
@@ -152,12 +152,12 @@ export function EndpointField() {
     for (let i = 0; i < CORE; i++) {
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(2 * Math.random() - 1);
-      const rad = Math.pow(Math.random(), 0.55) * 0.38;
+      const rad = Math.pow(Math.random(), 0.55) * 0.55;
       rest[o * 3] = Math.sin(ph) * Math.cos(th) * rad;
       rest[o * 3 + 1] = Math.sin(ph) * Math.sin(th) * rad;
       rest[o * 3 + 2] = Math.cos(ph) * rad;
       ringOf[o] = -1;
-      const glow = 0.18 + (1 - rad / 0.38) * 0.22;
+      const glow = 0.18 + (1 - rad / 0.55) * 0.22;
       lBase[o * 3] = brand.r * glow;
       lBase[o * 3 + 1] = brand.g * glow;
       lBase[o * 3 + 2] = brand.b * glow;
@@ -171,7 +171,7 @@ export function EndpointField() {
     latticeGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
     latticeGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
     const latticeMat = new THREE.PointsMaterial({
-      size: 0.032,
+      size: 0.048,
       vertexColors: true,
       transparent: true,
       opacity: 1,
@@ -383,7 +383,7 @@ export function EndpointField() {
           pCol[j] = c.r;
           pCol[j + 1] = c.g;
           pCol[j + 2] = c.b;
-          pSize[base + t] = 0.085 * fall;
+          pSize[base + t] = 0.11 * fall;
 
           if (t === 0) {
             // Light nearby lattice — cheap hash neighborhood.
@@ -414,14 +414,14 @@ export function EndpointField() {
       colAttr.needsUpdate = true;
       sizeAttr.needsUpdate = true;
 
-      // Settled three-quarter view — nucleus on the right of the band.
-      const drift = reduced ? 0 : Math.sin(now * 0.00015) * 0.08;
-      camera.position.set(2.4 + drift, 1.05, 3.6);
-      camera.lookAt(0.15, 0, 0);
-      lattice.rotation.y = reduced ? 0.2 : now * 0.00008;
+      // Dead-centre in the close stage — no lateral bias.
+      const drift = reduced ? 0 : Math.sin(now * 0.00015) * 0.04;
+      camera.position.set(drift, 0.2, 2.35);
+      camera.lookAt(0, 0, 0);
+      lattice.rotation.y = reduced ? 0.12 : now * 0.00008;
 
-      latticeMat.opacity = 0.7;
-      packetMat.uniforms.uScale.value = 1;
+      latticeMat.opacity = 0.85;
+      packetMat.uniforms.uScale.value = 1.25;
       postMat.uniforms.uFade.value = 1;
 
       renderer.setRenderTarget(rt);

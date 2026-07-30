@@ -1,52 +1,96 @@
+import { useState } from 'react';
 import { Icon } from '../../components/Icons';
 import { Empty } from '../../components/ui';
 import { Band, BandHead, SectionRule } from './Band';
-import { customerStory } from '../content/home';
+import { customerStories } from '../content/home';
 
 /**
- * The result is the headline, so the figures are set at display size and the
- * quote runs full width underneath. The portrait slot carries the system's
- * `Empty` state — the photograph isn't available to this build.
+ * Case-study carousel. Portrait + identity on the left, body and quote
+ * stacked on the right so the column fills; stats as a ruled row under
+ * the pair. Matches the live Oku layout without the empty lower-right void.
  */
 export function CustomerStory() {
+  const [index, setIndex] = useState(0);
+  const total = customerStories.length;
+  const story = customerStories[index];
+
+  const prev = () => setIndex((i) => (i - 1 + total) % total);
+  const next = () => setIndex((i) => (i + 1) % total);
+  const pad = (n: number) => String(n).padStart(2, '0');
+
   return (
     <Band className="lp-story">
-      <SectionRule index="06" />
-      <BandHead wide title={customerStory.title} />
+      <SectionRule index="07" />
+      <BandHead
+        wide
+        title={story.title}
+        actions={
+          <div className="lp-story-nav" role="group" aria-label="Case studies">
+            <button
+              type="button"
+              className="btn"
+              onClick={prev}
+              aria-label="Previous case study"
+            >
+              <Icon.ChevronLeft size={14} />
+            </button>
+            <span className="lp-story-index" aria-live="polite">
+              {pad(index + 1)} / {pad(total)}
+            </span>
+            <button
+              type="button"
+              className="btn"
+              onClick={next}
+              aria-label="Next case study"
+            >
+              <Icon.Chevron size={14} />
+            </button>
+          </div>
+        }
+      />
 
-      <div className="lp-blocks lp-story-grid">
-        <div className="lp-story-figures" style={{ '--w': 4, '--h': 3 } as React.CSSProperties} data-reveal>
-          {customerStory.stats.map((stat) => (
+      <div className="lp-blocks lp-story-grid" key={story.id}>
+        <div className="lp-story-side" style={{ '--w': 4 } as React.CSSProperties} data-reveal>
+          <div className="lp-media lp-media-ceo">
+            {story.portrait ? (
+              <img src={story.portrait} alt={story.author.name} />
+            ) : (
+              <Empty icon={<Icon.Users size={20} />} title="CEO portrait">
+                Photograph of {story.author.name} for the {story.company} story.
+              </Empty>
+            )}
+          </div>
+          <div className="lp-story-identity">
+            <span className="lp-story-identity-name">{story.author.name}</span>
+            <span className="lp-story-identity-role">{story.author.role}</span>
+          </div>
+        </div>
+
+        <div className="lp-story-main" style={{ '--w': 8 } as React.CSSProperties} data-reveal>
+          <div className="lp-story-body">
+            {story.paragraphs.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
+          </div>
+
+          <figure className="lp-quote">
+            <span className="lp-quote-mark" aria-hidden>
+              <Icon.Social size={20} />
+            </span>
+            <blockquote className="lp-quote-text">{story.quote}</blockquote>
+            <figcaption className="lp-quote-attr">{story.attribution}</figcaption>
+          </figure>
+        </div>
+
+        <div className="lp-story-figures" style={{ '--w': 12 } as React.CSSProperties} data-reveal>
+          {story.stats.map((stat) => (
             <div key={stat.id} className="lp-story-figure">
               <span className="lp-story-num">{stat.value}</span>
               <span className="lp-stat-label">{stat.label}</span>
             </div>
           ))}
         </div>
-
-        <div className="lp-story-body" style={{ '--w': 8, '--h': 3 } as React.CSSProperties} data-reveal>
-          {customerStory.paragraphs.map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
-        </div>
       </div>
-
-      <figure className="lp-quote" data-reveal>
-        <span className="lp-quote-mark" aria-hidden>
-          <Icon.Social size={20} />
-        </span>
-        <blockquote className="lp-quote-text">{customerStory.quote}</blockquote>
-        <figcaption className="lp-quote-author">
-          <div className="lp-media lp-media-portrait">
-            <Empty bare icon={<Icon.Image size={16} />} title="Portrait" />
-          </div>
-          <span>
-            <span className="lp-quote-author-name">{customerStory.author.name}</span>
-            <span className="lp-quote-author-role">{customerStory.author.role}</span>
-          </span>
-          <span className="lp-quote-attr push-right">{customerStory.attribution}</span>
-        </figcaption>
-      </figure>
     </Band>
   );
 }

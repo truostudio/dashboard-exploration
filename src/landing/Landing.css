@@ -100,9 +100,6 @@
 .landing:not(:has(.lp-scene canvas)) .lp-hero.lp-invert {
   background: var(--ub-canvas);
 }
-.landing:not(:has(.lp-footer-scene canvas)) .lp-footer.lp-invert {
-  background: var(--ub-canvas);
-}
 
 /* ============================================================
    Dither
@@ -276,6 +273,11 @@
   margin-inline: auto;
   border-left: 1px solid var(--lp-rail);
   border-right: 1px solid var(--lp-rail);
+}
+/* Scene plate paints after ::before at the same z-index and covered the
+   rails. Keep the edge rule above the dither host. */
+.lp-footer::before {
+  z-index: 2;
 }
 .lp-band.lp-no-rails::before { display: none; }
 
@@ -857,8 +859,81 @@
 }
 
 /* ============================================================
-   4 · Trusted by — marquee
+   4 · Trusted by — static customers board
+   Page rails own the L/R edges; the board only draws top/bottom
+   and internal seams, so nothing doubles.
    ============================================================ */
+.lp-trusted {
+  padding-top: var(--s-9);
+  padding-bottom: var(--s-9);
+}
+.lp-trusted-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
+  align-items: stretch;
+  /* No L/R border — .lp-band::before rails already mark that edge. */
+  border-top: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+}
+.lp-trusted-logos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.lp-trusted-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: var(--s-5) var(--s-4);
+  border-right: 1px solid var(--ub-line);
+  border-bottom: 1px solid var(--ub-line);
+}
+/* Inner column against the centre: drop cell edge; centre draws one seam. */
+.lp-trusted-board > .lp-trusted-logos:first-child .lp-trusted-cell:nth-child(2n) {
+  border-right: none;
+}
+/* Outer column against the page rail: no second vertical. */
+.lp-trusted-board > .lp-trusted-logos:last-child .lp-trusted-cell:nth-child(2n) {
+  border-right: none;
+}
+.lp-trusted-logos .lp-trusted-cell:nth-last-child(-n + 2) { border-bottom: none; }
+.lp-trusted-logo {
+  display: block;
+  width: auto;
+  height: 28px;
+  max-width: 100%;
+  object-fit: contain;
+}
+:root[data-theme='dark'] .lp-trusted-logo {
+  filter: brightness(0) invert(1);
+  opacity: 0.72;
+}
+.lp-trusted-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+  padding: var(--s-7) var(--s-5);
+  text-align: center;
+  background: var(--ub-sunken);
+  /* Single seams to the logo columns — cells on either side stay clear. */
+  border-left: 1px solid var(--ub-line);
+  border-right: 1px solid var(--ub-line);
+}
+.lp-trusted-center .lp-title {
+  max-width: 12ch;
+  text-wrap: balance;
+}
+.lp-trusted-badge {
+  display: block;
+  width: 56px;
+  height: auto;
+}
+
+/* Marquee primitives retained for other bands. */
 .lp-marquee {
   position: relative;
   overflow: hidden;
@@ -878,10 +953,23 @@
   to   { transform: translate3d(-50%, 0, 0); }
 }
 
-.lp-trusted { padding-top: var(--s-9); padding-bottom: var(--s-9); }
+.lp-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 88px;
+  padding: 0 var(--s-9);
+  flex: none;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  color: var(--ub-text-3);
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-io);
+}
+.lp-logo:hover { color: var(--ub-black); }
 
-/* ---- Customer wall ----
-   Six blocks of 2×2 units: twelve across, two down, no remainder. */
+/* ---- Customer wall (legacy square field) ---- */
 .lp-wall {
   border-top: 1px solid var(--ub-line);
   border-left: 1px solid var(--ub-line);
@@ -902,22 +990,6 @@
   transition: background-color 0.2s var(--ease-io), color 0.2s var(--ease-io);
 }
 .lp-wall-brick:hover { background: var(--ub-sunken); color: var(--ub-black); }
-
-.lp-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 88px;
-  padding: 0 var(--s-9);
-  flex: none;
-  font-family: var(--font-pixel);
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
-  color: var(--ub-text-3);
-  white-space: nowrap;
-  transition: color 0.2s var(--ease-io);
-}
-.lp-logo:hover { color: var(--ub-black); }
 
 /* ============================================================
    5 · Overview
@@ -1091,6 +1163,8 @@
    text held off the unit edge. */
 .lp-blocks > .lp-story-figures,
 .lp-blocks > .lp-story-body,
+.lp-blocks > .lp-story-side,
+.lp-blocks > .lp-story-main,
 .lp-blocks > .lp-stat,
 .lp-blocks > .lp-lead,
 .lp-blocks > .lp-blog-rest { padding-inline: var(--lp-pad); }
@@ -1343,11 +1417,13 @@
 .win-panel,
 .lp-quote,
 .lp-media-lead,
-.lp-faq { position: relative; }
+.lp-faq,
+.lp-trusted-board { position: relative; }
 .win-panel::before, .win-panel::after,
 .lp-quote::before, .lp-quote::after,
 .lp-media-lead::before, .lp-media-lead::after,
-.lp-faq::before, .lp-faq::after {
+.lp-faq::before, .lp-faq::after,
+.lp-trusted-board::before, .lp-trusted-board::after {
   content: '';
   position: absolute;
   inset: -1px;
@@ -1357,13 +1433,15 @@
 }
 /* Two pseudo-elements, four corners: each clips a full-size box down to a
    10px L at two opposite corners. */
-.win-panel::before, .lp-quote::before, .lp-media-lead::before, .lp-faq::before {
+.win-panel::before, .lp-quote::before, .lp-media-lead::before, .lp-faq::before,
+.lp-trusted-board::before {
   clip-path: polygon(
     0 0, 10px 0, 10px 1px, 1px 1px, 1px 10px, 0 10px,
     0 100%, 10px 100%, 10px calc(100% - 1px), 1px calc(100% - 1px), 1px calc(100% - 10px), 0 calc(100% - 10px)
   );
 }
-.win-panel::after, .lp-quote::after, .lp-media-lead::after, .lp-faq::after {
+.win-panel::after, .lp-quote::after, .lp-media-lead::after, .lp-faq::after,
+.lp-trusted-board::after {
   clip-path: polygon(
     100% 0, calc(100% - 10px) 0, calc(100% - 10px) 1px, calc(100% - 1px) 1px, calc(100% - 1px) 10px, 100% 10px,
     100% 100%, calc(100% - 10px) 100%, calc(100% - 10px) calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) calc(100% - 10px), 100% calc(100% - 10px)
@@ -1901,16 +1979,63 @@
 /* ============================================================
    8 · Customer story (inverted)
    ============================================================ */
-.lp-story-grid { align-items: start; margin-bottom: var(--s-10); }
-/* The result is the headline, so the figures get display scale. */
-.lp-story-figures { display: flex; flex-direction: column; gap: var(--s-8); }
-.lp-story-figure { display: flex; flex-direction: column; gap: var(--s-2); }
-.lp-story-num {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-5xl);
-  line-height: var(--lh-5xl);
-  letter-spacing: -0.03em;
-  color: var(--ub-blue-ink);
+.lp-story-grid { align-items: start; margin-bottom: 0; row-gap: var(--s-8); }
+.lp-story-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.lp-story-index {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.08em;
+  color: var(--ub-text-3);
+  min-width: 5.5ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.lp-story-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.lp-media-ceo {
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: none;
+  border: 1px solid var(--ub-line-strong);
+  background: var(--ub-sunken);
+}
+.lp-media-ceo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lp-media-ceo .empty-title { display: block; }
+.lp-story-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: var(--s-2);
+}
+.lp-story-identity-name {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+}
+.lp-story-identity-role {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+}
+.lp-story-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+  min-width: 0;
 }
 .lp-story-body {
   display: flex;
@@ -1921,22 +2046,45 @@
   color: var(--ub-text-2);
   max-width: 68ch;
 }
+/* Stats as a full-measure ruled row under the pair. */
+.lp-story-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin-top: var(--s-2);
+  border-top: 1px solid var(--ub-line-strong);
+}
+.lp-story-figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-6) 0;
+  border-right: 1px solid var(--ub-line);
+}
+.lp-story-figure:last-child { border-right: none; }
+.lp-story-num {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-5xl);
+  line-height: var(--lh-5xl);
+  letter-spacing: -0.03em;
+  color: var(--ub-blue-ink);
+}
 .lp-quote {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--s-6);
-  padding: var(--lp-inset);
-  border-top: 1px solid var(--ub-line-strong);
-  border-bottom: 1px solid var(--ub-line-strong);
+  gap: var(--s-4);
+  padding: var(--s-5) 0 0;
+  border-top: 1px solid var(--ub-line);
+  border-bottom: none;
 }
 .lp-quote-mark { color: var(--ub-blue); opacity: 0.8; }
 .lp-quote-text {
-  font-size: var(--fs-2xl);
-  line-height: var(--lh-2xl);
-  letter-spacing: -0.03em;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  letter-spacing: -0.02em;
   font-weight: 500;
-  max-width: 32ch;
+  max-width: 36ch;
 }
 .lp-quote-attr {
   font-family: var(--font-mono);
@@ -2047,9 +2195,21 @@
 .lp-media-portrait { flex: none; width: 44px; height: 44px; align-items: center; justify-content: center; }
 .lp-media-portrait .empty-title, .lp-media-thumb .empty-title { display: none; }
 
-.lp-blog-grid { align-items: start; }
-.lp-lead { display: flex; flex-direction: column; gap: var(--s-5); }
-.lp-lead-copy { display: flex; flex-direction: column; gap: var(--s-3); }
+.lp-blog-grid { align-items: stretch; }
+.lp-lead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  /* Stretched grid item — fill the row so the byline can sit on the shared floor. */
+  min-height: 100%;
+}
+.lp-lead-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  flex: 1;
+  min-height: 0;
+}
 .lp-lead-title {
   font-size: var(--fs-2xl);
   line-height: var(--lh-2xl);
@@ -2065,7 +2225,19 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.lp-blog-rest { display: flex; flex-direction: column; }
+.lp-lead .lp-post-byline { margin-top: auto; }
+.lp-blog-rest {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  align-self: stretch;
+  min-height: 100%;
+}
+/* Each side post fills its half so the last byline sits on the lead's floor. */
+.lp-blog-rest .lp-post-row {
+  min-height: 0;
+  align-items: stretch;
+}
+.lp-blog-rest .lp-post-row:last-child { padding-bottom: 0; }
 .lp-post-row {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr);
@@ -2075,7 +2247,13 @@
   transition: background-color 0.16s var(--ease-io);
 }
 .lp-post-row:first-child { border-top: none; padding-top: 0; }
-.lp-post-row-copy { display: flex; flex-direction: column; gap: var(--s-2); min-width: 0; }
+.lp-post-row-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: 100%;
+}
 .lp-post-title { font-size: var(--fs-lg); line-height: var(--lh-lg); font-weight: 600; letter-spacing: -0.02em; }
 .lp-post-excerpt {
   font-size: var(--fs-micro);
@@ -2091,6 +2269,7 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
+  margin-top: auto;
   padding-top: var(--s-4);
   border-top: 1px solid var(--ub-line);
   font-family: var(--font-mono);
@@ -2103,6 +2282,11 @@
 /* ============================================================
    11 · FAQ
    ============================================================ */
+/* Abut the invert footer — no empty band pad between the last chapter
+   and the close stage (that gap read as a black divider). */
+.lp-faq-band {
+  padding-bottom: 0;
+}
 /* The row is the full width of the section — the hover state runs edge to
    edge and only the text is inset. A highlight that stops short of the
    section's own edge reads as a card, which this is not. */
@@ -2158,29 +2342,31 @@
 
 /* ============================================================
    12 · Footer — closing band
-   Converging dither field behind the close + CTA (local WebGL,
-   not the hero routing volume). Sidebar nav, legal as floor chrome.
+   Nucleus dither fills the empty close stage and just grazes the
+   rail (local WebGL, not the hero routing volume). Sidebar nav,
+   legal as floor chrome.
    ============================================================ */
-/* Transparent so EndpointField reads through; no-WebGL fallback above
-   still lays a dark plate when there is no canvas. */
 .lp-footer {
   position: relative;
   z-index: 1;
   isolation: isolate;
-  overflow: hidden;
-  background: transparent;
+  overflow-x: clip;
+  overflow-y: visible;
+  /* Own the invert plate — scene no longer covers the full footer. */
+  background: var(--ub-canvas);
   min-height: min(72svh, 640px);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--s-9) var(--lp-gutter) var(--s-6);
+  /* No top pad — FAQ already ends on a rule; padding here made a black gap. */
+  padding: 0 var(--lp-gutter) var(--s-6);
 }
 .lp-footer-scene {
   position: absolute;
-  inset: 0;
+  /* Own the close stage; clear the inner gap and just graze the rail. */
+  inset: 0 0 calc((var(--s-8) + 28px) * -1);
   z-index: 0;
   pointer-events: none;
-  background: #0D0E0D;
+  background: transparent;
 }
 .lp-footer-scene canvas {
   display: block;
@@ -2190,17 +2376,31 @@
 .lp-footer-inner {
   position: relative;
   z-index: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--s-8);
   max-width: var(--lp-max);
   width: 100%;
   margin: 0 auto;
+  min-height: 0;
 }
 .lp-footer-inner > * { min-width: 0; }
 
+/* Empty upper volume + close CTA; dither is staged and centred here. */
+.lp-footer-close-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: min(48svh, 440px);
+}
+
 /* Close: section-scale type + actions, not display hero type. */
 .lp-footer-close {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -2235,6 +2435,8 @@
 
 /* Brand + sidebar-density columns on one rail. */
 .lp-footer-rail {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
   gap: var(--s-8);
@@ -2303,6 +2505,8 @@
 
 /* Floor chrome: ticker then legal. */
 .lp-footer-floor {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -2354,7 +2558,7 @@
   .lp-figure { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }
   .lp-footer {
     min-height: 0;
-    padding: var(--s-8) var(--lp-gutter) var(--s-5);
+    padding: 0 var(--lp-gutter) var(--s-5);
   }
   .lp-footer-close {
     flex-direction: column;
@@ -2416,8 +2620,15 @@
   .lp-stat-num, .lp-story-num { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
   .lp-proof-title, .lp-lead-title, .lp-quote-text { font-size: var(--fs-xl); line-height: 32px; }
   .lp-story-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
-  .lp-story-figures { flex-direction: row; gap: var(--s-7); }
-  .lp-quote { padding: var(--s-7) 0; }
+  .lp-story-side {
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .lp-media-ceo {
+    width: min(220px, 100%);
+  }
+  .lp-story-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-quote { padding: var(--s-5) 0 0; }
   .lp-post-row { grid-template-columns: 88px minmax(0, 1fr); gap: var(--s-4); }
   .lp-media-thumb { width: 88px; height: 72px; }
   .pg-bill { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
@@ -2431,11 +2642,35 @@
   .lp-quote-text { font-size: var(--fs-body); line-height: var(--lh-body); }
   .lp-faq-q { font-size: var(--fs-body); line-height: var(--lh-body); padding: var(--s-5) var(--s-2); }
   .lp-faq-a { padding-left: 40px; }
-  .lp-footer { padding-top: var(--s-7); }
+  .lp-footer { padding-top: 0; }
   .lp-footer-nav { grid-template-columns: minmax(0, 1fr); }
   .lp-footer-legal { margin-left: 0; }
   .lp-footer-meta { flex-direction: column; align-items: flex-start; }
   .lp-logo { height: 64px; padding: 0 var(--s-6); font-size: var(--fs-body); line-height: var(--lh-body); }
+  .lp-trusted-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lp-trusted-center {
+    order: -1;
+    border: none;
+    border-bottom: 1px solid var(--ub-line);
+    padding: var(--s-6);
+  }
+  .lp-trusted-center .lp-title { max-width: 18ch; }
+  .lp-trusted-logos {
+    border-bottom: 1px solid var(--ub-line);
+  }
+  .lp-trusted-board > .lp-trusted-logos:last-child { border-bottom: none; }
+  /* On a stacked board the outer cells meet the page edge — keep no L/R double. */
+  .lp-trusted-board > .lp-trusted-logos:first-child .lp-trusted-cell:nth-child(2n),
+  .lp-trusted-board > .lp-trusted-logos:last-child .lp-trusted-cell:nth-child(2n) {
+    border-right: none;
+  }
+  .lp-trusted-board > .lp-trusted-logos .lp-trusted-cell:nth-child(2n - 1) {
+    border-right: 1px solid var(--ub-line);
+  }
+  .lp-trusted-cell { min-height: 72px; }
+  .lp-trusted-logo { height: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

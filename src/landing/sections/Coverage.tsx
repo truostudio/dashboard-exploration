@@ -19,7 +19,7 @@ export function Coverage() {
 
   return (
     <Band className="lp-coverage">
-      <SectionRule index="05" />
+      <SectionRule index="06" />
 
       <div className="lp-blocks" data-reveal>
         <Win w={5} variant="flat" className="win-note">

@@ -13,7 +13,7 @@ export function Blog() {
 
   return (
     <Band className="lp-blog">
-      <SectionRule index="08" />
+      <SectionRule index="09" />
       <BandHead
         wide
         title={blog.title}
@@ -26,7 +26,7 @@ export function Blog() {
       />
 
       <div className="lp-blocks lp-blog-grid">
-        <article className="lp-lead" data-reveal>
+        <article className="lp-lead" style={{ '--w': 7 } as React.CSSProperties} data-reveal>
           <div className="lp-media lp-media-lead">
             <Empty icon={<Icon.Image size={20} />} title="Article image">
               Artwork for “{lead.title}” lives in the CMS.
@@ -44,7 +44,7 @@ export function Blog() {
           </div>
         </article>
 
-        <div className="lp-blog-rest" style={{ '--w': 5, '--h': 5 } as React.CSSProperties}>
+        <div className="lp-blog-rest" style={{ '--w': 5 } as React.CSSProperties}>
           {rest.map((post) => (
             <article key={post.id} className="lp-post-row" data-reveal>
               <div className="lp-media lp-media-thumb">

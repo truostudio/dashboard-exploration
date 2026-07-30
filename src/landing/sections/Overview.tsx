@@ -66,7 +66,7 @@ function Note({ id, w }: { id: string; w: number }) {
 export function Overview() {
   return (
     <Band className="lp-overview">
-      <SectionRule index="03" />
+      <SectionRule index="04" />
       <BandHead
         wide
         title={

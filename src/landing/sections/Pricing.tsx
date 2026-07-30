@@ -42,7 +42,7 @@ export function Pricing() {
 
   return (
     <Band className="lp-pricing">
-      <SectionRule index="07" />
+      <SectionRule index="08" />
 
       <div className="lp-blocks" data-reveal>
         <Win w={7} variant="flat" className="win-note">
