@@ -142,7 +142,6 @@ export function EndpointField() {
     let brand = sceneBrand();
     let ink = sceneInk('dark');
     let dim = sceneDim();
-    let themeNow: SceneTheme = 'dark';
     const ringCount = RINGS.reduce((s, r) => s + r.n, 0);
     const total = ringCount + CORE;
     const lPos = new Float32Array(total * 3);
@@ -260,7 +259,6 @@ export function EndpointField() {
     scene.add(new THREE.Points(packetGeo, packetMat));
 
     function applyTheme(theme: SceneTheme) {
-      themeNow = theme;
       brand = sceneBrand();
       ink = sceneInk(theme);
       dim = sceneDim();

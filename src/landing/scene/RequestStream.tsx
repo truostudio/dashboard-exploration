@@ -184,7 +184,6 @@ export function RequestStream() {
     let brand = sceneBrand();
     let ink = sceneInk('dark');
     let dim = sceneDim();
-    let themeNow: SceneTheme = 'dark';
     const ENTRY = new THREE.Vector3(-2.5, 0.05, 0);
     const ends = Array.from({ length: LANES }, (_, i) => laneEnd(i));
     const tmp = new THREE.Vector3();
@@ -333,8 +332,7 @@ export function RequestStream() {
     scene.add(new THREE.Points(packetGeo, packetMat));
 
     function applyTheme(theme: SceneTheme) {
-      themeNow = theme;
-      el.style.backgroundColor = scenePlate();
+      host.current?.style.setProperty('background-color', scenePlate());
       brand = sceneBrand();
       ink = sceneInk(theme);
       dim = sceneDim();
