@@ -557,7 +557,7 @@
   gap: var(--s-1);
   min-width: 0;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 .lp-nav-link {
   display: inline-flex;
@@ -594,6 +594,35 @@
 }
 .lp-nav-toggle { display: none; }
 .lp-nav-scrim { position: fixed; inset: 0; z-index: 39; background: var(--ub-scrim); }
+
+/* Products — Panel + Table from the component library, positioned on the wrap
+   (outside lp-invert) so theme tokens stay document-scoped. */
+.lp-nav-dd-trigger {
+  gap: var(--s-1);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+.lp-nav-dd-caret {
+  color: var(--ub-text-3);
+  transition: transform 0.15s var(--ease-io);
+}
+.lp-nav-dd-trigger.open .lp-nav-dd-caret { transform: rotate(180deg); }
+.lp-nav-dd-anchor {
+  position: absolute;
+  z-index: 50;
+  width: min(640px, calc(100vw - 48px));
+}
+.lp-nav-dd-panel { width: 100%; margin: 0; }
+.lp-nav-dd-product {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.lp-nav-dd-icon { color: var(--ub-blue); flex: none; }
+.lp-nav-dd-panel-mobile { margin-top: var(--s-2); width: 100%; }
+.lp-nav-dd-mobile { width: auto; }
 
 /* ============================================================
    1 · Hero
@@ -632,6 +661,78 @@
 .lp-hero-inner > * { min-width: 0; padding-inline: var(--lp-pad); }
 
 .lp-hero-title { max-width: 16ch; }
+.lp-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+  margin-bottom: var(--s-4);
+}
+/* Pricing page hero — no WebGL plate behind it, so the invert fills itself.
+   Shorter than the home hero; the table below is the load-bearing instrument. */
+.lp-pricing-hero {
+  min-height: min(72svh, 560px);
+  background: var(--ub-canvas);
+}
+.lp-pricing-hero .lp-hero-title { max-width: 18ch; }
+.lp-pricing-close {
+  background: var(--ub-canvas);
+}
+.lp-pricing-close-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-inline: var(--lp-pad);
+  max-width: 40rem;
+}
+.lp-pricing-close .lp-hero-title {
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-3xl);
+  max-width: 16ch;
+}
+/* Nodes reuses pricing hero/close + Win/StatTiles/plan-table from the kit. */
+.lp-nodes-hero,
+.lp-nodes-close { background: var(--ub-canvas); }
+.lp-nodes-hero {
+  min-height: min(72svh, 560px);
+}
+.lp-nodes-hero .lp-hero-title { max-width: 18ch; }
+.lp-nodes-close .lp-hero-title {
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-3xl);
+  max-width: 16ch;
+}
+.lp-nodes-stats { padding-top: var(--s-8); }
+.lp-nodes-stats .panel-sub a {
+  color: var(--ub-blue-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.lp-nodes-section-lede {
+  margin: calc(var(--s-4) * -1) 0 var(--s-6);
+  padding-inline: 0;
+  max-width: 42rem;
+}
+.lp-nodes-footnote {
+  margin-top: var(--s-5);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  max-width: 52rem;
+}
+.lp-nodes-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.lp-nodes-quad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+.lp-nodes-split .panel-head,
+.lp-nodes-quad .panel-head { margin-bottom: 0; }
 .lp-hero-foot {
   display: flex;
   flex-direction: column;
@@ -1250,7 +1351,32 @@
 }
 .plan-act td { padding-top: var(--lp-inset); padding-bottom: var(--lp-inset); }
 .plan-cta { width: 100%; }
-.lp-bill-toggle { gap: var(--s-4); }
+.lp-bill-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-3);
+}
+.lp-bill-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.lp-bill-discount {
+  flex: none;
+  letter-spacing: 0.08em;
+}
+.lp-pricing .lp-head { margin-bottom: var(--s-8); }
+/* Page mode: no competing section title — just billing chrome over the table. */
+.lp-pricing-page { padding-top: var(--s-8); }
+.lp-pricing-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding-inline: var(--lp-pad);
+  margin-bottom: var(--s-6);
+}
 
 /* ---- Uptime strip ---- */
 .up { display: flex; flex-direction: column; gap: var(--s-5); padding: var(--lp-inset); }
@@ -2112,9 +2238,6 @@
    9 · Pricing
    ============================================================ */
 .lp-billing { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
-/* The calculator used to be pulled up under the lede with a -64px margin,
-   which collided with a three-line lede. It now follows the head normally. */
-.lp-pricing .lp-head { margin-bottom: var(--s-5); }
 .lp-pricing-calc { margin: 0 0 var(--s-8); }
 /* The plans butt against each other and share a hairline, the way rows in a
    dashboard table do, rather than floating as four separate cards. */
@@ -2608,6 +2731,9 @@
   }
   .lp-nav-links.open { transform: none; }
   .lp-nav-link { height: 44px; }
+  .lp-nav-dd-mobile { width: 100%; }
+  .lp-nav-dd-trigger { width: 100%; justify-content: space-between; }
+  .lp-nav-dd-anchor { display: none; }
 }
 
 @media (max-width: 760px) {
@@ -2640,6 +2766,8 @@
   .pg-race-flag { display: none; }
   .lp-stat { padding: var(--s-5) var(--s-4) var(--s-5) 0; }
   .lp-quote-text { font-size: var(--fs-body); line-height: var(--lh-body); }
+  .lp-nodes-split,
+  .lp-nodes-quad { grid-template-columns: 1fr; }
   .lp-faq-q { font-size: var(--fs-body); line-height: var(--lh-body); padding: var(--s-5) var(--s-2); }
   .lp-faq-a { padding-left: 40px; }
   .lp-footer { padding-top: 0; }

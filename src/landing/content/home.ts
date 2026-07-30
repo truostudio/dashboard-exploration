@@ -14,8 +14,54 @@
 export const nav = {
   links: [
     { label: 'Docs', href: 'https://docs.uniblock.dev/' },
-    { label: 'Pricing', href: 'https://www.uniblock.dev/pricing' },
-    { label: 'Products', href: 'https://www.uniblock.dev/nodes' },
+    { label: 'Pricing', href: '/landing-page-pricing' },
+    {
+      label: 'Products',
+      items: [
+        {
+          label: 'Integrations',
+          href: 'https://uniblock.dev/integrations',
+          icon: 'Link' as const,
+          blurb: 'One API key, 55+ providers',
+        },
+        {
+          label: 'Chains',
+          href: 'https://uniblock.dev/chains',
+          icon: 'Cube' as const,
+          blurb: 'Route across 300+ blockchains',
+        },
+        {
+          label: 'Nodes',
+          href: '/landing-page-nodes',
+          icon: 'Nodes' as const,
+          blurb: 'Managed infra, 99.9% uptime',
+        },
+        {
+          label: 'Polymarket',
+          href: 'https://uniblock.dev/polymarket',
+          icon: 'Defi' as const,
+          blurb: 'Prediction-market data',
+        },
+        {
+          label: 'Kraken xStocks',
+          href: 'https://uniblock.dev/kraken-xstocks',
+          icon: 'Coin' as const,
+          blurb: 'Tokenized equities on Solana & BNB',
+        },
+        {
+          label: 'Websockets',
+          href: 'https://uniblock.dev/websockets',
+          icon: 'Webhook' as const,
+          blurb: 'Connect to provider streams through a single managed access layer.',
+        },
+        {
+          label: 'Hyperliquid',
+          href: 'https://uniblock.dev/hyperliquid',
+          icon: 'Lightning' as const,
+          blurb: 'Perps and market data on HyperEVM',
+        },
+      ],
+    },
     { label: 'Resources', href: 'https://www.uniblock.dev/blog' },
     { label: 'About', href: 'https://www.uniblock.dev/about' },
   ],
@@ -579,7 +625,7 @@ export const footer = {
   tagline: ['Every Blockchain API.', 'One Interface.'],
   primary: [
     { label: 'Docs', href: 'https://docs.uniblock.dev/', icon: 'Code' as const },
-    { label: 'Pricing', href: 'https://www.uniblock.dev/pricing', icon: 'Card' as const },
+    { label: 'Pricing', href: '/landing-page-pricing', icon: 'Card' as const },
     { label: 'Integrations', href: 'https://www.uniblock.dev/integrations', icon: 'Grid' as const },
     { label: 'Chains', href: 'https://www.uniblock.dev/chains', icon: 'Tx' as const },
     { label: 'Nodes', href: 'https://www.uniblock.dev/nodes', icon: 'Settings' as const },
