@@ -74,7 +74,8 @@
 
   /* ---- Brand (locked) ---- */
   --ub-blue: #1FB6FF;
-  --ub-blue-ink: #0089cc;          /* AA-safe blue for text on the page bg */
+  /* Same as brand blue in every theme — no darker "royal" substitute for text. */
+  --ub-blue-ink: var(--ub-blue);
   --ub-blue-hover: #0FA9F5;
   --ub-blue-soft: rgba(31, 182, 255, 0.10);
   --ub-blue-wash: rgba(31, 182, 255, 0.05);
@@ -208,8 +209,7 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  /* Brand blue is unchanged; only the text-safe variant lightens. */
-  --ub-blue-ink: #5CC8FF;
+  /* Brand blue stays #1FB6FF; ink already points at --ub-blue. */
   --ub-blue-hover: #45C1FF;
   --ub-blue-soft: rgba(31, 182, 255, 0.14);
   --ub-blue-wash: rgba(31, 182, 255, 0.07);
@@ -403,6 +403,7 @@ h1, h2, h3, h4 {
 .input,
 .nav-item,
 .nav-child,
+.lp-footer-link,
 .sb-doc,
 .qs-card,
 .ps-menu,
@@ -427,6 +428,7 @@ h1, h2, h3, h4 {
 .input::after,
 .nav-item::after,
 .nav-child::after,
+.lp-footer-link::after,
 .sb-doc::after,
 .qs-card::after,
 .ps-menu::after,
@@ -504,6 +506,7 @@ h1, h2, h3, h4 {
 .input:focus::after,
 .nav-item:hover::after,
 .nav-child:hover::after,
+.lp-footer-link:hover::after,
 .sb-doc:hover::after,
 .qs-card:hover::after,
 .wss-select-btn:hover::after,
@@ -600,6 +603,7 @@ h1, h2, h3, h4 {
 .tb-search input,
 .nav-item,
 .nav-child,
+.lp-footer-link,
 .sb-doc,
 .project-switcher,
 .ps-name,

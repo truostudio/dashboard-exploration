@@ -48,6 +48,70 @@ export function useTypedText(text: string, speed = 44) {
 }
 
 /**
+ * Terminal-style cycle: keep a fixed prefix, type a path fast, hold, erase,
+ * then move to the next. Reduced motion shows the first full line and stops.
+ */
+export function useTypedCycle(
+  prefix: string,
+  paths: readonly string[],
+  {
+    typeMs = 16,
+    eraseMs = 10,
+    holdMs = 1400,
+  }: { typeMs?: number; eraseMs?: number; holdMs?: number } = {},
+) {
+  const list = paths.length > 0 ? paths : [''];
+  const [shown, setShown] = useState(() =>
+    reduced() ? prefix + list[0] : prefix,
+  );
+
+  useEffect(() => {
+    // The reduced-motion value is already set by the initialiser; writing it
+    // again here is a setState in an effect body for no gain.
+    if (reduced()) return;
+
+    let alive = true;
+    let timer = 0;
+    let idx = 0;
+
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => {
+        timer = window.setTimeout(resolve, ms);
+      });
+
+    const run = async () => {
+      while (alive) {
+        const target = list[idx] ?? '';
+        for (let c = 0; c <= target.length && alive; c++) {
+          setShown(prefix + target.slice(0, c));
+          if (c < target.length) await wait(typeMs);
+        }
+        if (!alive) break;
+        await wait(holdMs);
+        if (!alive) break;
+        for (let c = target.length; c >= 0 && alive; c--) {
+          setShown(prefix + target.slice(0, c));
+          if (c > 0) await wait(eraseMs);
+        }
+        if (!alive) break;
+        idx = (idx + 1) % list.length;
+        await wait(160);
+      }
+    };
+
+    void run();
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+    // list is compared by joined key so callers can pass a stable literal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefix, list.join('\0'), typeMs, eraseMs, holdMs]);
+
+  return shown;
+}
+
+/**
  * True once the element has been on screen — so a window at the bottom of the
  * page isn't already twelve seconds into its animation when it is reached.
  */

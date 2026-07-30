@@ -120,38 +120,40 @@ const BILLS = [
 
 export function BillingSplit() {
   return (
-    <div className="pg-bill">
-      <div className="pg-bill-side">
-        <span className="pg-bill-label">Before</span>
-        <ul className="pg-bill-list">
-          {BILLS.map((bill) => {
-            const provider = directProviders.find((p) => p.id === bill.id);
-            return (
-              <li key={bill.id} className="pg-bill-row struck">
-                <Avatar src={provider?.icon} name={provider?.name ?? bill.id} size="sm" />
-                <span>{provider?.name ?? bill.id}</span>
-                <span className="pg-bill-amt">{bill.amount}</span>
-              </li>
-            );
-          })}
-        </ul>
-        <span className="pg-bill-note">5 invoices · 5 contracts</span>
-      </div>
+    <div className="pg-bill-wrap">
+      <div className="pg-bill">
+        <div className="pg-bill-side">
+          <span className="pg-bill-label">Before</span>
+          <ul className="pg-bill-list">
+            {BILLS.map((bill) => {
+              const provider = directProviders.find((p) => p.id === bill.id);
+              return (
+                <li key={bill.id} className="pg-bill-row struck">
+                  <Avatar src={provider?.icon} name={provider?.name ?? bill.id} size="sm" />
+                  <span>{provider?.name ?? bill.id}</span>
+                  <span className="pg-bill-amt">{bill.amount}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <span className="pg-bill-note">5 invoices · 5 contracts</span>
+        </div>
 
-      <span className="pg-bill-arrow" aria-hidden>
-        <Icon.Chevron size={18} />
-      </span>
+        <span className="pg-bill-arrow" aria-hidden>
+          <Icon.Chevron size={18} />
+        </span>
 
-      <div className="pg-bill-side">
-        <span className="pg-bill-label on">After</span>
-        <ul className="pg-bill-list">
-          <li className="pg-bill-row total">
-            <img src="/assets/icons/providers/Uniblock.webp" alt="" className="avatar-art avatar-sm" />
-            <span>Uniblock</span>
-            <span className="pg-bill-amt">$4,225.00</span>
-          </li>
-        </ul>
-        <span className="pg-bill-note on">1 invoice · 1 relationship</span>
+        <div className="pg-bill-side">
+          <span className="pg-bill-label on">After</span>
+          <ul className="pg-bill-list">
+            <li className="pg-bill-row total">
+              <Avatar src="/assets/icons/providers/Uniblock.webp" name="Uniblock" size="sm" />
+              <span>Uniblock</span>
+              <span className="pg-bill-amt">$4,225.00</span>
+            </li>
+          </ul>
+          <span className="pg-bill-note on">1 invoice · 1 relationship</span>
+        </div>
       </div>
     </div>
   );

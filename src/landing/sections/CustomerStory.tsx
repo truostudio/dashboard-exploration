@@ -10,7 +10,7 @@ import { customerStory } from '../content/home';
  */
 export function CustomerStory() {
   return (
-    <Band className="lp-story lp-invert">
+    <Band className="lp-story">
       <SectionRule index="06" />
       <BandHead wide title={customerStory.title} />
 

@@ -9,9 +9,8 @@ import * as THREE from 'three';
  * they travel. Bayer dither resolves the render to the same 1-bit field the
  * rest of the product speaks.
  *
- * Scroll presence: full in the hero, quiet through the body, then the same
- * routing volume returns under the footer mini-hero — not a separate floor
- * graphic inventing a second metaphor.
+ * Scroll presence: full in the hero, then off. Mid-page and footer keep their
+ * own plates; the cone does not reconstitute under the closing band.
  */
 
 const LANES = 9;
@@ -158,8 +157,10 @@ export function RequestStream() {
     const dim = ink.clone().multiplyScalar(0.2);
 
     // Dark plate behind transparent dither — matches .lp-invert / dark canvas.
+    // Stays opaque for the whole page; mid-page bands paint their own canvas
+    // over it. Fading this with presence re-broke light mode (invert ink on
+    // the light page canvas while the hero was still on screen).
     el.style.backgroundColor = '#0D0E0D';
-    el.style.opacity = '1';
 
     const ENTRY = new THREE.Vector3(-2.5, 0.05, 0);
     const ends = Array.from({ length: LANES }, (_, i) => laneEnd(i));
@@ -323,7 +324,6 @@ export function RequestStream() {
 
     let progress = 0;
     let heroPresence = 1;
-    let footPresence = 0;
     const pointer = { x: 0, y: 0 };
     const readScroll = () => {
       const max = document.body.scrollHeight - window.innerHeight;
@@ -331,32 +331,16 @@ export function RequestStream() {
 
       const vh = window.innerHeight;
       const hero = document.querySelector('.lp-hero');
-      const footBand = document.querySelector('.lp-footer');
 
       // Hero owns the artifact only while it still fills the viewport. Once the
-      // hero has scrolled off, presence must be zero — FAQ and body copy sit
-      // on black, not inside a reconstituting funnel.
+      // hero has scrolled off, presence must be zero — mid-page and footer sit
+      // on their own plates, not inside a reconstituting funnel.
       if (hero) {
         const r = hero.getBoundingClientRect();
         const raw = Math.min(1, Math.max(0, (r.bottom - vh * 0.12) / (vh * 0.75)));
         heroPresence = raw * raw;
       } else {
         heroPresence = 0;
-      }
-
-      // Footer return spans most of a viewport of scroll — not a snap in the
-      // last few dozen pixels. Starts as the band enters, settles when it owns
-      // the frame. FAQ stays clear until the footer is actually approaching.
-      if (footBand) {
-        const r = footBand.getBoundingClientRect();
-        const start = vh * 0.92; // top near the bottom edge
-        const end = vh * 0.12; // top near the top — fully settled
-        const raw = (start - r.top) / (start - end);
-        const t = Math.min(1, Math.max(0, raw));
-        // smoothstep: ease in and out so the cone fades rather than pops
-        footPresence = t * t * (3 - 2 * t);
-      } else {
-        footPresence = 0;
       }
     };
     readScroll();
@@ -416,18 +400,14 @@ export function RequestStream() {
       }
 
       // Full strength on the hero — the cone is the signature, not a sidebar.
-      // Footer brings the same volume back quieter beside the mini-hero type.
-      const presence = Math.max(heroPresence, footPresence * 0.78);
-      const close = footPresence;
+      const presence = heroPresence;
 
       for (let i = 0; i < MAX; i++) {
         const p = packets[i];
         const base = i * (TRAIL + 1);
 
         if (!p.dead && !reduced) {
-          // Footer traffic is the same story, slower — still routing, not a
-          // different graphic.
-          p.t += dt * p.speed * (close > 0.2 ? 0.55 : 1);
+          p.t += dt * p.speed;
           if (p.t >= 1) p.dead = true;
         }
 
@@ -470,7 +450,7 @@ export function RequestStream() {
             const lx = Math.floor((v.x + 3) * 4);
             const ly = Math.floor((v.y + 2) * 4);
             const lz = Math.floor((v.z + 2) * 4);
-            const wScale = close > 0.2 ? 0.55 : 1.1;
+            const wScale = 1.1;
             for (let n = 0; n < 48; n++) {
               const idx = ((lx * 73856093) ^ (ly * 19349663) ^ (lz * 83492791) ^ (n * 2654435761)) >>> 0;
               const li = idx % laneCount;
@@ -494,16 +474,15 @@ export function RequestStream() {
       sizeAttr.needsUpdate = true;
       latCol.needsUpdate = true;
 
-      // Same three-quarter on the fan in both hero and footer — footer just
-      // settles closer to the opening frame instead of inventing a floor shot.
-      const a = Math.PI * (0.34 + progress * 0.38 * (1 - close) + close * 0.04);
-      const radius = 4.6 + close * 0.35;
-      const camY = 0.55 + progress * 0.45 * (1 - close) + close * 0.7;
-      const lookY = -0.35 * (1 - close) + close * -0.2;
-      const lookX = -1.05 * (1 - close) + close * -0.95;
+      // Three-quarter on the fan; progress only nudges the orbit as you leave.
+      const a = Math.PI * (0.34 + progress * 0.38);
+      const radius = 4.6;
+      const camY = 0.55 + progress * 0.45;
+      const lookY = -0.35;
+      const lookX = -1.05;
 
-      const px = reduced ? 0 : pointer.x * 0.2 * (1 - close * 0.5);
-      const py = reduced ? 0 : pointer.y * 0.12 * (1 - close * 0.5);
+      const px = reduced ? 0 : pointer.x * 0.2;
+      const py = reduced ? 0 : pointer.y * 0.12;
 
       camera.position.set(
         Math.sin(a) * radius + px,
@@ -512,15 +491,11 @@ export function RequestStream() {
       );
       camera.lookAt(lookX, lookY, 0);
 
-      latticeMat.opacity = (close > 0.05 ? 0.4 : 0.55) * presence;
+      latticeMat.opacity = 0.55 * presence;
       packetMat.uniforms.uScale.value =
-        presence < 0.05 ? 0 : close > 0.2 ? 0.45 + presence * 0.3 : 0.75 + presence * 0.5;
+        presence < 0.05 ? 0 : 0.75 + presence * 0.5;
       postMat.uniforms.uFade.value = presence;
-      postMat.uniforms.uClear.value = close;
-      // Invert plate lives on the host (CSS), not the GL clear — transparent
-      // dither discards then reveal #0D0E0D instead of the light page canvas.
-      // Opacity tracks presence so mid-page bands are not blacked out.
-      el.style.opacity = String(presence);
+      postMat.uniforms.uClear.value = 0;
 
       renderer.setRenderTarget(rt);
       renderer.setClearColor(0x000000, 0);

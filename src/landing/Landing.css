@@ -81,19 +81,26 @@
   z-index: 0;
   pointer-events: none;
   /* Invert plate: transparent GL discards reveal this instead of the page
-     canvas. RequestStream fades opacity with hero/footer presence. */
+     canvas. Mid-page bands paint an opaque canvas over it; do not fade. */
   background: #0D0E0D;
 }
 .lp-scene canvas { display: block; width: 100%; height: 100%; }
 /* Bands sit above the scene; the inverted ones let it through. */
-/* Footer sits above the scene; the plate is solid so type stays clean. */
 .lp-band,
 .lp-hero,
 .lp-footer { position: relative; z-index: 1; }
 
+/* Light mid-page must cover the fixed invert plate. Without this, light theme
+   shows a black void between/through transparent bands. */
+.lp-band:not(.lp-invert) {
+  background: var(--ub-canvas);
+}
+
 /* No WebGL: invert bands still need a dark plate (scene normally paints it). */
-.landing:not(:has(.lp-scene canvas)) .lp-hero.lp-invert,
-.landing:not(:has(.lp-scene canvas)) .lp-footer.lp-invert {
+.landing:not(:has(.lp-scene canvas)) .lp-hero.lp-invert {
+  background: var(--ub-canvas);
+}
+.landing:not(:has(.lp-footer-scene canvas)) .lp-footer.lp-invert {
   background: var(--ub-canvas);
 }
 
@@ -196,7 +203,7 @@
   --ub-line-strong: rgba(250, 255, 250, 0.16);
   --ub-border: #474947;
   --ub-border-soft: #2B2D2B;
-  --ub-blue-ink: #5CC8FF;
+  --ub-blue-ink: var(--ub-blue);
   --ub-blue-soft: rgba(31, 182, 255, 0.14);
   --ub-blue-wash: rgba(31, 182, 255, 0.07);
   --ub-blue-border: rgba(31, 182, 255, 0.32);
@@ -666,6 +673,8 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* Keep the caret hard while paths cycle — blink reads as idle, not typing. */
+.lp-hero-cmd .lp-caret { animation: none; }
 
 .lp-hero-cta { display: flex; flex-wrap: wrap; gap: var(--s-3); }
 .lp-hero-graphic { min-width: 0; }
@@ -1538,6 +1547,10 @@
 }
 
 /* ---- Billing split ---- */
+.pg-bill-wrap {
+  container-type: inline-size;
+  container-name: pg-bill;
+}
 .pg-bill {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
@@ -1545,6 +1558,15 @@
   align-items: start;
   gap: var(--s-4);
   padding: var(--lp-inset);
+}
+/* Stack when the panel is narrow — this graphic often sits in a 5-col
+   module where the viewport is still wide. */
+@container pg-bill (max-width: 480px) {
+  .pg-bill {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-5);
+  }
+  .pg-bill-arrow { transform: rotate(90deg); }
 }
 .pg-bill-arrow { align-self: center; }
 .pg-bill-side { display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
@@ -1570,18 +1592,28 @@
 }
 .pg-bill-row .avatar-art { filter: grayscale(1); opacity: 0.5; }
 .pg-bill-row.struck { color: var(--ub-text-3); text-decoration: line-through; }
-/* Flex rather than the shared grid: the total's 1fr name track collapses to
-   exactly the text width, leaving the amount butted against it. */
+/* Same track as the struck rows so the amount stays on the right rail and the
+   name yields under narrow columns — flex + margin-auto let them collide. */
 .pg-bill-row.total {
-  display: flex;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
+  gap: var(--s-2);
   padding: var(--s-4) var(--s-3);
   border: 1px solid var(--ub-blue-border);
   background: var(--ub-blue-wash);
   font-weight: 600;
 }
+.pg-bill-row.total > span:not(.pg-bill-amt) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .pg-bill-row.total .pg-bill-amt {
-  margin-left: auto;
+  margin-left: 0;
+  flex: none;
+  white-space: nowrap;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
 }
@@ -2125,104 +2157,165 @@
 }
 
 /* ============================================================
-   12 · Footer — mini-hero
-   Last viewport mirrors the opening: brand-scale type, CTAs, and
-   navigation as composition. Closing CTA lives here so the page
-   ends once. Routing volume reconstitutes behind the type.
+   12 · Footer — closing band
+   Converging dither field behind the close + CTA (local WebGL,
+   not the hero routing volume). Sidebar nav, legal as floor chrome.
    ============================================================ */
+/* Transparent so EndpointField reads through; no-WebGL fallback above
+   still lays a dark plate when there is no canvas. */
 .lp-footer {
   position: relative;
   z-index: 1;
   isolation: isolate;
   overflow: hidden;
-  /* Same as hero: scene paints the invert plate; keep the band open. */
   background: transparent;
-  min-height: min(100svh, 920px);
+  min-height: min(72svh, 640px);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 120px var(--lp-gutter) var(--s-7);
+  padding: var(--s-9) var(--lp-gutter) var(--s-6);
+}
+.lp-footer-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #0D0E0D;
+}
+.lp-footer-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .lp-footer-inner {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  grid-template-areas:
-    'hero nav'
-    'meta meta';
-  column-gap: var(--s-9);
-  row-gap: var(--s-8);
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
   max-width: var(--lp-max);
   width: 100%;
   margin: 0 auto;
 }
 .lp-footer-inner > * { min-width: 0; }
 
-.lp-footer-hero {
-  grid-area: hero;
+/* Close: section-scale type + actions, not display hero type. */
+.lp-footer-close {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-7);
+  padding-inline: var(--lp-pad);
+}
+.lp-footer-close-copy {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--s-6);
-  max-width: 34rem;
+  gap: var(--s-3);
+  max-width: 36rem;
 }
-.lp-footer-logo img {
-  width: 120px;
-  height: auto;
-  display: block;
-}
-.lp-footer-title {
-  font-size: clamp(40px, 6vw, var(--fs-5xl));
-  line-height: 1.05;
+.lp-footer-close-title {
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-2xl);
   font-weight: 600;
-  letter-spacing: -0.04em;
-  max-width: 11ch;
+  letter-spacing: -0.03em;
+  max-width: 22ch;
 }
-.lp-footer-title .lp-line { display: block; }
-.lp-footer-title .lp-line:last-child { color: var(--ub-text-3); }
-.lp-footer-body {
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
+.lp-footer-close-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--ub-text-2);
-  max-width: 36ch;
+  max-width: 48ch;
 }
-.lp-footer-act {
+.lp-footer-close-act {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-3);
+  flex: none;
+}
+
+/* Brand + sidebar-density columns on one rail. */
+.lp-footer-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: var(--s-8);
+  align-items: start;
+  padding-inline: var(--lp-pad);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--ub-line);
+}
+.lp-footer-brand {
+  display: block;
+  width: fit-content;
+}
+.lp-footer-brand img {
+  width: 104px;
+  height: auto;
+  display: block;
 }
 
 .lp-footer-nav {
-  grid-area: nav;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-5) var(--s-6);
+}
+.lp-footer-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 2px;
-  padding-bottom: 4px;
+  min-width: 0;
+}
+.lp-footer-group-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+  padding: 0 8px;
+  margin-bottom: 6px;
 }
 .lp-footer-link {
-  font-size: var(--fs-xl);
-  line-height: var(--lh-xl);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
   color: var(--ub-text-2);
-  transition: color 0.1s var(--ease-out), transform 0.1s var(--ease-out);
+  transition: background 0.14s var(--ease-io), color 0.14s var(--ease-io);
+}
+.lp-footer-link svg {
+  flex: none;
+  color: var(--ub-text-3);
+  transition: color 0.14s var(--ease-io);
 }
 .lp-footer-link:hover {
+  background: var(--ub-hover);
   color: var(--ub-black);
-  transform: translateX(4px);
+}
+.lp-footer-link:hover svg { color: var(--ub-text-2); }
+.lp-footer-link-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Floor chrome: ticker then legal. */
+.lp-footer-floor {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-inline: var(--lp-pad);
+  border-top: 1px solid var(--ub-line);
 }
 
 .lp-footer-meta {
-  grid-area: meta;
   display: flex;
   align-items: center;
   gap: var(--s-4);
   flex-wrap: wrap;
-  padding-top: var(--s-5);
-  border-top: 1px solid var(--ub-line);
+  padding: var(--s-4) 0 0;
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
@@ -2261,20 +2354,21 @@
   .lp-figure { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }
   .lp-footer {
     min-height: 0;
-    padding: 96px var(--lp-gutter) var(--s-6);
+    padding: var(--s-8) var(--lp-gutter) var(--s-5);
   }
-  .lp-footer-inner {
+  .lp-footer-close {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-5);
+  }
+  .lp-footer-rail {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'hero'
-      'nav'
-      'meta';
-    row-gap: var(--s-7);
+    gap: var(--s-6);
   }
-  .lp-footer-hero { max-width: none; }
-  .lp-footer-title { font-size: var(--fs-3xl); max-width: none; }
-  .lp-footer-nav { flex-direction: row; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
-  .lp-footer-link { font-size: var(--fs-lg); line-height: var(--lh-lg); }
+  .lp-footer-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-5);
+  }
   .lp-integration-grid,
   .lp-infra-grid,
   .lp-story-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
@@ -2337,7 +2431,8 @@
   .lp-quote-text { font-size: var(--fs-body); line-height: var(--lh-body); }
   .lp-faq-q { font-size: var(--fs-body); line-height: var(--lh-body); padding: var(--s-5) var(--s-2); }
   .lp-faq-a { padding-left: 40px; }
-  .lp-footer { padding-top: 72px; }
+  .lp-footer { padding-top: var(--s-7); }
+  .lp-footer-nav { grid-template-columns: minmax(0, 1fr); }
   .lp-footer-legal { margin-left: 0; }
   .lp-footer-meta { flex-direction: column; align-items: flex-start; }
   .lp-logo { height: 64px; padding: 0 var(--s-6); font-size: var(--fs-body); line-height: var(--lh-body); }

@@ -1,36 +1,34 @@
 import { closing, footer } from './content/home';
 import { Icon } from '../components/Icons';
+import { EndpointField } from './scene/EndpointField';
+
+type LinkIcon = keyof typeof Icon;
+
+const groups: { label: string; links: { label: string; href: string; icon: LinkIcon }[] }[] = [
+  { label: 'Product', links: footer.primary },
+  { label: 'Company', links: footer.company },
+  { label: 'Social', links: footer.social },
+];
 
 /**
- * End of page as a mini-hero — not a utility strip.
+ * Page ending as a closing band.
  *
- * Pattern borrowed from authored endings (Locomotive, Motto, Dolsten): the
- * last viewport still has a headline, an action, and navigation as part of
- * the composition. The routing volume reconstitutes behind it the way it
- * owns the opening hero.
+ * A dithered converging field (many → one) sits behind the close + CTA —
+ * same CRT language and palette as the hero routing volume, different
+ * construction. Sidebar-density link columns and legal as floor chrome.
  */
 export function LandingFooter() {
-  const nav = [...footer.primary, ...footer.company, ...footer.social];
-
   return (
     <footer className="lp-footer lp-invert">
+      <EndpointField />
+
       <div className="lp-footer-inner">
-        <div className="lp-footer-hero">
-          <a className="lp-footer-logo" href="/landing-page-home" aria-label="Uniblock home">
-            <img src="/uniblock-logo.png" alt="" width={120} />
-          </a>
-
-          <h2 className="lp-footer-title">
-            {footer.tagline.map((line) => (
-              <span className="lp-line" key={line}>
-                <span>{line}</span>
-              </span>
-            ))}
-          </h2>
-
-          <p className="lp-footer-body">{closing.body}</p>
-
-          <div className="lp-footer-act">
+        <div className="lp-footer-close">
+          <div className="lp-footer-close-copy">
+            <h2 className="lp-footer-close-title">{closing.title}</h2>
+            <p className="lp-footer-close-body">{closing.body}</p>
+          </div>
+          <div className="lp-footer-close-act">
             <button className="btn primary">
               <Icon.Key size={14} />
               {closing.cta}
@@ -42,23 +40,40 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <nav className="lp-footer-nav" aria-label="Footer">
-          {nav.map((link) => (
-            <a key={link.label} className="lp-footer-link" href={link.href}>
-              {link.label}
-            </a>
-          ))}
-        </nav>
+        <div className="lp-footer-rail">
+          <a className="lp-footer-brand" href="/landing-page-home" aria-label="Uniblock home">
+            <img src="/uniblock-logo.png" alt="" width={104} />
+          </a>
 
-        <div className="lp-footer-meta">
-          <span>{footer.copyright}</span>
-          <span className="lp-footer-legal">
-            {footer.legal.map((link) => (
-              <a key={link.label} href={link.href}>
-                {link.label}
-              </a>
+          <nav className="lp-footer-nav" aria-label="Footer">
+            {groups.map((group) => (
+              <div key={group.label} className="lp-footer-group">
+                <span className="lp-footer-group-label">{group.label}</span>
+                {group.links.map((link) => {
+                  const I = Icon[link.icon];
+                  return (
+                    <a key={link.label} className="lp-footer-link" href={link.href}>
+                      <I size={14} />
+                      <span className="lp-footer-link-label">{link.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
             ))}
-          </span>
+          </nav>
+        </div>
+
+        <div className="lp-footer-floor">
+          <div className="lp-footer-meta">
+            <span>{footer.copyright}</span>
+            <span className="lp-footer-legal">
+              {footer.legal.map((link) => (
+                <a key={link.label} href={link.href}>
+                  {link.label}
+                </a>
+              ))}
+            </span>
+          </div>
         </div>
       </div>
     </footer>

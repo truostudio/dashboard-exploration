@@ -1,4 +1,4 @@
-import { useTypedText } from '../graphics/terminal';
+import { useTypedCycle } from '../graphics/terminal';
 import { hero, coverage } from '../content/home';
 import { Icon } from '../../components/Icons';
 
@@ -17,7 +17,7 @@ import { Icon } from '../../components/Icons';
  * + default, with icons — so the landing speaks the product's control language.
  */
 export function Hero() {
-  const cmd = useTypedText('curl uni/v1/market-data/token-price?chain=solana');
+  const cmd = useTypedCycle(hero.cmdPrefix, hero.cmdPaths);
 
   return (
     <section className="lp-hero lp-invert">
@@ -33,7 +33,7 @@ export function Hero() {
         <div className="lp-hero-foot" data-reveal>
           <p className="lp-hero-body">{hero.body}</p>
 
-          <p className="lp-hero-cmd">
+          <p className="lp-hero-cmd" aria-live="polite">
             <span>{cmd}</span>
             <span className="lp-caret" aria-hidden />
           </p>

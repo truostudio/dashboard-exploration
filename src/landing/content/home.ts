@@ -31,6 +31,18 @@ export const hero = {
   body: 'One endpoint. 55+ providers, 300+ chains, scored and routed per request.',
   primary: 'Get your API key',
   secondary: 'Read the docs',
+  /** Fixed shell; the path after this cycles in the hero. */
+  cmdPrefix: 'curl uni/v1/',
+  cmdPaths: [
+    'market-data/token-price?chain=solana',
+    'nft/wallet-nft-balances?chain=ethereum',
+    'scan/address-transactions?chain=base',
+    'token/address-token-balances?chain=polygon',
+    'market-data/trending-tokens',
+    'scan/gas-price-tiers?chain=ethereum',
+    'token/token-usd-price?chain=arbitrum',
+    'nft/collection-floor-prices?chain=ethereum',
+  ],
 };
 
 /* ---------------- 2 · Optimized integration ---------------- */
@@ -494,22 +506,22 @@ export const closing = {
 export const footer = {
   tagline: ['Every Blockchain API.', 'One Interface.'],
   primary: [
-    { label: 'Docs', href: 'https://docs.uniblock.dev/' },
-    { label: 'Pricing', href: 'https://www.uniblock.dev/pricing' },
-    { label: 'Integrations', href: 'https://www.uniblock.dev/integrations' },
-    { label: 'Chains', href: 'https://www.uniblock.dev/chains' },
-    { label: 'Nodes', href: 'https://www.uniblock.dev/nodes' },
-    { label: 'Blog', href: 'https://www.uniblock.dev/blog' },
+    { label: 'Docs', href: 'https://docs.uniblock.dev/', icon: 'Code' as const },
+    { label: 'Pricing', href: 'https://www.uniblock.dev/pricing', icon: 'Card' as const },
+    { label: 'Integrations', href: 'https://www.uniblock.dev/integrations', icon: 'Grid' as const },
+    { label: 'Chains', href: 'https://www.uniblock.dev/chains', icon: 'Tx' as const },
+    { label: 'Nodes', href: 'https://www.uniblock.dev/nodes', icon: 'Settings' as const },
+    { label: 'Blog', href: 'https://www.uniblock.dev/blog', icon: 'Chart' as const },
   ],
   company: [
-    { label: 'About', href: 'https://www.uniblock.dev/about' },
-    { label: 'Contact', href: 'https://www.uniblock.dev/contact' },
-    { label: 'Glossary', href: 'https://www.uniblock.dev/glossary' },
-    { label: 'Branding', href: 'https://www.uniblock.dev/branding' },
+    { label: 'About', href: 'https://www.uniblock.dev/about', icon: 'Users' as const },
+    { label: 'Contact', href: 'https://www.uniblock.dev/contact', icon: 'Mail' as const },
+    { label: 'Glossary', href: 'https://www.uniblock.dev/glossary', icon: 'Search' as const },
+    { label: 'Branding', href: 'https://www.uniblock.dev/branding', icon: 'Image' as const },
   ],
   social: [
-    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/uniblock' },
-    { label: 'X', href: 'https://x.com/uniblockdev' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/company/uniblock', icon: 'Social' as const },
+    { label: 'X', href: 'https://x.com/uniblockdev', icon: 'Send' as const },
   ],
   copyright: '©2026 Uniblock',
   legal: [
