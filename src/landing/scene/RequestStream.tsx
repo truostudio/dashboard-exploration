@@ -1,5 +1,13 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import {
+  sceneBrand,
+  sceneDim,
+  sceneInk,
+  scenePlate,
+  watchSceneTheme,
+  type SceneTheme,
+} from './sceneTheme';
 
 /**
  * The signature artifact: a CRT routing volume.
@@ -63,7 +71,8 @@ export function RequestStream() {
     }
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const dpr = Math.min(window.devicePixelRatio, 2);
+    // Cap DPR — full 2× on a full-viewport double-pass is the main GPU cost.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr);
     renderer.setSize(el.clientWidth, el.clientHeight);
     el.appendChild(renderer.domElement);
@@ -87,6 +96,10 @@ export function RequestStream() {
         uCell: { value: CELL },
         uFade: { value: 1 },
         uClear: { value: 0 },
+        uNarrow: { value: 0 },
+        uLight: { value: 0 },
+        uInk: { value: new THREE.Color() },
+        uBrand: { value: new THREE.Color() },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -100,6 +113,10 @@ export function RequestStream() {
         uniform float uCell;
         uniform float uFade;
         uniform float uClear;
+        uniform float uNarrow;
+        uniform float uLight;
+        uniform vec3 uInk;
+        uniform vec3 uBrand;
         varying vec2 vUv;
 
         float bayer(vec2 p) {
@@ -132,6 +149,11 @@ export function RequestStream() {
           float heroClear = smoothstep(0.34, 0.58, vUv.x);
           float heroFloor = smoothstep(0.0, 0.2, vUv.y);
           heroClear *= mix(0.2, 1.0, heroFloor);
+          // Narrow: type spans the whole measure, so a left/right split leaves
+          // the cone nowhere to go. Turn the split horizontal instead — the
+          // network takes the open space above the headline.
+          float heroTop = smoothstep(0.4, 0.68, vUv.y);
+          heroClear = mix(heroClear, heroTop, uNarrow);
           // Footer mini-hero: same left clear as the opening — the volume
           // reconstitutes on the right, beside the type.
           float footClear = smoothstep(0.3, 0.56, vUv.x);
@@ -142,26 +164,27 @@ export function RequestStream() {
           ramp *= mix(smoothstep(0.0, 0.1, vUv.y), 1.0, footMode);
           if (ramp < bayer(cell)) discard;
 
-          vec3 col = s.rgb / max(lum, 1e-4);
-          gl_FragColor = vec4(col, 1.0);
+          // Dark: phosphor cells are luminance-normalized (bright).
+          // Light: binary stamp — grey path vs --ub-blue (no mid mixes).
+          if (uLight > 0.5) {
+            // Grey path is near-achromatic; brand cyan has clear chroma + blue≥green.
+            float mx = max(max(s.r, s.g), s.b);
+            float mn = min(min(s.r, s.g), s.b);
+            float isBrand = step(0.06, mx - mn) * step(s.g * 0.92, s.b);
+            gl_FragColor = vec4(mix(uInk, uBrand, isBrand), 1.0);
+          } else {
+            vec3 col = s.rgb / max(lum, 1e-4);
+            gl_FragColor = vec4(col, 1.0);
+          }
         }`,
     });
     postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
 
-    // The artifact only lives on inverted (dark) bands. Read invert ink, not
-    // the page theme — light-mode --ub-text-2 is graphite and vanishes under
-    // additive blending on the dark plate.
-    const ink = new THREE.Color('#A7AAA7');
-    const brand = new THREE.Color('#1FB6FF');
-    // White guide cells only — keep this quieter than the cyan packets.
-    const dim = ink.clone().multiplyScalar(0.2);
-
-    // Dark plate behind transparent dither — matches .lp-invert / dark canvas.
-    // Stays opaque for the whole page; mid-page bands paint their own canvas
-    // over it. Fading this with presence re-broke light mode (invert ink on
-    // the light page canvas while the hero was still on screen).
-    el.style.backgroundColor = '#0D0E0D';
-
+    // Plate + ink track document --ub-* tokens (no invented hex).
+    let brand = sceneBrand();
+    let ink = sceneInk('dark');
+    let dim = sceneDim();
+    let themeNow: SceneTheme = 'dark';
     const ENTRY = new THREE.Vector3(-2.5, 0.05, 0);
     const ends = Array.from({ length: LANES }, (_, i) => laneEnd(i));
     const tmp = new THREE.Vector3();
@@ -181,6 +204,8 @@ export function RequestStream() {
     const lPos = new Float32Array(total * 3);
     const lCol = new Float32Array(total * 3);
     const lBase = new Float32Array(total * 3); // resting colour (r,g,b)
+    const lAmp = new Float32Array(total);
+    const lKind = new Uint8Array(total); // 0 = dim guide, 1 = brand core
 
     let o = 0;
     for (let lane = 0; lane < LANES; lane++) {
@@ -210,9 +235,8 @@ export function RequestStream() {
             // Quiet guide — denser near the entry, softer along the tube so
             // the fan reads as lanes rather than a solid white wash.
             const rest = 0.07 + (1 - u) * 0.12 + (rad < 0.05 ? 0.045 : 0);
-            lBase[o * 3] = dim.r * rest;
-            lBase[o * 3 + 1] = dim.g * rest;
-            lBase[o * 3 + 2] = dim.b * rest;
+            lAmp[o] = rest;
+            lKind[o] = 0;
             o++;
           }
         }
@@ -226,16 +250,28 @@ export function RequestStream() {
       lPos[o * 3] = ENTRY.x + Math.cos(th) * Math.cos(ph) * rad;
       lPos[o * 3 + 1] = ENTRY.y + Math.sin(ph) * rad;
       lPos[o * 3 + 2] = ENTRY.z + Math.sin(th) * Math.cos(ph) * rad;
-      lBase[o * 3] = brand.r * 0.22;
-      lBase[o * 3 + 1] = brand.g * 0.22;
-      lBase[o * 3 + 2] = brand.b * 0.22;
+      lAmp[o] = 0.22;
+      lKind[o] = 1;
       o++;
     }
 
-    lCol.set(lBase);
+    function paintLatticeBase() {
+      for (let i = 0; i < total; i++) {
+        const src = lKind[i] ? brand : dim;
+        const a = lAmp[i];
+        lBase[i * 3] = src.r * a;
+        lBase[i * 3 + 1] = src.g * a;
+        lBase[i * 3 + 2] = src.b * a;
+      }
+      lCol.set(lBase);
+      const attr = latticeGeo.attributes.color as THREE.BufferAttribute | undefined;
+      if (attr) attr.needsUpdate = true;
+    }
+
     const latticeGeo = new THREE.BufferGeometry();
     latticeGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
     latticeGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
+    paintLatticeBase();
     const latticeMat = new THREE.PointsMaterial({
       size: 0.038,
       vertexColors: true,
@@ -296,6 +332,21 @@ export function RequestStream() {
     });
     scene.add(new THREE.Points(packetGeo, packetMat));
 
+    function applyTheme(theme: SceneTheme) {
+      themeNow = theme;
+      el.style.backgroundColor = scenePlate();
+      brand = sceneBrand();
+      ink = sceneInk(theme);
+      dim = sceneDim();
+      postMat.uniforms.uLight.value = theme === 'light' ? 1 : 0;
+      // Stamp uniforms are written raw to the canvas — use display sRGB so
+      // --ub-blue matches the logo/button (linear working values read as royal).
+      (postMat.uniforms.uInk.value as THREE.Color).copy(ink).convertLinearToSRGB();
+      (postMat.uniforms.uBrand.value as THREE.Color).copy(brand).convertLinearToSRGB();
+      paintLatticeBase();
+    }
+    const stopTheme = watchSceneTheme(applyTheme);
+
     let favoured = 0;
     const c = new THREE.Color();
     const v = new THREE.Vector3();
@@ -325,18 +376,17 @@ export function RequestStream() {
     let progress = 0;
     let heroPresence = 1;
     const pointer = { x: 0, y: 0 };
+    const heroEl = document.querySelector('.lp-hero');
     const readScroll = () => {
       const max = document.body.scrollHeight - window.innerHeight;
       progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
 
       const vh = window.innerHeight;
-      const hero = document.querySelector('.lp-hero');
-
       // Hero owns the artifact only while it still fills the viewport. Once the
       // hero has scrolled off, presence must be zero — mid-page and footer sit
       // on their own plates, not inside a reconstituting funnel.
-      if (hero) {
-        const r = hero.getBoundingClientRect();
+      if (heroEl) {
+        const r = heroEl.getBoundingClientRect();
         const raw = Math.min(1, Math.max(0, (r.bottom - vh * 0.12) / (vh * 0.75)));
         heroPresence = raw * raw;
       } else {
@@ -344,23 +394,44 @@ export function RequestStream() {
       }
     };
     readScroll();
-    window.addEventListener('scroll', readScroll, { passive: true });
+
+    let scrollRaf = 0;
+    let raf = 0;
+    let looping = false;
+    let resumeLoop = () => {};
+    let stopLoop = () => {};
+
+    const onScroll = () => {
+      if (scrollRaf) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0;
+        readScroll();
+        if (heroPresence >= 0.012) resumeLoop();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     const onPointer = (e: PointerEvent) => {
+      if (heroPresence < 0.012) return;
       pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
       pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
     window.addEventListener('pointermove', onPointer, { passive: true });
 
+    let narrow = false;
     const onResize = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
       renderer.setSize(w, h);
       rt.setSize(Math.round(w * dpr), Math.round(h * dpr));
       postMat.uniforms.uRes.value.set(w * dpr, h * dpr);
+      // Matches the CSS breakpoint where the hero type goes full measure.
+      narrow = w <= 760;
+      postMat.uniforms.uNarrow.value = narrow ? 1 : 0;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       readScroll();
+      if (heroPresence >= 0.012) resumeLoop();
     };
     onResize();
     window.addEventListener('resize', onResize);
@@ -439,7 +510,10 @@ export function RequestStream() {
           pPos[j + 2] = v.z;
 
           const fall = 1 - t / (TRAIL + 1);
-          c.copy(won ? brand : ink).multiplyScalar(fade * fall * (won ? 1 : 0.28));
+          // Colour: full brand/ink (fall only shrinks point size) so light-mode
+          // dither can tell packet heads from the grey path.
+          const headGain = won ? 1 : 0.28;
+          c.copy(won ? brand : ink).multiplyScalar(fade * headGain);
           pCol[j] = c.r;
           pCol[j + 1] = c.g;
           pCol[j + 2] = c.b;
@@ -451,7 +525,7 @@ export function RequestStream() {
             const ly = Math.floor((v.y + 2) * 4);
             const lz = Math.floor((v.z + 2) * 4);
             const wScale = 1.1;
-            for (let n = 0; n < 48; n++) {
+            for (let n = 0; n < 24; n++) {
               const idx = ((lx * 73856093) ^ (ly * 19349663) ^ (lz * 83492791) ^ (n * 2654435761)) >>> 0;
               const li = idx % laneCount;
               const i3 = li * 3;
@@ -475,11 +549,13 @@ export function RequestStream() {
       latCol.needsUpdate = true;
 
       // Three-quarter on the fan; progress only nudges the orbit as you leave.
+      // Narrow recomposes for the horizontal split: the volume centres up, sits
+      // higher in frame, and pulls back so it clears the measure.
       const a = Math.PI * (0.34 + progress * 0.38);
-      const radius = 4.6;
-      const camY = 0.55 + progress * 0.45;
-      const lookY = -0.35;
-      const lookX = -1.05;
+      const radius = narrow ? 5.9 : 4.6;
+      const camY = (narrow ? 0.3 : 0.55) + progress * 0.45;
+      const lookY = narrow ? -1.15 : -0.35;
+      const lookX = narrow ? -0.1 : -1.05;
 
       const px = reduced ? 0 : pointer.x * 0.2;
       const py = reduced ? 0 : pointer.y * 0.12;
@@ -505,21 +581,53 @@ export function RequestStream() {
       renderer.setClearColor(0x000000, 0);
       renderer.clear();
       renderer.render(postScene, postCam);
+
+      return presence;
     }
 
-    let raf = 0;
     const loop = (t: number) => {
-      frame(t);
+      if (!looping) return;
+      const presence = frame(t);
+      if (presence < 0.01) {
+        stopLoop();
+        return;
+      }
       raf = requestAnimationFrame(loop);
     };
+
+    stopLoop = () => {
+      looping = false;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      el.style.visibility = 'hidden';
+    };
+
+    resumeLoop = () => {
+      if (reduced || looping) return;
+      if (document.visibilityState === 'hidden') return;
+      looping = true;
+      el.style.visibility = '';
+      last = 0;
+      raf = requestAnimationFrame(loop);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') stopLoop();
+      else if (heroPresence >= 0.012) resumeLoop();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     if (reduced) frame(0);
-    else raf = requestAnimationFrame(loop);
+    else resumeLoop();
 
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', readScroll);
+      stopTheme();
+      stopLoop();
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('pointermove', onPointer);
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
       latticeGeo.dispose();
       latticeMat.dispose();
       packetGeo.dispose();

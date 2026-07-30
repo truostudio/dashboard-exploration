@@ -76,7 +76,8 @@ export function Pricing({ page = false }: Props) {
           label="one unified invoice"
           meta={billing === 'annually' ? 'billed annually' : 'billed monthly'}
         >
-          <table className="plan-table">
+          <div className="lp-scroll">
+            <table className="plan-table">
             <thead>
               <tr>
                 <th scope="col">
@@ -111,7 +112,8 @@ export function Pricing({ page = false }: Props) {
                 ))}
               </tr>
             </tbody>
-          </table>
+            </table>
+          </div>
         </Win>
       </div>
 

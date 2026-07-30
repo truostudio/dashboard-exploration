@@ -34,6 +34,9 @@ import {
   PaperPlaneTilt,
   Play,
   Plus,
+  Calculator,
+  BookOpen,
+  Rocket,
   SquaresFour,
   Sun,
   Target,
@@ -109,4 +112,7 @@ export const Icon = {
   Cube: icon(Cube),
   Nodes: icon(TreeStructure),
   Lightning: icon(Lightning),
+  Rocket: icon(Rocket),
+  Book: icon(BookOpen),
+  Calculator: icon(Calculator),
 };

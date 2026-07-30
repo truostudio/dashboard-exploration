@@ -17,6 +17,7 @@ import { SettingsTeam } from './views/SettingsTeam';
 import { SettingsBilling } from './views/SettingsBilling';
 import { Components } from './views/Components';
 import { useTheme } from './theme';
+import './components/ui/ui.css';
 import './App.css';
 
 export type ViewId =

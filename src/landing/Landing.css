@@ -80,9 +80,8 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Invert plate: transparent GL discards reveal this instead of the page
-     canvas. Mid-page bands paint an opaque canvas over it; do not fade. */
-  background: #0D0E0D;
+  /* Plate colour is set by RequestStream to match theme; CSS fallback follows canvas. */
+  background: var(--ub-canvas);
 }
 .lp-scene canvas { display: block; width: 100%; height: 100%; }
 /* Bands sit above the scene; the inverted ones let it through. */
@@ -116,7 +115,7 @@
   --dither-dot: rgba(13, 14, 13, 0.38);
 }
 :root[data-theme='dark'] .landing,
-.landing .lp-invert {
+:root:not([data-theme='light']) .landing .lp-invert {
   --dither-dot: rgba(250, 255, 250, 0.5);
 }
 
@@ -180,9 +179,15 @@
 }
 
 /* ---- Inverted band ----
-   Same token names, dark values, regardless of the visitor's theme. This is
-   how the page gets contrast without a second palette. */
+   Dark plate for contrast on a light page. In dark theme the whole landing
+   is already dark, so invert matches. Dark token overrides apply only when
+   the document is not light — light theme uses :root tokens as-is. */
 .lp-invert {
+  background: var(--ub-canvas);
+  color: var(--ub-black);
+}
+
+:root:not([data-theme='light']) .lp-invert {
   color-scheme: dark;
   --ub-black: #F1F3F1;
   --ub-black-hover: #DDDFDD;
@@ -207,9 +212,30 @@
   --ub-blue-glow: rgba(31, 182, 255, 0.26);
   --ub-accent-on-blue: #FFFFFF;
   --ub-plate: rgba(255, 255, 255, 0.14);
+}
 
+/* Light theme: only the home hero stays transparent so the WebGL plate
+   shows through. Other invert bands (nav, footer, etc.) keep --ub-canvas.
+   Invert must not flip rails to pale — those vanish on a light plate. */
+:root[data-theme='light'] .landing .lp-invert {
+  --lp-rail: rgba(13, 14, 13, 0.12);
+}
+:root[data-theme='light'] .landing .lp-hero.lp-invert {
+  background: transparent;
+}
+
+/* Pages without the home WebGL scene still need an opaque light plate. */
+:root[data-theme='light'] .landing .lp-pricing-hero,
+:root[data-theme='light'] .landing .lp-nodes-hero,
+:root[data-theme='light'] .landing .lp-pricing-close,
+:root[data-theme='light'] .landing .lp-nodes-close,
+:root[data-theme='light'] .landing .lp-footer {
   background: var(--ub-canvas);
-  color: var(--ub-black);
+}
+
+/* No WebGL: home hero needs a plate too. */
+:root[data-theme='light'] .landing:not(:has(.lp-scene canvas)) .lp-hero.lp-invert {
+  background: var(--ub-canvas);
 }
 
 /* ============================================================
@@ -514,8 +540,8 @@
    Nav
    ============================================================ */
 /* ---- Nav ----
-   Sticky on the page rails — same L/R edges as every band. Not a nested card
-   floating inside the measure. Transparent over the hero; opaque once you leave. */
+   Terminal instrument strip on the page rails — mono indices, live chip,
+   registration marks. Transparent over the hero; opaque once you leave. */
 .lp-nav-wrap {
   position: sticky;
   top: 0;
@@ -530,7 +556,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--s-4);
+  gap: var(--s-5);
   height: 52px;
   max-width: var(--lp-max);
   margin: 0 auto;
@@ -538,7 +564,12 @@
   border-left: 1px solid var(--lp-rail);
   border-right: 1px solid var(--lp-rail);
   border-bottom: 1px solid var(--ub-line);
+  background: var(--ub-canvas);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
 }
+/* Gutters stay clear over the hero; only the ruled content strip is opaque. */
 .lp-nav-wrap.on-hero .lp-nav {
   border-bottom-color: transparent;
 }
@@ -554,7 +585,7 @@
 .lp-nav-links {
   display: flex;
   align-items: center;
-  gap: var(--s-1);
+  gap: 0;
   min-width: 0;
   flex: 1;
   overflow: visible;
@@ -562,24 +593,68 @@
 .lp-nav-link {
   display: inline-flex;
   align-items: center;
+  gap: var(--s-2);
   height: var(--ctl-h-sm);
   padding: 0 var(--s-3);
+  font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   font-weight: 500;
-  color: var(--ub-text-2);
-  transition: color 0.15s var(--ease-io);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+  transition: color 0.15s var(--ease-io), background-color 0.15s var(--ease-io);
   white-space: nowrap;
 }
-.lp-nav-link:hover { color: var(--ub-black); }
+.lp-nav-idx {
+  color: var(--ub-text-3);
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+.lp-nav-label { color: inherit; }
+.lp-nav-link:hover,
+.lp-nav-link:focus-visible,
+.lp-nav-dd-trigger.open {
+  color: var(--ub-blue-ink);
+  background: var(--ub-blue-wash);
+}
+.lp-nav-link:hover .lp-nav-idx,
+.lp-nav-dd-trigger.open .lp-nav-idx {
+  color: var(--ub-blue-ink);
+  opacity: 1;
+}
 
 .lp-nav-actions {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-3);
   margin-left: auto;
   flex: none;
 }
+.lp-nav-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: var(--ctl-h-sm);
+  padding: 0 var(--s-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ub-text-2);
+  border: 1px solid var(--ub-line-strong);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s var(--ease-io), border-color 0.15s var(--ease-io), background-color 0.15s var(--ease-io);
+}
+.lp-nav-theme:hover {
+  color: var(--ub-black);
+  border-color: var(--ub-border);
+  background: var(--ub-hover);
+}
+.lp-nav-theme-k { color: var(--ub-text-3); }
+.lp-nav-theme-v { color: inherit; }
 .lp-nav-actions .btn {
   height: var(--ctl-h-sm);
   transition:
@@ -592,21 +667,32 @@
 .lp-nav-actions .btn::after {
   transition: opacity 0.08s var(--ease-out);
 }
+.lp-nav-cta {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+}
 .lp-nav-toggle { display: none; }
 .lp-nav-scrim { position: fixed; inset: 0; z-index: 39; background: var(--ub-scrim); }
+/* Sheet-only chrome. On desktop this row *is* the nav, so it stays out. */
+.lp-nav-sheet-bar,
+.lp-nav-sheet-foot { display: none; }
 
-/* Products — Panel + Table from the component library, positioned on the wrap
-   (outside lp-invert) so theme tokens stay document-scoped. */
+/* Mega menus — Panel + Table, positioned on the wrap (outside lp-invert). */
 .lp-nav-dd-trigger {
-  gap: var(--s-1);
   border: 0;
   background: transparent;
   cursor: pointer;
-  font: inherit;
 }
 .lp-nav-dd-caret {
-  color: var(--ub-text-3);
-  transition: transform 0.15s var(--ease-io);
+  color: currentColor;
+  opacity: 0.55;
+  transition: transform 0.15s var(--ease-io), opacity 0.15s var(--ease-io);
+}
+.lp-nav-dd-trigger.open .lp-nav-dd-caret,
+.lp-nav-dd-trigger:hover .lp-nav-dd-caret {
+  opacity: 1;
 }
 .lp-nav-dd-trigger.open .lp-nav-dd-caret { transform: rotate(180deg); }
 .lp-nav-dd-anchor {
@@ -614,11 +700,39 @@
   z-index: 50;
   width: min(640px, calc(100vw - 48px));
 }
+.lp-nav-dd-bridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 12px;
+}
 .lp-nav-dd-panel { width: 100%; margin: 0; }
+.lp-nav-dd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--ub-line);
+  background: var(--ub-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lp-nav-dd-head-k { color: var(--ub-black); }
+.lp-nav-dd-head-v { color: var(--ub-text-3); }
 .lp-nav-dd-product {
   display: inline-flex;
   align-items: center;
   gap: var(--s-3);
+}
+.lp-nav-dd-idx {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  min-width: 1.6em;
 }
 .lp-nav-dd-icon { color: var(--ub-blue); flex: none; }
 .lp-nav-dd-panel-mobile { margin-top: var(--s-2); width: 100%; }
@@ -769,12 +883,18 @@
   align-items: center;
   gap: var(--s-2);
   min-height: 20px;
+  max-width: 100%;
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   color: var(--ub-text-2);
   white-space: nowrap;
   overflow: hidden;
+}
+.lp-hero-cmd > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Keep the caret hard while paths cycle — blink reads as idle, not typing. */
 .lp-hero-cmd .lp-caret { animation: none; }
@@ -1025,12 +1145,15 @@
   border-right: 1px solid var(--ub-line);
 }
 .lp-trusted-center .lp-title {
-  max-width: 12ch;
+  max-width: 14ch;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 .lp-trusted-badge {
   display: block;
-  width: 56px;
+  width: 88px;
   height: auto;
 }
 
@@ -1238,7 +1361,10 @@
   margin-inline: calc(var(--lp-seam) / -2);
   padding-inline: 0;
 }
-.lp-blocks > * { margin-inline: calc(var(--lp-seam) / 2); }
+/* `.lp-pair` is `display: contents`, so its children — not the wrapper — are
+   the real grid items. Every rule that sizes a block has to reach through it. */
+.lp-blocks > *,
+.lp-blocks > .lp-pair > * { margin-inline: calc(var(--lp-seam) / 2); }
 /* The workspace carries the most blocks, so its rows need more between them
    than a two-block row does. */
 .lp-workspace { row-gap: var(--s-8); }
@@ -1251,24 +1377,37 @@
 .lp-wall > *,
 .lp-stats > *,
 .lp-pricing-grid > * { margin-inline: 0; }
-.lp-blocks > * {
+.lp-blocks > *,
+.lp-blocks > .lp-pair > * {
   grid-column: span var(--w, 12);
   padding-inline: 0;
   min-width: 0;
   min-height: 0;
 }
+/* The wrapper itself is boxless; it must never claim a track. */
+.lp-blocks > .lp-pair { grid-column: auto; margin-inline: 0; }
 /* The two things that genuinely are squares stay squares, by ratio rather
    than by row count: a wall brick and a lattice cell. */
 .lp-wall-brick { aspect-ratio: 1; }
 /* Blocks that are bare prose rather than a drawn window still need their
    text held off the unit edge. */
-.lp-blocks > .lp-story-figures,
 .lp-blocks > .lp-story-body,
 .lp-blocks > .lp-story-side,
 .lp-blocks > .lp-story-main,
 .lp-blocks > .lp-stat,
 .lp-blocks > .lp-lead,
 .lp-blocks > .lp-blog-rest { padding-inline: var(--lp-pad); }
+
+/* Text + graphic pair. Desktop: children join the parent subgrid (`contents`),
+   so desktop column order is simply DOM order.
+   `order` cannot be used to flip a pair here. With `display: contents` there is
+   no per-pair box, so every Win in the field is a sibling of every other and
+   the grid compares `order` across all of them — one pair's flip reshuffles the
+   whole section. Mobile re-stacks note-first with flex `order` instead, where
+   `.lp-pair` is a real container and the scope is the pair. */
+.lp-pair {
+  display: contents;
+}
 
 /* ============================================================
    Dithered block rule
@@ -1306,9 +1445,16 @@
    happen in a table. */
 .plan-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
+}
+.lp-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .plan-table th,
 .plan-table td {
@@ -1439,6 +1585,8 @@
   font-size: var(--fs-micro);
   line-height: 20px;
   white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .log-line {
   display: grid;
@@ -1730,7 +1878,7 @@
 .pg-score-fill {
   display: block;
   height: 100%;
-  background: var(--ub-border);
+  background: var(--m, var(--ub-border));
   transform: scaleX(0);
   transform-origin: left;
 }
@@ -1741,7 +1889,29 @@
   from { transform: scaleX(0); }
   to { transform: none; }
 }
-.pg-race-row.on .pg-score-fill { background: var(--ub-blue); }
+/* One hue per metric, off the existing accent tokens, so three bars in a row
+   are three readable series rather than three lengths. Colour used to carry
+   selection instead; the row wash and the flag hold that on their own. */
+.pg-metric-latency { --m: var(--ub-blue); }
+.pg-metric-cost { --m: var(--ub-violet); }
+.pg-metric-reliability { --m: var(--ub-success); }
+/* The winner leads on weight now that every row is in colour. */
+.pg-race-row:not(.on) .pg-score-fill { opacity: 0.45; }
+
+/* Header cells double as the key — a chip over each column. */
+.pg-race-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+}
+.pg-race-key::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--m);
+}
 .pg-race-flag {
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
@@ -2172,22 +2342,21 @@
   color: var(--ub-text-2);
   max-width: 68ch;
 }
-/* Stats as a full-measure ruled row under the pair. */
+/* Stats close the story column. The rule is internal-divider weight, the same
+   as the quote's, so it reads as the next beat inside the block rather than a
+   section break. */
 .lp-story-figures {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
-  margin-top: var(--s-2);
-  border-top: 1px solid var(--ub-line-strong);
+  border-top: 1px solid var(--ub-line);
 }
 .lp-story-figure {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
-  padding: var(--s-6) 0;
-  border-right: 1px solid var(--ub-line);
+  padding: var(--s-5) 0 0;
 }
-.lp-story-figure:last-child { border-right: none; }
 .lp-story-num {
   font-family: var(--font-pixel);
   font-size: var(--fs-5xl);
@@ -2465,9 +2634,9 @@
 
 /* ============================================================
    12 · Footer — closing band
-   Nucleus dither fills the empty close stage and just grazes the
-   rail (local WebGL, not the hero routing volume). Sidebar nav,
-   legal as floor chrome.
+   Chrome stacks first (close CTA, links, legal), then the nucleus
+   owns the floor: full measure, nothing over it, running off the
+   bottom edge of the document.
    ============================================================ */
 .lp-footer {
   position: relative;
@@ -2477,17 +2646,27 @@
   overflow-y: visible;
   /* Own the invert plate — scene no longer covers the full footer. */
   background: var(--ub-canvas);
-  min-height: min(72svh, 640px);
   display: flex;
   flex-direction: column;
-  /* No top pad — FAQ already ends on a rule; padding here made a black gap. */
-  padding: 0 var(--lp-gutter) var(--s-6);
+  /* No top pad — FAQ already ends on a rule; padding here made a black gap.
+     No bottom pad — the field runs to the edge. */
+  padding: 0 var(--lp-gutter);
+}
+
+/* The floor stage: sits on the page measure so the rails frame it. */
+.lp-footer-stage {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  max-width: var(--lp-max);
+  margin: 0 auto;
+  height: clamp(240px, 42svh, 460px);
+  margin-top: var(--s-7);
+  overflow: hidden;
 }
 .lp-footer-scene {
   position: absolute;
-  /* Own the close stage; clear the inner gap and just graze the rail. */
-  inset: 0 0 calc((var(--s-8) + 28px) * -1);
-  z-index: 0;
+  inset: 0;
   pointer-events: none;
   background: transparent;
 }
@@ -2499,26 +2678,15 @@
 .lp-footer-inner {
   position: relative;
   z-index: 1;
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--s-8);
+  gap: var(--s-7);
   max-width: var(--lp-max);
   width: 100%;
   margin: 0 auto;
   min-height: 0;
 }
 .lp-footer-inner > * { min-width: 0; }
-
-/* Empty upper volume + close CTA; dither is staged and centred here. */
-.lp-footer-close-stage {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: min(48svh, 440px);
-}
 
 /* Close: section-scale type + actions, not display hero type. */
 .lp-footer-close {
@@ -2528,7 +2696,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--s-7);
-  padding-inline: var(--lp-pad);
+  padding: var(--s-9) var(--lp-pad) 0;
 }
 .lp-footer-close-copy {
   display: flex;
@@ -2678,10 +2846,18 @@
   .lp-hero { min-height: 0; padding-top: var(--s-9); padding-bottom: var(--s-8); }
   .lp-hero h1 { font-size: 56px; line-height: 60px; }
   .lp-hero-body { font-size: var(--fs-body); line-height: var(--lh-body); }
+  .lp-hero-status {
+    gap: var(--s-4) var(--s-5);
+    padding: var(--s-4) var(--s-5);
+  }
   .lp-figure { font-size: var(--fs-3xl); line-height: var(--lh-3xl); }
   .lp-footer {
     min-height: 0;
-    padding: 0 var(--lp-gutter) var(--s-5);
+    padding: 0 var(--lp-gutter);
+  }
+  .lp-footer-stage {
+    height: clamp(200px, 34svh, 320px);
+    margin-top: var(--s-6);
   }
   .lp-footer-close {
     flex-direction: column;
@@ -2708,41 +2884,180 @@
   .lp-ledger-num { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
   .lp-blog-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-8); }
 
-  /* Nav collapses to a drawer. It slides in from the left for the same reason
-     the dashboard sidebar does: a fixed panel parked off the right edge adds
-     to the document's scrollable width, and overflow to the left does not. */
+  /* Subgrid only works when .lp-inner is a 12-col grid (≥1001px). Stack below. */
+  .lp-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lp-seam);
+    margin-inline: 0;
+  }
+  .lp-blocks > *,
+  .lp-blocks > .lp-pair > * {
+    width: 100%;
+    margin-inline: 0;
+    grid-column: auto;
+  }
+  .lp-pair {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lp-seam);
+    width: 100%;
+  }
+  .lp-pair > .win-note { order: 0; }
+  .lp-pair > .win:not(.win-note) { order: 1; }
+  .lp-workspace { gap: var(--s-6); }
+  .lp-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+  .lp-stats > * { width: auto; }
+  .lp-story-grid .lp-story-main { order: -1; }
+  .lp-story-grid .lp-story-side { order: 0; }
+  .lp-rule {
+    display: block;
+    height: 1px;
+    background: var(--ub-line);
+    margin-block: var(--s-2);
+  }
+  .lp-rule > * { display: none; }
+
+  .lp-nodes-quad { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-trusted-board { grid-template-columns: minmax(0, 1fr); }
+  .lp-trusted-center {
+    order: -1;
+    border: none;
+    border-bottom: 1px solid var(--ub-line);
+    padding: var(--s-6);
+  }
+  .lp-trusted-center .lp-title {
+    max-width: 16ch;
+    font-size: var(--fs-xl);
+    line-height: var(--lh-xl);
+  }
+  .lp-trusted-badge { width: 72px; }
+  .lp-trusted-logos { border-bottom: 1px solid var(--ub-line); }
+  .lp-trusted-board > .lp-trusted-logos:last-child { border-bottom: none; }
+  .lp-trusted-board > .lp-trusted-logos:first-child .lp-trusted-cell:nth-child(2n),
+  .lp-trusted-board > .lp-trusted-logos:last-child .lp-trusted-cell:nth-child(2n) {
+    border-right: none;
+  }
+  .lp-trusted-board > .lp-trusted-logos .lp-trusted-cell:nth-child(2n - 1) {
+    border-right: 1px solid var(--ub-line);
+  }
+  .lp-trusted-cell { min-height: 72px; }
+  .lp-trusted-logo { height: 22px; }
+
+  .pg-race-head,
+  .pg-race-row {
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  }
+  .pg-race-flag { display: none; }
+
+  /* Nav collapses to a full-screen sheet. A 320px flyout was generic drawer
+     chrome; this is the readout language the rest of the page is built in —
+     a prompt, a numbered listing, controls on the floor — given the whole
+     viewport. The bar itself floats above it so the close is always there. */
   .lp-nav-toggle { display: inline-flex; }
+  .lp-brand,
+  .lp-nav-actions { position: relative; z-index: 42; }
+  /* Theme lives on the sheet floor now; the bar keeps brand, CTA and close. */
+  .lp-nav-actions > .lp-nav-theme { display: none; }
+
   .lp-nav-links {
     position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 41;
-    width: min(320px, 86vw);
     flex-direction: column;
     align-items: stretch;
-    gap: var(--s-1);
-    padding: var(--s-8) var(--s-4);
-    background: var(--ub-elevated);
-    border-right: 1px solid var(--ub-line);
-    transform: translateX(-100%);
-    transition: transform 0.24s var(--ease-out);
+    gap: 0;
+    padding: calc(52px + var(--s-7)) var(--lp-gutter) var(--s-6);
+    background: var(--ub-canvas);
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.18s var(--ease-out), transform 0.18s var(--ease-out);
     overflow: auto;
+    overscroll-behavior: contain;
   }
-  .lp-nav-links.open { transform: none; }
-  .lp-nav-link { height: 44px; }
+  .lp-nav-links.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .lp-nav-sheet-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding-bottom: var(--s-4);
+    margin-bottom: var(--s-5);
+    border-bottom: 1px solid var(--ub-line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-micro);
+    letter-spacing: 0.08em;
+    color: var(--ub-text-2);
+  }
+  .lp-nav-sheet-dim { color: var(--ub-text-3); }
+
+  /* Routes as a directory listing: index, name, full-measure rule. */
+  .lp-nav-link {
+    height: auto;
+    width: 100%;
+    gap: var(--s-4);
+    padding: var(--s-4) 0;
+    font-size: var(--fs-lg);
+    line-height: var(--lh-lg);
+    letter-spacing: 0.02em;
+    color: var(--ub-black);
+    border-bottom: 1px solid var(--ub-line);
+  }
+  .lp-nav-link:hover,
+  .lp-nav-link:focus-visible,
+  .lp-nav-dd-trigger.open { background: transparent; }
+  .lp-nav-idx {
+    opacity: 1;
+    color: var(--ub-text-3);
+    font-size: var(--fs-micro);
+  }
   .lp-nav-dd-mobile { width: 100%; }
-  .lp-nav-dd-trigger { width: 100%; justify-content: space-between; }
+  .lp-nav-dd-trigger { width: 100%; justify-content: flex-start; }
+  .lp-nav-dd-trigger .lp-nav-dd-caret { margin-left: auto; }
   .lp-nav-dd-anchor { display: none; }
+
+  .lp-nav-sheet-foot {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin-top: auto;
+    padding-top: var(--s-6);
+  }
+  .lp-nav-theme-sheet { height: var(--ctl-h); padding-inline: var(--s-4); }
+  .lp-nav-theme-sheet .lp-nav-theme-k { display: inline; }
 }
 
 @media (max-width: 760px) {
   .landing { --lp-band-y: 64px; --lp-gutter: 20px; }
   .lp-hero h1 { font-size: 40px; line-height: 44px; letter-spacing: -0.035em; }
+  .lp-hero-act { width: 100%; }
+  .lp-hero-act .btn { flex: 1 1 auto; justify-content: center; }
+  /* Wrapping flex left the push-right item stranded on its own line. */
+  .lp-hero-status {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .lp-hero-status .push-right { margin-left: 0; }
   .lp-title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); max-width: none; }
   .lp-figure { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
   .lp-head { margin-bottom: var(--s-8); }
   .lp-head-split { flex-direction: column; align-items: stretch; }
+  /* Once the head stacks there is no title to sit opposite, so the billing
+     chrome hangs off the left edge with everything else. */
+  .lp-bill-toggle { align-items: flex-start; }
+  .lp-bill-row { justify-content: flex-start; }
+  .lp-pricing-toolbar { justify-content: flex-start; }
   .lp-stat-num, .lp-story-num { font-size: var(--fs-2xl); line-height: var(--lh-2xl); }
   .lp-proof-title, .lp-lead-title, .lp-quote-text { font-size: var(--fs-xl); line-height: 32px; }
   .lp-story-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-7); }
@@ -2755,50 +3070,69 @@
   }
   .lp-story-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-quote { padding: var(--s-5) 0 0; }
-  .lp-post-row { grid-template-columns: 88px minmax(0, 1fr); gap: var(--s-4); }
-  .lp-media-thumb { width: 88px; height: 72px; }
+  /* Stack like the lead article: artwork over copy, thumb runs the measure. */
+  .lp-post-row { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
+  .lp-media-thumb { width: 100%; height: 160px; }
+  /* Equal rows exist to land the last byline on the lead's floor. Once the
+     lead sits above instead of beside, they only clip the excerpts. */
+  .lp-blog-rest { grid-template-rows: auto auto; }
+  .lp-blog-rest .lp-post-row { align-items: start; }
   .pg-bill { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
   .pg-bill-arrow { transform: rotate(90deg); }
   .pg-norm { grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
   .pg-norm-rail { height: 24px; width: 1px; justify-self: center; }
   .pg-flow { flex-direction: column; }
-  .pg-race-head, .pg-race-row { grid-template-columns: minmax(0, 1.2fr) repeat(3, minmax(0, 1fr)); }
-  .pg-race-flag { display: none; }
+  .pg-race-head,
+  .pg-race-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2);
+  }
+  .pg-race-row > *:not(.pg-race-name) {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+  }
+  /* Stacked, the head no longer sits over columns it can label, so it reflows
+     from a header row into a wrapped key. The chips carry over from desktop. */
+  .pg-race-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+  }
+  .pg-race-head-name,
+  .pg-race-head-pad { display: none; }
   .lp-stat { padding: var(--s-5) var(--s-4) var(--s-5) 0; }
+  .lp-stats { grid-template-columns: minmax(0, 1fr); }
   .lp-quote-text { font-size: var(--fs-body); line-height: var(--lh-body); }
   .lp-nodes-split,
   .lp-nodes-quad { grid-template-columns: 1fr; }
   .lp-faq-q { font-size: var(--fs-body); line-height: var(--lh-body); padding: var(--s-5) var(--s-2); }
-  .lp-faq-a { padding-left: 40px; }
+  .lp-faq-a { padding-left: var(--s-2); padding-right: var(--s-2); }
   .lp-footer { padding-top: 0; }
   .lp-footer-nav { grid-template-columns: minmax(0, 1fr); }
   .lp-footer-legal { margin-left: 0; }
   .lp-footer-meta { flex-direction: column; align-items: flex-start; }
   .lp-logo { height: 64px; padding: 0 var(--s-6); font-size: var(--fs-body); line-height: var(--lh-body); }
-  .lp-trusted-board {
-    grid-template-columns: minmax(0, 1fr);
+
+  .lp-brand img { width: 72px; }
+  .lp-nav-theme-k { display: none; }
+  .lp-nav-cta {
+    padding-inline: var(--s-3);
   }
-  .lp-trusted-center {
-    order: -1;
-    border: none;
-    border-bottom: 1px solid var(--ub-line);
-    padding: var(--s-6);
+}
+
+@media (max-width: 480px) {
+  .landing { --lp-gutter: 16px; --lp-pad: 12px; }
+  .lp-hero h1 { font-size: 32px; line-height: 36px; }
+  .lp-hero-status {
+    gap: var(--s-3) var(--s-4);
+    padding: var(--s-3) var(--s-4);
   }
-  .lp-trusted-center .lp-title { max-width: 18ch; }
-  .lp-trusted-logos {
-    border-bottom: 1px solid var(--ub-line);
+  .lp-nav {
+    gap: var(--s-3);
+    padding: 0 var(--s-3);
   }
-  .lp-trusted-board > .lp-trusted-logos:last-child { border-bottom: none; }
-  /* On a stacked board the outer cells meet the page edge — keep no L/R double. */
-  .lp-trusted-board > .lp-trusted-logos:first-child .lp-trusted-cell:nth-child(2n),
-  .lp-trusted-board > .lp-trusted-logos:last-child .lp-trusted-cell:nth-child(2n) {
-    border-right: none;
-  }
-  .lp-trusted-board > .lp-trusted-logos .lp-trusted-cell:nth-child(2n - 1) {
-    border-right: 1px solid var(--ub-line);
-  }
-  .lp-trusted-cell { min-height: 72px; }
-  .lp-trusted-logo { height: 22px; }
+  .plan-table { min-width: 560px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -62,7 +62,29 @@ export const nav = {
         },
       ],
     },
-    { label: 'Resources', href: 'https://www.uniblock.dev/blog' },
+    {
+      label: 'Resources',
+      items: [
+        {
+          label: 'Startup Program',
+          href: 'https://uniblock.dev/startup-program',
+          icon: 'Rocket' as const,
+          blurb: 'Free infrastructure credits for startups',
+        },
+        {
+          label: 'Glossary',
+          href: 'https://www.uniblock.dev/glossary',
+          icon: 'Book' as const,
+          blurb: 'Plain-language definitions for blockchain concepts',
+        },
+        {
+          label: 'Pricing Calculator',
+          href: '/landing-page-pricing',
+          icon: 'Calculator' as const,
+          blurb: 'Get an estimate. Plan and cost update live.',
+        },
+      ],
+    },
     { label: 'About', href: 'https://www.uniblock.dev/about' },
   ],
   cta: 'GET STARTED',

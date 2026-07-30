@@ -2,13 +2,13 @@ import type { ReactElement } from 'react';
 import { Icon } from '../components/Icons';
 import { Empty } from '../components/ui';
 import { useTheme } from '../theme';
-import { useReveal, useScrollProgress } from './useReveal';
+import { useReveal } from './useReveal';
 import { LandingNav } from './LandingNav';
 import { LandingFooter } from './LandingFooter';
 import { Home } from './pages/Home';
 import { PricingPage } from './pages/Pricing';
 import { NodesPage } from './pages/Nodes';
-import '../App.css';
+import '../components/ui/ui.css';
 import './Landing.css';
 
 /**
@@ -37,7 +37,6 @@ export function LandingApp({ slug }: { slug: string }) {
   const overlay = slug === 'home' || slug === 'pricing' || slug === 'nodes';
 
   useReveal();
-  useScrollProgress('.lp-stack-seq');
 
   return (
     <div className="landing">

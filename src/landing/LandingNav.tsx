@@ -11,7 +11,7 @@ type Props = {
   overlay?: boolean;
 };
 
-type ProductItem = {
+type MenuItem = {
   label: string;
   href: string;
   icon: keyof typeof Icon;
@@ -20,24 +20,21 @@ type ProductItem = {
 
 type NavLink =
   | { label: string; href: string; items?: undefined }
-  | { label: string; href?: undefined; items: ProductItem[] };
+  | { label: string; href?: undefined; items: MenuItem[] };
 
-const PRODUCT_COLS = [
-  { key: 'product', header: 'Product' },
-  { key: 'about', header: 'About' },
+const MENU_COLS = [
+  { key: 'item', header: 'Item' },
+  { key: 'desc', header: 'Desc' },
   { key: 'go' },
 ];
 
-function ProductsTable({
-  items,
-  onNavigate,
-}: {
-  items: ProductItem[];
-  onNavigate: () => void;
-}) {
+/** Grace so the pointer can travel trigger → panel across the gap. */
+const HOVER_CLOSE_MS = 120;
+
+function MenuTable({ items, onNavigate }: { items: MenuItem[]; onNavigate: () => void }) {
   return (
-    <Table columns={PRODUCT_COLS} ruled>
-      {items.map((item) => {
+    <Table columns={MENU_COLS} ruled>
+      {items.map((item, i) => {
         const Glyph = Icon[item.icon] ?? Icon.Grid;
         return (
           <tr
@@ -50,11 +47,14 @@ function ProductsTable({
           >
             <td>
               <span className="lp-nav-dd-product">
+                <span className="lp-nav-dd-idx mono dim">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <Glyph size={16} className="lp-nav-dd-icon" />
                 <span className="cell-strong">{item.label}</span>
               </span>
             </td>
-            <td className="dim">{item.blurb}</td>
+            <td className="dim mono">{item.blurb}</td>
             <RowChevron />
           </tr>
         );
@@ -64,19 +64,39 @@ function ProductsTable({
 }
 
 /**
- * Sticky strip on the page rails. Invert only the bar over a dark hero —
- * the Products Panel mounts on the wrap (document theme tokens), not under
- * lp-invert, so dark mode keeps elevated dark.
+ * Sticky instrument strip — mono indices, live chip, registration marks.
+ * Mega-menu Panels mount on the wrap (document theme), not under lp-invert.
+ * Desktop menus are hover popovers; mobile drawer stays tap-to-expand.
  */
 export function LandingNav({ theme, onToggleTheme, overlay }: Props) {
-  const [open, setOpen] = useState(false);
-  const [productsOpen, setProductsOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [atTop, setAtTop] = useState(true);
   const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const panelRef = useRef<HTMLDivElement>(null);
-  const productsId = useId();
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const baseId = useId();
+
+  const clearCloseTimer = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+
+  const openMenu = (label: string) => {
+    clearCloseTimer();
+    setActiveMenu(label);
+  };
+
+  const scheduleCloseMenu = () => {
+    clearCloseTimer();
+    closeTimer.current = setTimeout(() => setActiveMenu(null), HOVER_CLOSE_MS);
+  };
+
+  useEffect(() => () => clearCloseTimer(), []);
 
   useEffect(() => {
     const onScroll = () => setAtTop(window.scrollY < 48);
@@ -86,56 +106,82 @@ export function LandingNav({ theme, onToggleTheme, overlay }: Props) {
   }, []);
 
   useLayoutEffect(() => {
-    if (!productsOpen || !wrapRef.current || !triggerRef.current) {
+    if (!activeMenu || !wrapRef.current) {
+      setPanelPos(null);
+      return;
+    }
+    const trigger = triggerRefs.current[activeMenu];
+    if (!trigger) {
       setPanelPos(null);
       return;
     }
     const wrap = wrapRef.current.getBoundingClientRect();
-    const trigger = triggerRef.current.getBoundingClientRect();
+    const rect = trigger.getBoundingClientRect();
     setPanelPos({
-      top: trigger.bottom - wrap.top + 10,
-      left: Math.max(0, trigger.left - wrap.left),
+      top: rect.bottom - wrap.top + 10,
+      left: Math.max(0, rect.left - wrap.left),
     });
-  }, [productsOpen, open]);
+  }, [activeMenu, drawerOpen]);
 
   useEffect(() => {
-    if (!productsOpen) return;
+    if (!activeMenu) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setProductsOpen(false);
-    };
-    const onPointer = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (triggerRef.current?.contains(t)) return;
-      if (panelRef.current?.contains(t)) return;
-      setProductsOpen(false);
+      if (e.key === 'Escape') setActiveMenu(null);
     };
     window.addEventListener('keydown', onKey);
-    window.addEventListener('mousedown', onPointer);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('mousedown', onPointer);
-    };
-  }, [productsOpen]);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeMenu]);
 
   const onHero = Boolean(overlay) && atTop;
   const nextTheme = theme === 'dark' ? 'light' : 'dark';
   const links = nav.links as NavLink[];
-  const products = links.find((l): l is Extract<NavLink, { items: ProductItem[] }> => Boolean(l.items));
+  const openLink = links.find(
+    (l): l is Extract<NavLink, { items: MenuItem[] }> => Boolean(l.items) && l.label === activeMenu,
+  );
 
   const closeAll = () => {
-    setOpen(false);
-    setProductsOpen(false);
+    clearCloseTimer();
+    setDrawerOpen(false);
+    setActiveMenu(null);
   };
+
+  /* The sheet covers the document, so the page behind it must stop scrolling
+     and Escape has to be a way out. */
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [drawerOpen]);
+
+  let linkIndex = 0;
 
   return (
     <div ref={wrapRef} className={`lp-nav-wrap ${onHero ? 'on-hero' : ''}`.trim()}>
-      <nav className={`lp-nav ${onHero ? 'lp-invert' : ''}`.trim()} aria-label="Main">
+      <nav className={`lp-nav marks-4 ${onHero ? 'lp-invert' : ''}`.trim()} aria-label="Main">
         <a className="lp-brand" href="/landing-page-home" aria-label="Uniblock home">
           <img src="/uniblock-logo.png" alt="" width={104} />
         </a>
 
-        <div className={`lp-nav-links ${open ? 'open' : ''}`.trim()}>
+        <div className={`lp-nav-links ${drawerOpen ? 'open' : ''}`.trim()}>
+          {/* Sheet chrome — inert on desktop, where this row is the nav itself. */}
+          <div className="lp-nav-sheet-bar" aria-hidden>
+            <span className="lp-nav-sheet-cmd">
+              uniblock <span className="lp-nav-sheet-dim">ls</span> ./routes
+            </span>
+            <span className="lp-caret" />
+          </div>
+
           {links.map((link) => {
+            const idx = String(++linkIndex).padStart(2, '0');
+
             if (!link.items) {
               return (
                 <a
@@ -144,68 +190,115 @@ export function LandingNav({ theme, onToggleTheme, overlay }: Props) {
                   href={link.href}
                   onClick={closeAll}
                 >
-                  {link.label}
+                  <span className="lp-nav-idx">{idx}</span>
+                  <span className="lp-nav-label">{link.label}</span>
                 </a>
               );
             }
 
+            const menuId = `${baseId}-${link.label}`;
+            const isOpen = activeMenu === link.label;
+
             return (
-              <div key={link.label} className="lp-nav-dd-mobile">
+              <div
+                key={link.label}
+                className="lp-nav-dd-mobile"
+                onMouseEnter={() => openMenu(link.label)}
+                onMouseLeave={scheduleCloseMenu}
+              >
                 <button
-                  ref={triggerRef}
+                  ref={(node) => {
+                    triggerRefs.current[link.label] = node;
+                  }}
                   type="button"
-                  className={`lp-nav-link lp-nav-dd-trigger ${productsOpen ? 'open' : ''}`.trim()}
-                  aria-expanded={productsOpen}
-                  aria-controls={productsId}
-                  onClick={() => setProductsOpen((v) => !v)}
+                  className={`lp-nav-link lp-nav-dd-trigger ${isOpen ? 'open' : ''}`.trim()}
+                  aria-expanded={isOpen}
+                  aria-controls={menuId}
+                  aria-haspopup="true"
+                  onFocus={() => openMenu(link.label)}
+                  onBlur={(e) => {
+                    const next = e.relatedTarget as Node | null;
+                    if (panelRef.current?.contains(next)) return;
+                    scheduleCloseMenu();
+                  }}
+                  onClick={() => {
+                    if (drawerOpen) {
+                      setActiveMenu((v) => (v === link.label ? null : link.label));
+                    }
+                  }}
                 >
-                  {link.label}
-                  <Icon.ChevronDown size={12} className="lp-nav-dd-caret" />
+                  <span className="lp-nav-idx">{idx}</span>
+                  <span className="lp-nav-label">{link.label}</span>
+                  <Icon.ChevronDown size={11} className="lp-nav-dd-caret" />
                 </button>
-                {productsOpen && open && (
-                  <Panel id={productsId} className="lp-nav-dd-panel-mobile" flush marks={4}>
-                    <ProductsTable items={link.items} onNavigate={closeAll} />
+                {isOpen && drawerOpen && (
+                  <Panel id={menuId} className="lp-nav-dd-panel-mobile" flush marks={4}>
+                    <MenuTable items={link.items} onNavigate={closeAll} />
                   </Panel>
                 )}
               </div>
             );
           })}
+
+          <div className="lp-nav-sheet-foot">
+            <button
+              className="lp-nav-theme lp-nav-theme-sheet"
+              onClick={onToggleTheme}
+              aria-label={`Switch to ${nextTheme} theme`}
+            >
+              <span className="lp-nav-theme-k">theme</span>
+              <span className="lp-nav-theme-v">{theme}</span>
+            </button>
+          </div>
         </div>
-        {open && <div className="lp-nav-scrim" onClick={closeAll} />}
 
         <div className="lp-nav-actions">
           <button
-            className="btn dark"
+            className="lp-nav-theme"
             onClick={onToggleTheme}
             aria-label={`Switch to ${nextTheme} theme`}
             title={`Switch to ${nextTheme} theme`}
           >
-            {theme === 'dark' ? <Icon.Moon size={14} /> : <Icon.Sun size={14} />}
-            {theme === 'dark' ? 'Dark' : 'Light'}
+            <span className="lp-nav-theme-k">theme</span>
+            <span className="lp-nav-theme-v">{theme}</span>
           </button>
 
-          <button className="btn primary lp-nav-cta">{nav.cta}</button>
+          <button className="btn primary lp-nav-cta">
+            <Icon.Key size={14} />
+            {nav.cta}
+          </button>
 
           <button
-            className="btn dark lp-nav-toggle"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
+            className="btn dark icon-only lp-nav-toggle"
+            onClick={() => setDrawerOpen((v) => !v)}
+            aria-label={drawerOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={drawerOpen}
           >
-            {open ? 'Close' : 'Menu'}
+            {drawerOpen ? <Icon.X size={16} /> : <Icon.Menu size={17} />}
           </button>
         </div>
       </nav>
 
-      {/* Desktop: Panel on the wrap so it inherits document theme, not lp-invert. */}
-      {productsOpen && !open && products && panelPos && (
+      {activeMenu && !drawerOpen && openLink && panelPos && (
         <div
           ref={panelRef}
           className="lp-nav-dd-anchor"
           style={{ top: panelPos.top, left: panelPos.left }}
+          onMouseEnter={() => openMenu(activeMenu)}
+          onMouseLeave={scheduleCloseMenu}
         >
-          <Panel id={productsId} className="lp-nav-dd-panel" flush marks={4}>
-            <ProductsTable items={products.items} onNavigate={closeAll} />
+          <div className="lp-nav-dd-bridge" aria-hidden />
+          <Panel
+            id={`${baseId}-${activeMenu}`}
+            className="lp-nav-dd-panel"
+            flush
+            marks={4}
+          >
+            <header className="lp-nav-dd-head">
+              <span className="lp-nav-dd-head-k">{activeMenu.toLowerCase()}</span>
+              <span className="lp-nav-dd-head-v">{openLink.items.length} entries</span>
+            </header>
+            <MenuTable items={openLink.items} onNavigate={closeAll} />
           </Panel>
         </div>
       )}

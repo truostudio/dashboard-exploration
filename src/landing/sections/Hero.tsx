@@ -51,11 +51,8 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Real figures, read out along the floor of the frame. */}
-      <div className="lp-hero-status" data-reveal>
-        <span className="lp-status-live">
-          <i /> live
-        </span>
+      {/* Floor strip — no reveal offset (would clip under hero overflow). */}
+      <div className="lp-hero-status">
         {coverage.stats.map((stat) => (
           <span key={stat.id} className="lp-status-item">
             <b>{stat.value}</b> {stat.label}

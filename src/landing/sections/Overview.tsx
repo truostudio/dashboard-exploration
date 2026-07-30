@@ -15,6 +15,9 @@ import { overview } from '../content/home';
  * blue at random — a viewer has no idea what "focused" means or why it moved.
  * It is gone. Blue now marks only what it marks everywhere else on the page:
  * the Uniblock path — the provider that won, the single invoice, the live tail.
+ *
+ * Pairs wrap in `.lp-pair`. Desktop column order is DOM order; mobile always
+ * re-stacks the note above the graphic regardless of how the pair is written.
  */
 
 const FEATURES = Object.fromEntries(overview.features.map((f) => [f.id, f]));
@@ -78,57 +81,64 @@ export function Overview() {
       />
 
       <div className="lp-blocks lp-workspace" data-reveal>
-        <Note id="apis" w={4} />
+        <div className="lp-pair">
+          <Note id="apis" w={4} />
+          <Win
+            w={8}
+            bare
+            title="The endpoint surface"
+            caption="Every category resolves to the same request shape and the same response contract."
+            label="4 of 3,000+ shown"
+            meta="one contract"
+          >
+            <Explorer />
+          </Win>
+        </div>
 
-        <Win
-          w={8}
-          bare
-          title="The endpoint surface"
-          caption="Every category resolves to the same request shape and the same response contract."
-          label="4 of 3,000+ shown"
-          meta="one contract"
-        >
-          <Explorer />
-        </Win>
+        {/* Graphic first: desktop column order is DOM order. Mobile still
+            stacks the note above it. */}
+        <div className="lp-pair">
+          <Win
+            w={7}
+            bare
+            title="Every provider, health-checked"
+            caption="Uniblock polls all 55+ providers continuously. The highlight is that check moving through them."
+            label="55+ connected"
+            meta="all operational"
+          >
+            <ProviderMesh cols={7} rows={2} />
+          </Win>
+          <Note id="orchestrated" w={5} />
+        </div>
 
-        <Win
-          w={7}
-          bare
-          title="Every provider, health-checked"
-          caption="Uniblock polls all 55+ providers continuously. The highlight is that check moving through them."
-          label="55+ connected"
-          meta="all operational"
-        >
-          <ProviderMesh cols={7} rows={2} />
-        </Win>
+        <div className="lp-pair">
+          <Note id="routing" w={5} />
+          <Win
+            w={7}
+            bare
+            title="How a provider is chosen"
+            caption="Latency, cost and reliability are scored on every request. The full-strength row is the provider that won this one."
+            label="scored per request"
+            meta="hedged if the winner slows"
+          >
+            <RouteRace />
+          </Win>
+        </div>
 
-        <Note id="orchestrated" w={5} />
-
-        <Note id="routing" w={5} />
-
-        <Win
-          w={7}
-          bare
-          title="How a provider is chosen"
-          caption="Latency, cost and reliability are scored on every request. Blue is the provider that won this one."
-          label="scored per request"
-          meta="hedged if the winner slows"
-        >
-          <RouteRace />
-        </Win>
-
-        <Win
-          w={7}
-          bare
-          title="Five contracts become one"
-          caption="The same spend, billed once. Blue is what you actually receive."
-          label="5 invoices → 1"
-          meta="one relationship"
-        >
-          <BillingSplit />
-        </Win>
-
-        <Note id="billing" w={5} />
+        {/* Flipped: graphic left, note right. */}
+        <div className="lp-pair">
+          <Win
+            w={7}
+            bare
+            title="Five contracts become one"
+            caption="The same spend, billed once. Blue is what you actually receive."
+            label="5 invoices → 1"
+            meta="one relationship"
+          >
+            <BillingSplit />
+          </Win>
+          <Note id="billing" w={5} />
+        </div>
 
         {/* Last, and full width. The four claims above are paired blocks; a
             12-wide block between them broke that rhythm and read as a one-off.

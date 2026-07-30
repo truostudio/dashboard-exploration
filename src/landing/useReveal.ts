@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 
 /**
  * Scroll choreography. Anything marked `data-reveal` starts translated and
- * transparent and settles when it first enters the viewport; `data-revealed`
- * is the flag the stylesheet keys off. One observer for the whole page rather
- * than a hook per component, so sections stay plain markup.
+ * settles when it first enters the viewport; `data-revealed` is the flag the
+ * stylesheet keys off. One observer for the whole page rather than a hook per
+ * component, so sections stay plain markup.
  *
  * Elements added later (a tab switching its rows) are picked up by the mutation
- * observer. Under `prefers-reduced-motion` everything is revealed immediately.
+ * observer — only new nodes are scanned, not the whole tree on every DOM churn.
+ * Under `prefers-reduced-motion` everything is revealed immediately.
  */
 export function useReveal(enabled = true) {
   useEffect(() => {
@@ -34,14 +35,25 @@ export function useReveal(enabled = true) {
       { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
     );
 
-    const observeAll = () => {
-      for (const el of document.querySelectorAll('[data-reveal]:not([data-revealed])')) {
+    const watch = (el: Element) => {
+      if (!(el instanceof Element)) return;
+      if (el.hasAttribute('data-reveal') && !el.hasAttribute('data-revealed')) {
         io.observe(el);
+      }
+      for (const child of el.querySelectorAll('[data-reveal]:not([data-revealed])')) {
+        io.observe(child);
       }
     };
 
-    observeAll();
-    const mo = new MutationObserver(observeAll);
+    document.querySelectorAll('[data-reveal]:not([data-revealed])').forEach((el) => io.observe(el));
+
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType === 1) watch(node as Element);
+        }
+      }
+    });
     mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {

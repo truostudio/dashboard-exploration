@@ -65,6 +65,10 @@ const RACE = [
   { id: 'ankr', latency: 48, cost: 88, reliability: 81 },
 ];
 
+/* Once the row stacks there are no column headers left to tell the three bars
+   apart, so each metric carries a hue and the head becomes its key. */
+const METRICS = ['latency', 'cost', 'reliability'] as const;
+
 /**
  * With the window focused the scores re-run, so you watch the decision being
  * made rather than reading its result. Keying the wrapper on `on` remounts the
@@ -75,11 +79,13 @@ export function RouteRace({ on = false }: { on?: boolean }) {
   return (
     <div className="pg-race" key={on ? 'scoring' : 'idle'}>
       <div className="pg-race-head">
-        <span>Provider</span>
-        <span>Latency</span>
-        <span>Cost</span>
-        <span>Reliability</span>
-        <span />
+        <span className="pg-race-head-name">Provider</span>
+        {METRICS.map((metric) => (
+          <span key={metric} className={`pg-race-key pg-metric-${metric}`}>
+            {metric}
+          </span>
+        ))}
+        <span className="pg-race-head-pad" />
       </div>
       {RACE.map((row, i) => {
         const provider = directProviders.find((p) => p.id === row.id);
@@ -90,7 +96,7 @@ export function RouteRace({ on = false }: { on?: boolean }) {
               {provider?.name ?? row.id}
             </span>
             {[row.latency, row.cost, row.reliability].map((score, j) => (
-              <span key={j} className="pg-score" aria-hidden>
+              <span key={j} className={`pg-score pg-metric-${METRICS[j]}`} aria-hidden>
                 <span
                   className="pg-score-fill"
                   style={{ width: `${score}%`, '--d': `${(i * 3 + j) * 0.05}s` } as CSSProperties}

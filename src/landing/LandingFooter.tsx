@@ -13,31 +13,28 @@ const groups: { label: string; links: { label: string; href: string; icon: LinkI
 /**
  * Page ending as a closing band.
  *
- * A dithered nucleus fills the empty close stage and just grazes the rail
- * below — same CRT language as the hero, different silhouette. Sidebar-
- * density link columns and legal as floor chrome.
+ * Chrome first — close CTA, links, legal — then the nucleus owns the floor.
+ * The artifact is the last thing on the page rather than a texture behind the
+ * copy, so the document dissolves into the network it has been describing.
  */
 export function LandingFooter() {
   return (
     <footer className="lp-footer lp-invert">
       <div className="lp-footer-inner">
-        <div className="lp-footer-close-stage">
-          <EndpointField />
-          <div className="lp-footer-close">
-            <div className="lp-footer-close-copy">
-              <h2 className="lp-footer-close-title">{closing.title}</h2>
-              <p className="lp-footer-close-body">{closing.body}</p>
-            </div>
-            <div className="lp-footer-close-act">
-              <button className="btn primary">
-                <Icon.Key size={14} />
-                {closing.cta}
-              </button>
-              <a className="btn dark" href="https://docs.uniblock.dev/">
-                <Icon.External size={14} />
-                Read the docs
-              </a>
-            </div>
+        <div className="lp-footer-close">
+          <div className="lp-footer-close-copy">
+            <h2 className="lp-footer-close-title">{closing.title}</h2>
+            <p className="lp-footer-close-body">{closing.body}</p>
+          </div>
+          <div className="lp-footer-close-act">
+            <button className="btn primary">
+              <Icon.Key size={14} />
+              {closing.cta}
+            </button>
+            <a className="btn dark" href="https://docs.uniblock.dev/">
+              <Icon.External size={14} />
+              Read the docs
+            </a>
           </div>
         </div>
 
@@ -76,6 +73,11 @@ export function LandingFooter() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* The floor. Full measure, no copy over it — the field gets the frame. */}
+      <div className="lp-footer-stage">
+        <EndpointField />
       </div>
     </footer>
   );

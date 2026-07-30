@@ -31,8 +31,9 @@ const CAPTIONS: Record<string, { title: string; caption: string; label: string }
 
 /**
  * Three layers, three arrangements of the same units: 5+7, then 7+5 with the
- * diagram rendered first so it takes the left, then 4+8. Same block, three
- * shapes — which is the point of building from a square unit.
+ * diagram on the left (flip), then 4+8. Desktop column order is DOM order, so a
+ * flipped row writes the diagram first; mobile re-stacks note above viz on its
+ * own, since there `.lp-pair` is a real flex container.
  */
 const SHAPES = [
   { note: 5, viz: 7, flip: false },
@@ -57,7 +58,7 @@ export function FullStack() {
           const cap = CAPTIONS[card.id];
 
           const note = (
-            <Win key={`${card.id}-note`} w={shape.note} variant="flat" className="win-note">
+            <Win w={shape.note} variant="flat" className="win-note">
               <h3 className="win-note-title">{card.title}</h3>
               <p className="win-note-body">{card.body}</p>
               <ul className="lp-points">
@@ -72,7 +73,6 @@ export function FullStack() {
 
           const viz = (
             <Win
-              key={`${card.id}-viz`}
               w={shape.viz}
               bare
               title={cap.title}
@@ -83,7 +83,12 @@ export function FullStack() {
             </Win>
           );
 
-          return shape.flip ? [viz, note] : [note, viz];
+          return (
+            <div key={card.id} className="lp-pair">
+              {shape.flip ? viz : note}
+              {shape.flip ? note : viz}
+            </div>
+          );
         })}
       </div>
     </Band>

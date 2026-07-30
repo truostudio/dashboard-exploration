@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import {
+  sceneBrand,
+  sceneDim,
+  sceneInk,
+  watchSceneTheme,
+  type SceneTheme,
+} from './sceneTheme';
 
 /**
  * Footer signature: an orbital phosphor nucleus.
@@ -43,7 +50,7 @@ export function EndpointField() {
     }
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const dpr = Math.min(window.devicePixelRatio, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr);
     renderer.setSize(el.clientWidth, el.clientHeight);
     el.appendChild(renderer.domElement);
@@ -65,6 +72,9 @@ export function EndpointField() {
         uRes: { value: new THREE.Vector2(1, 1) },
         uCell: { value: CELL },
         uFade: { value: 1 },
+        uLight: { value: 0 },
+        uInk: { value: new THREE.Color() },
+        uBrand: { value: new THREE.Color() },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -77,6 +87,9 @@ export function EndpointField() {
         uniform vec2 uRes;
         uniform float uCell;
         uniform float uFade;
+        uniform float uLight;
+        uniform vec3 uInk;
+        uniform vec3 uBrand;
         varying vec2 vUv;
 
         float bayer(vec2 p) {
@@ -104,28 +117,39 @@ export function EndpointField() {
           float lum = max(max(s.r, s.g), s.b) * s.a;
           float ramp = pow(clamp(lum * 4.5, 0.0, 1.0), 0.58) * uFade;
 
-          // Soft radial field centred on the stage; only the lower copy/CTA
-          // band clears so type stays readable.
-          float mid = 1.0 - smoothstep(0.08, 0.52, length(vUv - vec2(0.5, 0.52)));
-          float floorClear = smoothstep(0.0, 0.22, vUv.y);
-          ramp *= mix(0.05, 1.0, mid) * mix(0.2, 1.0, floorClear);
+          // Nothing sits over the stage any more, so the field can fill the
+          // frame: density settles into the floor and thins upward like a
+          // sky, which gives the nucleus somewhere to be rather than a box
+          // to float in.
+          float sky = mix(1.0, 0.36, smoothstep(0.34, 1.0, vUv.y));
+          float focus = 1.0 - smoothstep(0.12, 0.82, length((vUv - vec2(0.5, 0.5)) * vec2(1.0, 1.3)));
+          ramp *= sky * mix(0.4, 1.0, focus);
           if (ramp < bayer(cell)) discard;
 
-          vec3 col = s.rgb / max(lum, 1e-4);
-          gl_FragColor = vec4(col, 1.0);
+          if (uLight > 0.5) {
+            float mx = max(max(s.r, s.g), s.b);
+            float mn = min(min(s.r, s.g), s.b);
+            float isBrand = step(0.06, mx - mn) * step(s.g * 0.92, s.b);
+            gl_FragColor = vec4(mix(uInk, uBrand, isBrand), 1.0);
+          } else {
+            vec3 col = s.rgb / max(lum, 1e-4);
+            gl_FragColor = vec4(col, 1.0);
+          }
         }`,
     });
     postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
 
-    const ink = new THREE.Color('#A7AAA7');
-    const brand = new THREE.Color('#1FB6FF');
-    const dim = ink.clone().multiplyScalar(0.2);
-
+    let brand = sceneBrand();
+    let ink = sceneInk('dark');
+    let dim = sceneDim();
+    let themeNow: SceneTheme = 'dark';
     const ringCount = RINGS.reduce((s, r) => s + r.n, 0);
     const total = ringCount + CORE;
     const lPos = new Float32Array(total * 3);
     const lCol = new Float32Array(total * 3);
     const lBase = new Float32Array(total * 3);
+    const lAmp = new Float32Array(total);
+    const lKind = new Uint8Array(total);
     // Rest-frame positions so we can spin each ring without rebuilding.
     const rest = new Float32Array(total * 3);
     const ringOf = new Int16Array(total);
@@ -141,10 +165,8 @@ export function EndpointField() {
         rest[o * 3 + 2] = 0;
         ringOf[o] = ri;
         // Outer rings quieter; inner rings denser so the core reads first.
-        const restL = 0.07 + (1 - ri / RINGS.length) * 0.12;
-        lBase[o * 3] = dim.r * restL;
-        lBase[o * 3 + 1] = dim.g * restL;
-        lBase[o * 3 + 2] = dim.b * restL;
+        lAmp[o] = 0.07 + (1 - ri / RINGS.length) * 0.12;
+        lKind[o] = 0;
         o++;
       }
     });
@@ -157,19 +179,30 @@ export function EndpointField() {
       rest[o * 3 + 1] = Math.sin(ph) * Math.sin(th) * rad;
       rest[o * 3 + 2] = Math.cos(ph) * rad;
       ringOf[o] = -1;
-      const glow = 0.18 + (1 - rad / 0.55) * 0.22;
-      lBase[o * 3] = brand.r * glow;
-      lBase[o * 3 + 1] = brand.g * glow;
-      lBase[o * 3 + 2] = brand.b * glow;
+      lAmp[o] = 0.18 + (1 - rad / 0.55) * 0.22;
+      lKind[o] = 1;
       o++;
     }
 
-    lCol.set(lBase);
-    lPos.set(rest);
+    function paintLatticeBase() {
+      for (let i = 0; i < total; i++) {
+        const src = lKind[i] ? brand : dim;
+        const a = lAmp[i];
+        lBase[i * 3] = src.r * a;
+        lBase[i * 3 + 1] = src.g * a;
+        lBase[i * 3 + 2] = src.b * a;
+      }
+      lCol.set(lBase);
+      const attr = latticeGeo.attributes.color as THREE.BufferAttribute | undefined;
+      if (attr) attr.needsUpdate = true;
+    }
 
     const latticeGeo = new THREE.BufferGeometry();
     latticeGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
     latticeGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
+    paintLatticeBase();
+    lPos.set(rest);
+
     const latticeMat = new THREE.PointsMaterial({
       size: 0.048,
       vertexColors: true,
@@ -225,6 +258,18 @@ export function EndpointField() {
         }`,
     });
     scene.add(new THREE.Points(packetGeo, packetMat));
+
+    function applyTheme(theme: SceneTheme) {
+      themeNow = theme;
+      brand = sceneBrand();
+      ink = sceneInk(theme);
+      dim = sceneDim();
+      postMat.uniforms.uLight.value = theme === 'light' ? 1 : 0;
+      (postMat.uniforms.uInk.value as THREE.Color).copy(ink).convertLinearToSRGB();
+      (postMat.uniforms.uBrand.value as THREE.Color).copy(brand).convertLinearToSRGB();
+      paintLatticeBase();
+    }
+    const stopTheme = watchSceneTheme(applyTheme);
 
     const c = new THREE.Color();
     const v = new THREE.Vector3();
@@ -379,7 +424,7 @@ export function EndpointField() {
           pPos[j + 2] = v.z;
 
           const fall = 1 - t / (TRAIL + 1);
-          c.copy(brand).multiplyScalar(fall * (0.55 + u * 0.7));
+          c.copy(brand).multiplyScalar(0.55 + u * 0.7);
           pCol[j] = c.r;
           pCol[j + 1] = c.g;
           pCol[j + 2] = c.b;
@@ -414,10 +459,11 @@ export function EndpointField() {
       colAttr.needsUpdate = true;
       sizeAttr.needsUpdate = true;
 
-      // Dead-centre in the close stage — no lateral bias.
+      // Sit the nucleus a little above centre so the field reads as ground
+      // under it rather than padding around it.
       const drift = reduced ? 0 : Math.sin(now * 0.00015) * 0.04;
-      camera.position.set(drift, 0.2, 2.35);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(drift, 0.24, 2.5);
+      camera.lookAt(0, -0.18, 0);
       lattice.rotation.y = reduced ? 0.12 : now * 0.00008;
 
       latticeMat.opacity = 0.85;
@@ -446,6 +492,7 @@ export function EndpointField() {
     }
 
     return () => {
+      stopTheme();
       cancelAnimationFrame(raf);
       io.disconnect();
       window.removeEventListener('resize', onResize);

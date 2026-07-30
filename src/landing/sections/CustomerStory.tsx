@@ -80,15 +80,17 @@ export function CustomerStory() {
             <blockquote className="lp-quote-text">{story.quote}</blockquote>
             <figcaption className="lp-quote-attr">{story.attribution}</figcaption>
           </figure>
-        </div>
 
-        <div className="lp-story-figures" style={{ '--w': 12 } as React.CSSProperties} data-reveal>
-          {story.stats.map((stat) => (
-            <div key={stat.id} className="lp-story-figure">
-              <span className="lp-story-num">{stat.value}</span>
-              <span className="lp-stat-label">{stat.label}</span>
-            </div>
-          ))}
+          {/* Inside the story column, not a full-measure row under it — as its
+              own band the figures read as belonging to the next section. */}
+          <div className="lp-story-figures">
+            {story.stats.map((stat) => (
+              <div key={stat.id} className="lp-story-figure">
+                <span className="lp-story-num">{stat.value}</span>
+                <span className="lp-stat-label">{stat.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </Band>
