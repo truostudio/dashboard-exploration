@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../components/Icons';
+import { Barcode } from '../components/Barcode';
 import { Segmented } from '../components/Segmented';
 import { SquareMeter } from '../components/SquareMeter';
 import { AnimatedNumber } from '../components/AnimatedNumber';
@@ -689,6 +690,28 @@ export function Components() {
         </Entry>
       </LibSection>
 
+      {/* ---------------- Brand devices ---------------- */}
+      <LibSection id="devices" title="Brand devices" note="Ornament with a source. These carry the product's personality; use them instead of a gradient.">
+        <Entry name="Barcode" desc="A real series drawn as a tape print — dense rules with a hairline range and a heavier body. Deterministic, so the same data always draws the same band."
+          props={[['values', 'number[]'], ['columns', 'number (default 88)'], ['height', 'number'], ['accentEvery', 'number'], ['className', "'on-light' on pale surfaces"]]}
+          code={`<Barcode values={series} height={104} />
+<Barcode values={series} className="on-light" />`}>
+          <div className="lib-row" style={{ display: 'block' }}>
+            <Barcode values={Array.from({ length: 30 }, (_, i) => Math.sin(i / 3) * 40 + 60)} height={72} className="on-light" />
+          </div>
+        </Entry>
+        <Entry name="btn-blk" desc="Boxed mono action. Square, hairline, mono label — a stamped tag rather than a rounded UI button. Pairs with the inverted hero."
+          props={[['.is-solid', 'filled primary'], ['.is-bare', 'underlined tertiary'], ['.on-light', 'for pale surfaces']]}
+          code={`<button className="btn-blk on-light is-solid">Run</button>
+<button className="btn-blk on-light">Open docs</button>`}>
+          <div className="lib-row">
+            <button className="btn-blk on-light is-solid">Run sample request</button>
+            <button className="btn-blk on-light">Open docs</button>
+            <button className="btn-blk on-light is-bare">Migrating?</button>
+          </div>
+        </Entry>
+      </LibSection>
+
       {/* ---------------- Charts ---------------- */}
       <LibSection id="charts" title="Charts" note="Import from '../components/ui/Chart'. Never pass Recharts inline style objects; they escape the CSS system.">
         <Entry name="ChartFrame" desc="Plot wrapper. Replaces a raw ResponsiveContainer."
@@ -700,6 +723,9 @@ export function Components() {
         <Entry name="Theme constants" desc="Spread these onto Recharts primitives."
           props={[['chartAxis', 'XAxis / YAxis props'], ['chartAxisLine', 'axisLine prop'], ['chartGrid', 'CartesianGrid props'], ['chartCursor', 'crosshair for line/area'], ['chartBarCursor', 'band for bar charts']]}
           code={`<XAxis dataKey="label" {...chartAxis} axisLine={chartAxisLine} />\n<CartesianGrid {...chartGrid} />`} />
+        <Entry name="timeAxis / valueAxis" desc="The whole axis for a time-bucketed chart, prefilled. Prop bundles rather than components, because Recharts finds its axes by scanning children and a wrapper hides them."
+          props={[['timeAxis(buckets, gap?)', 'XAxis props, keyed on label'], ['valueAxis(width, format)', 'YAxis props']]}
+          code={`<XAxis {...timeAxis(labels.length)} />\n<YAxis {...valueAxis(48, fmtCompact)} />`} />
       </LibSection>
 
       {/* ---------------- Responsive ---------------- */}

@@ -119,14 +119,29 @@
      always-legible accent rather than the brand blue. */
   --ub-accent-on-blue: var(--ub-black);
 
-  /* ---- Semantics ---- */
-  --ub-success: #12885A;
-  --ub-success-soft: rgba(18, 136, 90, 0.10);
-  --ub-warning: #B45309;
-  --ub-warning-soft: rgba(180, 83, 9, 0.10);
-  --ub-danger: #D92D20;
-  --ub-danger-soft: rgba(217, 45, 32, 0.10);
-  --ub-violet: #7C5CFF;
+  /* ---- Semantics ----
+     Two values per slot, because one colour cannot do both jobs. The base is
+     the *mark*: chart fills, dots, meter bars — sat high enough to hold its own
+     next to the brand blue. The `-ink` is the *text*: the same hue dropped to
+     AA contrast on the surface. Painting 12px type in the mark colour is how a
+     palette ends up simultaneously washed out and illegible.
+
+     Marks are validated as a categorical set (see the dark block for the two
+     documented band exceptions). The old palette failed outright: #D92D20 and
+     #B45309 were ΔE 2.6 apart under deuteranopia, so the danger and warning
+     states were effectively the same colour for a red-green viewer. */
+  --ub-success: #12C98B;
+  --ub-success-ink: #0A7A52;      /* 5.36:1 on white */
+  --ub-success-soft: rgba(18, 201, 139, 0.12);
+  --ub-warning: #FF9500;
+  --ub-warning-ink: #9A5800;      /* 5.57:1 */
+  --ub-warning-soft: rgba(255, 149, 0, 0.12);
+  --ub-danger: #FF2D6F;
+  --ub-danger-ink: #C81E5B;       /* 5.54:1 */
+  --ub-danger-soft: rgba(255, 45, 111, 0.12);
+  --ub-violet: #8B5CFF;
+  --ub-violet-ink: #6D3BF5;       /* 5.84:1 */
+  --ub-violet-soft: rgba(139, 92, 255, 0.12);
 
   /* ---- Radius ----
      The system is square. Every corner is 0 so the registration ticks on
@@ -151,8 +166,20 @@
   --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font-pixel: 'Geist Pixel', 'Geist Mono', monospace;
+  /* Circle, deliberately not the Square used by the hero figures. Labels and
+     figures are different registers, and running both in the same pixel face
+     makes a caption look like a small headline. */
+  --font-pixel-label: 'Geist Pixel Circle', 'Geist Pixel', 'Geist Mono', monospace;
 
   /* ---- Type scale · size is a multiple of 4 · line-height is 150% ---- */
+  /* Accent step, below body. Pixel caps carry at this size in a way sentence
+     case never would, and it keeps a label from competing with the figure it
+     labels.
+
+     The one deliberate break from the multiple-of-4 scale: 8px was too quiet
+     for interactive table headers and 12px put labels back level with body
+     text. Leading is still 150%. */
+  --fs-label: 10px;  --lh-label: 15px;
   --fs-micro: 12px;  --lh-micro: 18px;
   --fs-body:  16px;  --lh-body:  24px;
   --fs-lg:    20px;  --lh-lg:    30px;
@@ -186,6 +213,11 @@
   --ease-io: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ---- Shell ---- */
+  /* Mirrors whatever `zoom` the large-display block applies below. `vh` units
+     are NOT adjusted by `zoom`, so a bare `height: 100vh` inside a zoomed page
+     resolves to zoom x the real viewport and any full-height element runs off
+     the screen. Anything sized in viewport units divides by this. */
+  --ui-zoom: 1;
   --sidebar-w: 240px;
   --topbar-h: 88px;
   --content-max: 1240px;
@@ -199,6 +231,35 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Large-display density
+   ------------------------------------------------------------
+   A CSS pixel is not a physical size. A 4K panel at 200% OS scale reports
+   1920 CSS px and this design is already correct there; the same panel at 100%
+   reports 3840 and the whole app reads half-size. The step is keyed to the
+   *reported* width, which is exactly the signal separating those two cases.
+
+   Scaled with `zoom` rather than by stepping the type tokens, because type is
+   not the thing that is too small — the design is. The spatial system here is
+   332 hardcoded px paddings, 38 fixed heights, and chart heights passed as JS
+   numbers; none of it is tokenized, so a type-only ladder grows the text
+   inside frozen padding and the result reads cramped rather than larger. Zoom
+   scales type, spacing, controls, icons, hairlines, and plot areas by one
+   factor, which is the only way this stays proportionate.
+
+   The content column still widens on its own: zoom multiplies it too, and
+   without this a 4K display is mostly gutter.
+   ============================================================ */
+@media (min-width: 2000px) {
+  body { zoom: 1.25; }
+  :root { --ui-zoom: 1.25; --content-max: 1440px; }
+}
+
+@media (min-width: 3000px) {
+  body { zoom: 1.5; }
+  :root { --ui-zoom: 1.5; --content-max: 1760px; }
 }
 
 /* ============================================================
@@ -241,13 +302,28 @@
   --ub-plate: rgba(255, 255, 255, 0.14);
   --ub-accent-on-blue: #FFFFFF;
 
-  --ub-success: #35C77E;
-  --ub-success-soft: rgba(53, 199, 126, 0.14);
-  --ub-warning: #E8A33C;
-  --ub-warning-soft: rgba(232, 163, 60, 0.14);
-  --ub-danger: #FF6B60;
-  --ub-danger-soft: rgba(255, 107, 96, 0.14);
-  --ub-violet: #9E86FF;
+  /* Selected against the dark surface, not flipped from the light values. Marks
+     go *deeper* here, not lighter: the dark band tops out well below the light
+     one because a bright fill on near-black glares and blooms.
+
+     Two deliberate exceptions to that band. The brand blue stays #1FB6FF in
+     both themes and sits above it — brand identity outranks the guideline. The
+     amber sits a hair above it too: pulling it fully in-band dropped its CVD
+     separation from the pink to ΔE 7.8, and legibility for a red-green viewer
+     is worth more than the last 0.03 of lightness. Ink stays bright, since on
+     this surface the readable direction is up. */
+  --ub-success: #03AD79;
+  --ub-success-ink: #2EE0A0;      /* 11.32:1 on the dark canvas */
+  --ub-success-soft: rgba(3, 173, 121, 0.16);
+  --ub-warning: #DE8500;
+  --ub-warning-ink: #FFB020;      /* 10.58:1 */
+  --ub-warning-soft: rgba(222, 133, 0, 0.16);
+  --ub-danger: #FF2D6F;
+  --ub-danger-ink: #FF6C97;       /* 7.22:1 */
+  --ub-danger-soft: rgba(255, 45, 111, 0.16);
+  --ub-violet: #8B5CFF;
+  --ub-violet-ink: #A78BFF;       /* 7.17:1 */
+  --ub-violet-soft: rgba(139, 92, 255, 0.16);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-md: 0 8px 28px -10px rgba(0, 0, 0, 0.7);
@@ -632,15 +708,15 @@ h1, h2, h3, h4 {
 
 /* ---- Eyebrow / overline ---- */
 .eyebrow {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--ub-text-3);
 }
 .eyebrow::before {
@@ -756,13 +832,13 @@ h1, h2, h3, h4 {
 .badge svg { flex: none; }
 
 .badge.method-get  { background: var(--ub-blue-soft);    color: var(--ub-blue-ink); border-color: var(--ub-blue-border); }
-.badge.method-post { background: var(--ub-success-soft); color: var(--ub-success);  border-color: rgba(18, 136, 90, 0.28); }
-.badge.method-ws   { background: rgba(124, 92, 255, 0.10); color: var(--ub-violet); border-color: rgba(124, 92, 255, 0.28); }
+.badge.method-post { background: var(--ub-success-soft); color: var(--ub-success-ink);  border-color: rgba(18, 201, 139, 0.32); }
+.badge.method-ws   { background: var(--ub-violet-soft); color: var(--ub-violet-ink); border-color: rgba(139, 92, 255, 0.32); }
 
 .badge.new     { background: var(--ub-blue-soft);    color: var(--ub-blue-ink); border-color: var(--ub-blue-border); }
-.badge.success { background: var(--ub-success-soft); color: var(--ub-success);  border-color: rgba(18, 136, 90, 0.24); }
-.badge.warning { background: var(--ub-warning-soft); color: var(--ub-warning);  border-color: rgba(180, 83, 9, 0.24); }
-.badge.danger  { background: var(--ub-danger-soft);  color: var(--ub-danger);   border-color: rgba(217, 45, 32, 0.24); }
+.badge.success { background: var(--ub-success-soft); color: var(--ub-success-ink);  border-color: rgba(18, 201, 139, 0.30); }
+.badge.warning { background: var(--ub-warning-soft); color: var(--ub-warning-ink);  border-color: rgba(255, 149, 0, 0.32); }
+.badge.danger  { background: var(--ub-danger-soft);  color: var(--ub-danger-ink);   border-color: rgba(255, 45, 111, 0.30); }
 .badge.solid   { background: var(--ub-black);        color: var(--ub-white);    border-color: var(--ub-black); }
 
 /* ---- Keycap ---- */
@@ -833,12 +909,12 @@ select.input {
   min-width: 0;
 }
 .field-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  font-weight: 500;
   color: var(--ub-text-3);
 }
 

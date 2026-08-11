@@ -52,7 +52,12 @@
       "Bash(node shoot2.mjs light)",
       "Bash(python \"C:/Users/Rober/AppData/Local/Temp/claude/c--Users-Rober-OneDrive-Documents-GitHub-dashboard-exploration/48150ce5-763a-4faa-bf7d-30d37901b39f/scratchpad/dashes.py\")",
       "Bash(grep -v \":0$\")",
-      "Bash(xargs -n1 basename)"
+      "Bash(xargs -n1 basename)",
+      "Bash(node \"C:/Users/Rober/AppData/Local/Temp/claude/c--Users-Rober-OneDrive-Documents-GitHub-dashboard-exploration/2bf0638d-e1e5-45a1-92ba-1e90a6a689ac/scratchpad/shot.mjs\")",
+      "Bash(git stash *)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(d\\);r.filter\\(f=>f.messages.length\\).forEach\\(f=>f.messages.forEach\\(m=>console.log\\(f.filePath.split\\('src'\\)[1]+':'+m.line+' '+m.ruleId\\)\\)\\)}\\)\")",
+      "Bash(node \"C:/Users/Rober/AppData/Local/Temp/claude/c--Users-Rober-OneDrive-Documents-GitHub-dashboard-exploration/2bf0638d-e1e5-45a1-92ba-1e90a6a689ac/scratchpad/shot2.mjs\" light)",
+      "Bash(grep -n \"/\\\\* ---- \\\\|const endpointCalls\\\\|const topCalls\\\\|const chainMix\\\\|const statusCodes\\\\|const slowest\\\\|cuByEndpoint\" src/data/analytics.ts)"
     ]
   }
 }

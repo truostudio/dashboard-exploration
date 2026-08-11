@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icons';
 import { projects, cuUsed, cuLimit } from '../data/mock';
 import type { ViewId } from '../App';
@@ -26,33 +26,67 @@ function isGroup(e: NavEntry): e is NavGroup {
   return (e as NavGroup).children !== undefined;
 }
 
-const projectNav: NavEntry[] = [
-  { id: 'overview',  label: 'Overview',   icon: 'Grid' },
-  { id: 'analytics', label: 'Analytics',  icon: 'Chart' },
+/**
+ * Sections, not a disclosure group.
+ *
+ * The old rail put Unified and Direct inside an "APIs" dropdown and left
+ * JSON-RPC outside it as a sibling — which quietly claimed JSON-RPC is not an
+ * API. It is one of the three request surfaces the product is built on
+ * (Unified, JSON-RPC, Direct), and the docs treat them as peers, so the nav
+ * does too now.
+ *
+ * Section headers were already the pattern here for Project and Settings; the
+ * dropdown was the one exception, and it cost a click to hide three leaves on a
+ * rail with room for all of them.
+ */
+type NavSection = { label: string; items: NavEntry[] };
+
+const NAV: NavSection[] = [
   {
-    key: 'apis',
-    label: 'APIs',
-    icon: 'Code',
-    children: [
-      { id: 'apis-unified', label: 'Unified' },
-      { id: 'apis-direct',  label: 'Direct' },
-      { id: 'apis-all',     label: 'All', badge: { text: '8', tone: 'green' } },
+    label: 'Project',
+    items: [
+      { id: 'overview',  label: 'Overview',  icon: 'Grid' },
+      { id: 'analytics', label: 'Analytics', icon: 'Chart' },
     ],
   },
-  { id: 'json-rpc',   label: 'JSON-RPC',   icon: 'Tx' },
-  { id: 'webhooks',   label: 'Webhooks',   icon: 'Webhook', badge: { text: '2', tone: 'orange' } },
-  { id: 'api-tester', label: 'API Tester', icon: 'Beaker' },
-];
-
-/** Internal only. Not part of the customer-facing product. */
-const devNav: NavLeaf[] = [
-  { id: 'components', label: 'Components', icon: 'Grid' },
-];
-
-const settingsNav: NavLeaf[] = [
-  { id: 'settings-project', label: 'Project', icon: 'Folder' },
-  { id: 'settings-team',    label: 'Team',    icon: 'Users' },
-  { id: 'settings-billing', label: 'Billing', icon: 'Card' },
+  {
+    // The three surfaces you can call, plus the two catalogues over them.
+    label: 'APIs',
+    items: [
+      { id: 'apis-unified', label: 'Unified',    icon: 'Code' },
+      { id: 'json-rpc',     label: 'JSON-RPC',   icon: 'Tx' },
+      { id: 'apis-direct',  label: 'Direct',     icon: 'Route' },
+      { id: 'chains',       label: 'Chains',     icon: 'Cube' },
+      { id: 'apis-all',     label: 'Browse all', icon: 'Search' },
+    ],
+  },
+  {
+    // Grouped as the docs group them. Webhooks was a lone top-level item and
+    // Nodes was a conditional child of it, which made node infrastructure a
+    // kind of webhook.
+    label: 'Real-time',
+    items: [
+      { id: 'webhooks', label: 'Webhooks', icon: 'Webhook', badge: { text: '2', tone: 'orange' } },
+      { id: 'nodes',    label: 'Nodes',    icon: 'Nodes' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [{ id: 'api-tester', label: 'API Tester', icon: 'Beaker' }],
+  },
+  {
+    label: 'Settings',
+    items: [
+      { id: 'settings-project', label: 'Project', icon: 'Folder' },
+      { id: 'settings-team',    label: 'Team',    icon: 'Users' },
+      { id: 'settings-billing', label: 'Billing', icon: 'Card' },
+    ],
+  },
+  {
+    /** Internal only. Not part of the customer-facing product. */
+    label: 'Developer',
+    items: [{ id: 'components', label: 'Components', icon: 'Grid' }],
+  },
 ];
 
 /** Compute units run to the millions, so the rail shows them abbreviated. */
@@ -256,23 +290,17 @@ export function Sidebar({ view, onNavigate, onNewProject, quickstartProgress, op
           </span>
         </button>
 
-        <div className="sb-section-label">Project</div>
-        {projectNav.map((entry) =>
-          isGroup(entry) ? (
-            <NavGroupItem key={entry.key} group={entry} view={view} onNavigate={onNavigate} />
-          ) : (
-            <NavLeafItem key={entry.id} item={entry} view={view} onNavigate={onNavigate} />
-          ),
-        )}
-
-        <div className="sb-section-label">Settings</div>
-        {settingsNav.map((item) => (
-          <NavLeafItem key={item.id} item={item} view={view} onNavigate={onNavigate} />
-        ))}
-
-        <div className="sb-section-label">Developer</div>
-        {devNav.map((item) => (
-          <NavLeafItem key={item.id} item={item} view={view} onNavigate={onNavigate} />
+        {NAV.map((section) => (
+          <Fragment key={section.label}>
+            <div className="sb-section-label">{section.label}</div>
+            {section.items.map((entry) =>
+              isGroup(entry) ? (
+                <NavGroupItem key={entry.key} group={entry} view={view} onNavigate={onNavigate} />
+              ) : (
+                <NavLeafItem key={entry.id} item={entry} view={view} onNavigate={onNavigate} />
+              ),
+            )}
+          </Fragment>
         ))}
       </nav>
 

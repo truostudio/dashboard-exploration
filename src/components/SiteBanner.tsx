@@ -38,7 +38,7 @@ export function SiteBanner({ onNavigate }: Props) {
         <span className="site-banner-prompt" aria-hidden>
           ›
         </span>
-        <span className="site-banner-tag">notice</span>
+        <span className="site-banner-tag">Notice</span>
         <span className="site-banner-sep" aria-hidden>
           ·
         </span>

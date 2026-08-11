@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
+import { Dither } from '../components/Dither';
 import { Segmented } from '../components/Segmented';
 import {
   TitledPanel, Field, TextInput, Form, FormActions, Badge, CopyButton,
@@ -111,26 +112,36 @@ export function Quickstart({
 
   return (
     <div className="view">
-      <section className="qs-hero blueprint-bg marks-4 rise rise-1">
+      {/* Textured with the house dither rather than inverted. The field is the
+          same Bayer/FBM effect the dashboard ships, inked in the brand blue and
+          frozen to one frame, masked off toward the copy so it never fights the
+          headline. */}
+      <section className="qs-hero marks-4 rise rise-1">
         <div className="qs-hero-inner">
-          <span className="eyebrow">Quickstart · 00 / 05</span>
-          <h2 className="qs-hero-title">Make your first request in under a minute.</h2>
-          <p className="qs-hero-sub muted">
-            Your project is ready. Drop the snippet below into your codebase, hit Run, and Uniblock will route it
-            through the fastest healthy provider for the chain you picked.
+          <span className="eyebrow qs-hero-eyebrow">Quickstart / 00—05</span>
+          <h2 className="qs-hero-title">
+            Make your first request<br />in under a minute.
+          </h2>
+          <p className="qs-hero-sub">
+            Your project is ready. Drop the snippet below into your codebase, hit Run, and Uniblock
+            routes it through the fastest healthy provider for the chain you picked.
           </p>
           <div className="qs-hero-actions">
-            <button className="btn primary" onClick={() => document.getElementById('qs-step-3')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
-              <Icon.Play size={13} /> Run sample request
+            <button
+              className="btn-blk on-light is-solid"
+              onClick={() => document.getElementById('qs-step-3')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            >
+              <Icon.Play size={12} /> Run sample request
             </button>
-            <button className="btn">
-              <Icon.External size={13} /> Open docs
+            <button className="btn-blk on-light">
+              <Icon.External size={12} /> Open docs
             </button>
-            <button className="btn ghost">
-              <Icon.Refresh size={13} /> Migrating from Alchemy / Infura
+            <button className="btn-blk on-light is-bare">
+              Migrating from Alchemy / Infura
             </button>
           </div>
         </div>
+        <Dither animated={false} staticTime={7} className="qs-hero-dither" />
       </section>
 
       <TitledPanel

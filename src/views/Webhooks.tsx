@@ -1,5 +1,5 @@
 import { Icon } from '../components/Icons';
-import { Panel, Table, RowChevron, ViewToolbar, Badge, useCopy } from '../components/ui';
+import { Panel, Table, RowChevron, ViewToolbar, Badge, Empty, useCopy } from '../components/ui';
 import { webhooks } from '../data/mock';
 
 const columns = [
@@ -27,6 +27,16 @@ export function Webhooks() {
       </ViewToolbar>
 
       <Panel marks flush className="rise rise-2">
+        {/* A new project has no webhooks, which is the state most people see
+            first. Say what a webhook would do for them rather than rendering an
+            empty header row. */}
+        {webhooks.length === 0 ? (
+          <Empty icon={<Icon.Webhook size={22} />} title="No webhooks yet">
+            Subscribe to address activity, contract events, NFT transfers, or swaps and Uniblock
+            will post them to your endpoint as they happen — with retries and signed payloads, so
+            you never poll for them.
+          </Empty>
+        ) : (
         <Table columns={columns}>
           {webhooks.map((w) => (
             <tr key={w.id} className="row-click">
@@ -53,6 +63,7 @@ export function Webhooks() {
             </tr>
           ))}
         </Table>
+        )}
       </Panel>
     </div>
   );

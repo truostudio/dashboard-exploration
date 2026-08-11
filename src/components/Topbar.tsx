@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Icon } from './Icons';
-import { SearchInput } from './ui';
+
 import type { Theme } from '../theme';
 
 type Props = {
@@ -9,6 +8,8 @@ type Props = {
   subtitle?: string;
   onNewProject: () => void;
   onMenu?: () => void;
+  /** Opens the command palette. The field is a button, not an input. */
+  onSearch?: () => void;
   theme: Theme;
   onToggleTheme: () => void;
   primaryAction?: { label: string; onClick: () => void };
@@ -20,12 +21,12 @@ export function Topbar({
   subtitle,
   onNewProject,
   onMenu,
+  onSearch,
   theme,
   onToggleTheme,
   primaryAction,
 }: Props) {
   const nextTheme = theme === 'dark' ? 'light' : 'dark';
-  const [query, setQuery] = useState('');
   return (
     <header className="topbar">
       <button className="tb-menu btn ghost icon-only" aria-label="Open menu" onClick={onMenu}>
@@ -47,13 +48,15 @@ export function Topbar({
       </div>
 
       <div className="tb-actions">
-        <SearchInput
-          value={query}
-          onChange={setQuery}
-          placeholder="Search endpoints, chains, docs…"
-          label="Search"
-          hint={<span className="kbd">⌘K</span>}
-        />
+        {/* Deliberately a button wearing a field's clothes. It used to be a real
+            input whose value went nowhere, which meant typing here silently did
+            nothing — worse than no field at all. Now it opens the palette that
+            actually searches, and the ⌘K hint is true. */}
+        <button className="tb-searchbtn" onClick={onSearch} aria-label="Search endpoints and pages">
+          <Icon.Search size={15} className="tb-searchbtn-icon" />
+          <span className="tb-searchbtn-text">Search endpoints, chains, docs…</span>
+          <span className="kbd">⌘K</span>
+        </button>
 
         <button
           className="btn ghost icon-only theme-toggle"

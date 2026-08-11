@@ -16,7 +16,7 @@
 .app {
   display: grid;
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-  min-height: 100vh;
+  min-height: calc(100vh / var(--ui-zoom));
   background: var(--ub-canvas);
 }
 
@@ -56,7 +56,7 @@
 .sidebar {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: calc(100vh / var(--ui-zoom));
   display: flex;
   flex-direction: column;
   background: var(--ub-elevated);
@@ -187,12 +187,12 @@
 }
 
 .sb-section-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  font-weight: 500;
   color: var(--ub-text-3);
   padding: 0 8px;
   margin: 20px 0 6px;
@@ -241,8 +241,8 @@
   background: var(--ub-blue-soft);
   color: var(--ub-blue-ink);
 }
-.nav-badge.orange { background: var(--ub-warning-soft); color: var(--ub-warning); }
-.nav-badge.green  { background: var(--ub-success-soft); color: var(--ub-success); }
+.nav-badge.orange { background: var(--ub-warning-soft); color: var(--ub-warning-ink); }
+.nav-badge.green  { background: var(--ub-success-soft); color: var(--ub-success-ink); }
 
 /* ---- Nav group ---- */
 .nav-group { display: contents; }
@@ -390,7 +390,7 @@
 }
 
 /* ============================================================
-   Site banner — terminal readout (dismissible, localStorage)
+   Site banner: terminal readout (dismissible, localStorage)
    ============================================================ */
 .site-banner {
   position: relative;
@@ -445,9 +445,12 @@
   font-weight: 600;
 }
 .site-banner-tag {
-  flex: none;
-  letter-spacing: 0.12em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  flex: none;
   color: var(--ub-blue-ink);
   font-weight: 500;
 }
@@ -506,15 +509,15 @@
 
 .tb-left { min-width: 0; flex: 1; }
 .tb-crumb {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 6px;
   margin-bottom: 2px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--ub-text-3);
   white-space: nowrap;
   overflow: hidden;
@@ -709,7 +712,6 @@
   gap: 20px;
 }
 
-.empty-bare { border: none; background: transparent; }
 .empty {
   display: flex;
   align-items: center;
@@ -725,6 +727,8 @@
   text-align: center;
   grid-column: 1 / -1;
 }
+/* Modifier, so it has to come after the base rule to win at equal specificity. */
+.empty-bare { border: none; background: transparent; padding: 24px 16px; }
 
 /* Rich variant: icon + title above the description. Same footprint as a
    chart or stat panel, so it drops straight into an analytics tile that
@@ -782,12 +786,13 @@
   letter-spacing: 0.01em;
 }
 .kpi-tile-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
-  color: var(--ub-text-3);
+  font-weight: 500;
+  color: var(--ub-text-2);
 }
 
 /* Windowed widget tiles (Past 1 hour / 30 days / 1 year) */
@@ -811,12 +816,13 @@
 }
 .widget-tile:first-child { border-left: none; }
 .widget-tile-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
-  color: var(--ub-text-3);
+  font-weight: 500;
+  color: var(--ub-text-2);
 }
 .widget-tile-num {
   font-family: var(--font-pixel);
@@ -846,7 +852,7 @@
 }
 .list-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1.4fr) minmax(80px, 2fr) 64px;
+  grid-template-columns: minmax(160px, 1.7fr) minmax(80px, 2fr) 64px;
   align-items: center;
   gap: 20px;
   padding: 12px 0;
@@ -860,6 +866,15 @@
   min-width: 0;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
+}
+/* `min-width: 0` on the column lets the grid track shrink, but the children
+   still overflow it — an endpoint path is one unbreakable token, so it ran
+   straight across the bar. Wrapped rather than truncated on purpose: the part
+   that distinguishes these rows is the tail (`…/getNFTsForOwner`), which is
+   exactly what an ellipsis would eat. */
+.list-main > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .list-main > .dim {
   font-size: var(--fs-micro);
@@ -954,11 +969,12 @@
   color: var(--ub-black);
 }
 .meter-caption {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  font-weight: 500;
 }
 
 .legend {
@@ -1039,13 +1055,13 @@
   line-height: var(--lh-body);
 }
 .table thead th {
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  text-align: left;
+  font-weight: 500;
   color: var(--ub-text-3);
   padding: 12px 16px;
   background: var(--ub-sunken);
@@ -1216,10 +1232,10 @@
   flex-wrap: wrap;
 }
 .keystrip-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
   color: var(--ub-text-3);
 }
@@ -1368,20 +1384,19 @@
 /* ============================================================
    Quickstart
    ============================================================ */
+/* ============================================================
+   Quickstart hero
+   ------------------------------------------------------------
+   The one inverted surface in the app. A first-run screen is where contrast
+   is worth spending, and a single dark panel gives the product a face without
+   committing the whole dashboard to a dark register.
+   ============================================================ */
 .qs-hero {
   position: relative;
-  padding: 48px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--ub-line-strong);
-}
-/* Wash sits under the blueprint grid rather than on a pseudo-element, which
-   is now reserved for the registration ticks. */
-.qs-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(90% 120% at 100% 0%, var(--ub-blue-wash), transparent 55%);
+  overflow: hidden;
+  padding: 56px 48px 64px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-border-soft);
 }
 .qs-hero-inner {
   position: relative;
@@ -1593,9 +1608,13 @@
   line-height: var(--lh-micro);
 }
 .spec dt {
-  color: var(--ub-text-3);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ub-text-2);
 }
 .spec dd {
   text-align: right;
@@ -1731,14 +1750,16 @@
   border: 1px solid var(--ub-line);
   background: var(--ub-elevated);
   text-align: left;
-  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  transition: border-color 0.16s var(--ease-out), background 0.16s var(--ease-out);
 }
+/* One accent, not three. The corner ticks are the signal; the border and
+   surface just lift so the card reads as pickable. Previously the border went
+   blue, the surface changed, and two bracket systems lit at once, which is why
+   the hover felt busy. */
 .prov-tile:hover {
-  border-color: var(--ub-blue-border);
-  background: var(--ub-sunken);
+  border-color: var(--ub-border);
+  background: var(--ub-hover);
 }
-.prov-tile:hover.marks::before,
-.prov-tile:hover.marks::after { opacity: 1; }
 .prov-tile.featured { border-color: var(--ub-blue-border); }
 .prov-tile-head {
   display: flex;
@@ -1860,10 +1881,10 @@
   margin-left: auto;
 }
 .endpoint-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
 }
 
@@ -1991,9 +2012,10 @@
 }
 .filter-pop-group { display: flex; flex-direction: column; gap: 8px; }
 .filter-pop-label {
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
 }
 .filter-pop-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -2062,7 +2084,7 @@
   background: var(--ub-grid);
   color: var(--ub-text-2);
 }
-.manage-avatar.danger { background: var(--ub-danger-soft); color: var(--ub-danger); }
+.manage-avatar.danger { background: var(--ub-danger-soft); color: var(--ub-danger-ink); }
 .manage-text {
   display: flex;
   flex-direction: column;
@@ -2102,10 +2124,10 @@
   padding-bottom: 8px;
 }
 .plan-name {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.14em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
   color: var(--ub-text-3);
 }
@@ -2167,7 +2189,7 @@
   display: flex;
   flex-direction: column;
   width: min(880px, 100%);
-  max-height: min(760px, 92vh);
+  max-height: min(760px, calc(92vh / var(--ui-zoom)));
   border-radius: var(--radius-lg);
   background: var(--ub-elevated);
   border: 1px solid var(--ub-line-strong);
@@ -2284,10 +2306,10 @@
 .picker-body { display: flex; flex-direction: column; gap: 24px; }
 .picker-group { display: flex; flex-direction: column; gap: 12px; }
 .picker-group-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.14em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
   color: var(--ub-text-3);
 }
@@ -2540,12 +2562,13 @@
   color: var(--ub-black);
 }
 .drawer-stat-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  letter-spacing: 0.1em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
-  color: var(--ub-text-3);
+  font-weight: 500;
+  color: var(--ub-text-2);
 }
 
 .drawer-search {
@@ -2587,12 +2610,12 @@
 }
 .drawer-group:first-child .drawer-group-head { border-top: none; }
 .drawer-group-name {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
   text-transform: uppercase;
+  font-weight: 500;
   color: var(--ub-blue-ink);
 }
 .drawer-group-head .mono { font-size: var(--fs-micro); }
@@ -2786,7 +2809,7 @@
 
   .donut-row { justify-content: center; }
   .modal-backdrop { padding: 0; }
-  .modal { max-height: 100vh; height: 100%; border-radius: 0; width: 100%; }
+  .modal { max-height: calc(100vh / var(--ui-zoom)); height: 100%; border-radius: 0; width: 100%; }
 }
 
 @media (max-width: 560px) {
@@ -2827,7 +2850,20 @@
 .qs-bar-wide { width: 120px; }
 
 .code-filename { padding: 0 4px; }
+/* Sized here rather than through Recharts' `fontSize` prop so axis ticks ride
+   the same token as the rest of the app and grow with it on a large display.
+   A number passed to Recharts becomes a hardcoded SVG attribute that no media
+   query can reach. */
 .axis-mono { font-family: var(--font-mono); }
+/* Recharts 3 hoists tick labels into their own z-index layer, outside the axis
+   group that carries .axis-mono, so no descendant selector reaches them and
+   they fall back to body size. Its own class is the only handle. Sized in CSS
+   rather than via Recharts' `fontSize` prop, which emits a hardcoded SVG
+   attribute that the large-display type scale cannot override. */
+.recharts-cartesian-axis-tick-value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+}
 
 /* ============================================================
    Charts: terminal readout
@@ -2847,12 +2883,15 @@
   line-height: var(--lh-micro);
 }
 .chart-tip-head {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
   padding: 6px 10px;
   border-bottom: 1px solid var(--ub-line);
   background: var(--ub-sunken);
   color: var(--ub-text-3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 .chart-tip-list { list-style: none; padding: 4px 0; }
@@ -2864,6 +2903,26 @@
   white-space: nowrap;
 }
 .chart-tip-key { width: 8px; height: 8px; flex: none; }
+/* Summed row: ruled off, and indented past the swatch column so the figure
+   still lines up with the series above it. */
+.chart-tip-total {
+  margin-top: 3px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ub-line);
+}
+.chart-tip-total .chart-tip-name { padding-left: 16px; color: var(--ub-black); }
+/* Breakdown rows with no caption still need separating from the series above. */
+.chart-tip-list.is-ruled { border-top: 1px solid var(--ub-line); }
+.chart-tip-sub {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  padding: 6px 10px 2px;
+  border-top: 1px solid var(--ub-line);
+  color: var(--ub-text-3);
+}
 .chart-tip-name { color: var(--ub-text-2); }
 .chart-tip-val {
   margin-left: auto;
@@ -2875,6 +2934,422 @@
 /* Recharts draws its own focus outline on the wrapper; suppress it. */
 .recharts-wrapper:focus,
 .recharts-surface:focus { outline: none; }
+
+/* Chart key. Any chart with more than one series carries one. Unlabelled
+   coloured bands are not a chart, they are decoration. */
+.chart-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-bottom: 12px;
+  padding-left: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+}
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.chart-legend-key {
+  width: 10px;
+  height: 10px;
+  flex: none;
+}
+/* A line series is a stroke, not an area: the swatch says which. */
+.chart-legend-key.is-line { height: 2px; width: 14px; }
+
+
+/* ============================================================
+   Analytics
+   ============================================================ */
+
+/* Tab row and the range/chain filters share one baseline. Below the breakpoint
+   the filters drop under the tabs rather than squeezing them. */
+.analytics-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.analytics-bar .sgm-tab { flex: 1 1 420px; }
+.analytics-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.analytics-filters .input {
+  height: 32px;
+  padding: 0 28px 0 10px;
+  font-size: var(--fs-micro);
+}
+.analytics-filters .sgm-seg { height: 32px; }
+
+/* States what window every figure below is measured over, once, at the top,
+   so no panel has to repeat it and none of them can disagree. */
+.analytics-window {
+  margin-top: -8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.04em;
+}
+.analytics-window .mono { color: var(--ub-black); }
+
+/* ---- Delta ---- */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.delta.good { color: var(--ub-success-ink); }
+.delta.bad { color: var(--ub-danger-ink); }
+.delta.flat { color: var(--ub-text-3); }
+.delta svg { flex: none; }
+.delta-since { color: var(--ub-text-3); }
+
+.kpi-tile-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* ---- Claim: one sentence stating what the panel above proves ---- */
+.claim-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 24px;
+  border-color: var(--ub-blue-border);
+  background: var(--ub-blue-wash);
+}
+.claim-icon { flex: none; color: var(--ub-blue); margin-top: 2px; }
+.claim-text {
+  max-width: 88ch;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ub-text-2);
+}
+.claim-text strong {
+  color: var(--ub-black);
+  font-weight: 550;
+  font-family: var(--font-mono);
+}
+.claim-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ub-line);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+}
+.claim-inline strong {
+  color: var(--ub-black);
+  font-family: var(--font-mono);
+  font-weight: 550;
+}
+/* Same note, sitting above its content instead of below it. */
+.claim-inline.is-top {
+  margin-top: 0;
+  margin-bottom: 4px;
+  padding-top: 0;
+  padding-bottom: 16px;
+  border-top: none;
+  border-bottom: 1px solid var(--ub-line);
+}
+.claim-icon.is-warn { color: var(--ub-warning-ink); }
+
+/* ---- Cost comparison ---- */
+.compare-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--ub-line);
+  background: var(--ub-sunken);
+  margin-bottom: 24px;
+}
+.compare-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border-left: 1px solid var(--ub-line);
+}
+.compare-side:first-child { border-left: none; }
+.compare-side.is-result { background: var(--ub-blue-wash); }
+.compare-label {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ub-text-2);
+}
+.compare-fig {
+  font-family: var(--font-pixel);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  color: var(--ub-black);
+}
+/* Blue is the Uniblock path: our price and what it saves, nothing else. */
+.compare-fig.is-blue { color: var(--ub-blue); }
+.compare-note {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+
+/* Caveat under a panel head, where the figures need a sentence of method
+   before they can be read honestly. */
+.panel-note {
+  max-width: 76ch;
+  margin-bottom: 20px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+
+/* ---- Table cells that carry a bar ----
+   The flex lives on a div inside the cell, never on the <td> itself:
+   display:flex on a table cell drops it out of the row's layout and the
+   bars stop lining up with the values beside them. */
+.cell-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+.bar.inline {
+  width: 84px;
+  flex: none;
+  margin: 0;
+}
+/* Number first, bar trailing, the whole group flush right. Keeps the digits
+   on the column's alignment line where they can still be compared. */
+.cell-bar.is-right {
+  justify-content: flex-end;
+  min-width: 0;
+}
+.cell-bar.is-right .bar.inline { width: 56px; }
+
+/* Failover: from → to, reading left to right */
+.fo-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.fo-arrow { color: var(--ub-blue); flex: none; }
+
+/* ---- Sortable headers ---- */
+.th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.th-sort:hover { color: var(--ub-black); }
+.th-sort.on { color: var(--ub-black); }
+/* Right-aligned headers put the caret on the left so the label stays flush
+   against the numbers it titles. */
+.num .th-sort { flex-direction: row-reverse; }
+.th-caret {
+  opacity: 0;
+  transform: rotate(90deg);
+  transition: opacity 0.12s var(--ease-io), transform 0.16s var(--ease-out);
+}
+.th-caret.on { opacity: 1; color: var(--ub-blue); }
+.th-caret.on.up { transform: rotate(-90deg); }
+
+/* ---- Endpoint drill-down ---- */
+.ep-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* Direct paths are long. Let them wrap rather than widening the whole table. */
+.ep-path { word-break: break-word; }
+
+.ep-filter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 0 24px 20px;
+}
+.ep-filter-note {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.table .row-click.is-open > td { background: var(--ub-hover); }
+
+/* Rows are focusable, so they need a visible ring. Inset rather than outlined:
+   an outline on a <tr> is clipped by the cells on most engines and renders as
+   two stray hairlines at the row ends. */
+.table .row-click:focus-visible {
+  outline: none;
+  box-shadow: inset 2px 0 0 var(--ub-blue), inset 0 0 0 1px var(--ub-blue-border);
+}
+.table .row-click:focus-visible > td { background: var(--ub-blue-wash); }
+
+/* ============================================================
+   Label tiers
+   ------------------------------------------------------------
+   Uppercase + 0.1em mono is ONE tier, and it belongs to table headers. It was
+   previously the treatment for every label in the app — tile captions, spec
+   terms, split headings, drawer stats, meter captions — six tiers shouting in
+   the same voice, which flattens the hierarchy instead of creating one. The
+   rest now sit in sentence-case sans at --ub-text-2: quieter, and readable as
+   a deliberate second rank rather than the same rule applied everywhere.
+   ============================================================ */
+
+/* ---- Inline trend ---- */
+.cell-trend {
+  width: 88px;
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+.sparkline { display: block; overflow: visible; }
+.sparkline-line {
+  fill: none;
+  stroke: var(--ub-text-3);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke 0.16s var(--ease-out);
+}
+.sparkline-fill {
+  fill: var(--ub-line);
+  stroke: none;
+  transition: fill 0.16s var(--ease-out);
+}
+.sparkline-dot {
+  fill: var(--ub-text-3);
+  transition: fill 0.16s var(--ease-out);
+}
+/* The trend only takes brand colour on the row you are actually reading, so a
+   19-row table does not read as 19 competing blue charts. */
+.table .row-click:hover .sparkline-line,
+.table .row-click:focus-visible .sparkline-line,
+.table .row-click.is-open .sparkline-line { stroke: var(--ub-blue); }
+.table .row-click:hover .sparkline-dot,
+.table .row-click:focus-visible .sparkline-dot,
+.table .row-click.is-open .sparkline-dot { fill: var(--ub-blue); }
+.table .row-click:hover .sparkline-fill,
+.table .row-click:focus-visible .sparkline-fill,
+.table .row-click.is-open .sparkline-fill { fill: var(--ub-blue-soft); }
+
+/* Tabular figures so a counting number does not shuffle its own width. */
+.num-roll { font-variant-numeric: tabular-nums; }
+.ep-chev {
+  color: var(--ub-text-3);
+  transition: transform 0.16s var(--ease-out);
+}
+.ep-chev.is-open { transform: rotate(90deg); color: var(--ub-blue); }
+
+/* The detail row spans the full table, so it must not inherit cell padding. */
+.table .row-detail > td {
+  padding: 0;
+  background: var(--ub-sunken);
+  border-top: none;
+}
+
+/* Collapse via grid-template-rows rather than max-height: it animates to the
+   content's real height, so the row never overshoots or clips a tall drill-down.
+   A row that is closing keeps this wrapper mounted until the transition ends,
+   which is what lets one row collapse while the next expands. */
+.ep-detail-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.26s var(--ease-io);
+}
+.ep-detail-wrap.is-open { grid-template-rows: 1fr; }
+.ep-detail-clip {
+  overflow: hidden;
+  /* Grid items floor at min-content without this, and the row would not close. */
+  min-height: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Not `none`: the collapse is ended by transitionend, and a removed
+     transition never fires it, which would strand the closing row mounted. */
+  .ep-detail-wrap { transition-duration: 1ms; }
+}
+
+.ep-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+.ep-detail-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.ep-spark-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ep-spark { width: 100%; }
+.ep-splits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 24px 32px;
+}
+.ep-split { min-width: 0; }
+.ep-split-title {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: var(--ub-text-2);
+  font-weight: 500;
+}
+/* A cell figure that has gone out of range. */
+.is-bad { color: var(--ub-danger-ink); }
+
+.err-cause {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.err-cause .dim {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+
+@media (max-width: 900px) {
+  .compare-row { grid-template-columns: 1fr; }
+  .compare-side { border-left: none; border-top: 1px solid var(--ub-line); }
+  .compare-side:first-child { border-top: none; }
+  .analytics-filters { padding-bottom: 0; }
+}
 
 /* ============================================================
    Panels as instrument housings
@@ -2891,3 +3366,459 @@
 .panel-flush > .panel-head-inset { border-bottom: 1px solid var(--ub-line); margin-bottom: 0; }
 .panel-flush > .panel-head-inset + .table-wrap { margin-top: 0; }
 .panel-flush > .panel-head-inset + .table-wrap .table thead th { border-top: none; }
+
+/* ============================================================
+   Command palette
+   ------------------------------------------------------------
+   The catalogue's front door. Anchored near the top rather than centred:
+   the list grows downward as you type, and a vertically centred dialog would
+   shift its own first result out from under the cursor on every keystroke.
+   ============================================================ */
+.cmdk-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: calc(12vh / var(--ui-zoom)) 24px 24px;
+  background: var(--ub-scrim);
+  animation: cmdk-fade 0.12s var(--ease-out);
+}
+.cmdk {
+  width: min(720px, 100%);
+  max-height: calc(68vh / var(--ui-zoom));
+  display: flex;
+  flex-direction: column;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-border);
+  box-shadow: var(--ub-pop-shadow);
+  animation: cmdk-rise 0.16s var(--ease-out);
+}
+@keyframes cmdk-fade { from { opacity: 0; } }
+@keyframes cmdk-rise { from { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .cmdk-scrim, .cmdk { animation: none; }
+}
+
+.cmdk-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--ub-line);
+  flex: none;
+}
+.cmdk-search-icon { color: var(--ub-text-3); flex: none; }
+.cmdk-input {
+  flex: 1;
+  min-width: 0;
+  height: 52px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ub-black);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.cmdk-input::placeholder { color: var(--ub-text-3); }
+
+.cmdk-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
+}
+.cmdk-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+}
+/* Highlight follows the keyboard, so it is one class rather than :hover —
+   otherwise the mouse resting anywhere fights the arrow keys for the marker. */
+.cmdk-row.is-active {
+  background: var(--ub-blue-wash);
+  border-left-color: var(--ub-blue);
+}
+.cmdk-row.is-group-start { margin-top: 6px; border-top: 1px solid var(--ub-line); padding-top: 12px; }
+.cmdk-name { flex: none; color: var(--ub-black); font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.cmdk-meta {
+  margin-left: auto;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmdk-page-icon { color: var(--ub-text-3); flex: none; }
+.cmdk-empty { padding: 24px 16px; text-align: center; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.cmdk-foot {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ub-line);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  flex: none;
+}
+.cmdk-foot .kbd { margin-right: 4px; }
+
+/* ---- Topbar search trigger ----
+   Its own class, not .tb-search: that one belongs to the real SearchInput used
+   across the app, and reusing it here restyled every search field in the
+   product. This is a button that only looks like a field. */
+.tb-searchbtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--ctl-h);
+  min-width: 260px;
+  padding: 0 8px 0 10px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-border-soft);
+  color: var(--ub-text-3);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  transition: border-color 0.14s var(--ease-out), color 0.14s var(--ease-out);
+}
+.tb-searchbtn:hover { border-color: var(--ub-border); color: var(--ub-text-2); }
+.tb-searchbtn:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: 1px; }
+.tb-searchbtn-text { flex: 1; text-align: left; }
+.tb-searchbtn-icon { flex: none; }
+
+/* ---- Endpoint table toolbar ---- */
+.ep-filter-end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.check-row input { accent-color: var(--ub-blue); }
+
+/* ---- Density ---- */
+.table-wrap.is-dense .table tbody td { padding-top: 4px; padding-bottom: 4px; }
+.table-wrap.is-dense .cell-trend { width: 72px; }
+
+/* Chain directory */
+.chain-idle { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.cmdk-row .chain-mark { flex: none; }
+
+/* ============================================================
+   Nodes: gated feature
+   ------------------------------------------------------------
+   Empty is the resting state, so it is laid out as a real screen rather than
+   a placeholder squeezed into a panel.
+   ============================================================ */
+.node-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 56px 24px 48px;
+}
+.node-hero-icon {
+  display: inline-flex;
+  padding: 14px;
+  color: var(--ub-blue);
+  background: var(--ub-blue-soft);
+  border: 1px solid var(--ub-blue-border);
+}
+.node-hero-title {
+  margin: 4px 0 0;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.node-hero-body {
+  margin: 0;
+  max-width: 460px;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.node-cta {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.node-foot {
+  margin: 20px auto 0;
+  max-width: 520px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.node-card { display: flex; flex-direction: column; gap: 8px; padding: 24px; }
+.node-card-icon { color: var(--ub-blue); }
+.node-card-title {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 600;
+}
+.node-card-body { margin: 0; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* ============================================================
+   API Tester
+   ------------------------------------------------------------
+   The request line reads as one object — method, URL, send — instead of being
+   split across two labelled panels where you could never see what you were
+   actually sending.
+   ============================================================ */
+.tester-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-border-soft);
+}
+.tester-url {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tester-url strong { font-weight: 500; color: var(--ub-black); }
+.tester-send { flex: none; }
+
+.tester-grid {
+  display: grid;
+  /* Response gets the wider half: it is the output you came for, and JSON
+     wraps badly in a narrow column. */
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .tester-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.tester-form { display: flex; flex-direction: column; gap: 16px; }
+.tester-auth {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ub-line);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.tester-auth-icon { flex: none; color: var(--ub-text-3); margin-top: 2px; }
+.tester-tabs { margin-bottom: 16px; }
+.tester .response-pre { margin: 0 0 16px; }
+
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+/* ---- Chain detail ---- */
+/* The endpoint list is the substance here, so it takes the wider column. */
+.chain-detail-head { grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); }
+.chain-detail-side .table-foot { padding-left: 0; padding-right: 0; }
+.chain-detail-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.chain-ep-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.chain-ep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ub-line);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.chain-ep:last-child { border-bottom: none; }
+.chain-ep-path { flex: none; color: var(--ub-black); }
+.chain-ep-meta {
+  margin-left: auto;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Quickstart hero contents ---- */
+.qs-hero-inner { position: relative; z-index: 1; max-width: 58ch; }
+.qs-hero-eyebrow { color: var(--ub-blue-ink); }
+.qs-hero-title {
+  margin: 12px 0 0;
+  /* Oversized and tight. The display step is where a brand gets to be loud,
+     and the app's other headings are deliberately quiet by comparison. */
+  font-size: var(--fs-3xl);
+  line-height: 1.06;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--ub-black);
+}
+.qs-hero-sub {
+  margin: 20px 0 0;
+  max-width: 54ch;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ub-text-2);
+}
+.qs-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+
+/* Boxed mono actions. Square, hairline, no fill unless it is the primary —
+   the reference language is a stamped label, not a rounded UI button. */
+.btn-blk {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--ub-white);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  cursor: pointer;
+  transition: background 0.14s var(--ease-out), border-color 0.14s var(--ease-out);
+}
+.btn-blk:hover { border-color: var(--ub-white); background: rgba(255, 255, 255, 0.08); }
+.btn-blk:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: 2px; }
+.btn-blk.is-solid {
+  background: var(--ub-blue);
+  border-color: var(--ub-blue);
+  color: var(--ub-black);
+  font-weight: 500;
+}
+.btn-blk.is-solid:hover { background: var(--ub-blue-hover); border-color: var(--ub-blue-hover); }
+.btn-blk.is-bare {
+  border-color: transparent;
+  padding-left: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn-blk.is-bare:hover { background: transparent; color: var(--ub-white); }
+
+/* ---- Barcode ---- */
+.barcode { display: block; width: 100%; }
+.barcode-bar { fill: rgba(255, 255, 255, 0.30); }
+/* The hairline range sits back so the bodies carry the pattern. */
+.barcode-bar.is-range { fill: rgba(255, 255, 255, 0.16); }
+.barcode-bar.is-accent { fill: var(--ub-blue); }
+.barcode-bar.is-accent.is-range { fill: rgba(31, 182, 255, 0.45); }
+.qs-hero-code { position: relative; z-index: 0; margin-bottom: -1px; }
+
+/* Light-surface variants, so the barcode and the boxed action are brand
+   devices rather than things that only exist on the one dark panel. */
+.barcode.on-light .barcode-bar { fill: rgba(13, 14, 13, 0.42); }
+.barcode.on-light .barcode-bar.is-range { fill: rgba(13, 14, 13, 0.16); }
+.barcode.on-light .barcode-bar.is-accent { fill: var(--ub-blue); }
+.barcode.on-light .barcode-bar.is-accent.is-range { fill: rgba(31, 182, 255, 0.45); }
+
+.btn-blk.on-light {
+  border-color: var(--ub-border);
+  color: var(--ub-black);
+}
+.btn-blk.on-light:hover { border-color: var(--ub-black); background: var(--ub-hover); }
+.btn-blk.on-light.is-solid {
+  background: var(--ub-black);
+  border-color: var(--ub-black);
+  color: var(--ub-white);
+}
+.btn-blk.on-light.is-solid:hover { background: var(--ub-black-hover); border-color: var(--ub-black-hover); }
+.btn-blk.on-light.is-bare { border-color: transparent; color: var(--ub-text-2); }
+.btn-blk.on-light.is-bare:hover { color: var(--ub-black); background: transparent; }
+
+/* ---- Chain JSON-RPC namespaces ---- */
+.chain-note { margin: 0 0 12px; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.chain-ns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 12px;
+}
+/* Borders on the cells, not a background showing through a 1px gap: the gap
+   trick paints every empty track in the last row grey. */
+.chain-ns {
+  padding: 12px 14px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line);
+  min-width: 0;
+}
+.chain-ns-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.chain-ns-methods {
+  margin: 6px 0 0;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  overflow-wrap: anywhere;
+}
+
+
+/* ---- Dither ---- */
+.dither {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.dither-canvas { display: block; width: 100%; height: 100%; }
+
+/* Pinned to the right of the hero and faded out toward the copy, so the field
+   is texture at the edge rather than a wash under the headline. */
+.qs-hero-dither {
+  left: auto;
+  right: 0;
+  width: min(58%, 720px);
+  opacity: 0.9;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent, #000 42%, #000 100%);
+}
+@media (max-width: 900px) {
+  .qs-hero-dither { width: 100%; opacity: 0.4; }
+}
+
+/* ---- Chain coverage strip ---- */
+.chain-cov {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+.chain-cov-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-line);
+}
+.chain-cov-cell.is-on { border-color: var(--ub-border-soft); }
+.chain-cov-label {
+  font-family: var(--font-pixel-label);
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ub-text-2);
+}
+.chain-cov-note { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* Two columns of endpoints once there is room; ten rows in one column is a
+   scroll, ten across two is a glance. */
+.chain-ep-list.is-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 0 32px;
+}

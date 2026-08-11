@@ -74,7 +74,7 @@ function FeatureCard({ provider, onOpen }: CardProps) {
 /** Compact card used in the full provider list. */
 function ProviderTile({ provider, onOpen }: CardProps) {
   return (
-    <button className="prov-tile marks" onClick={() => onOpen(provider)}>
+    <button className="prov-tile" onClick={() => onOpen(provider)}>
       <div className="prov-tile-head">
         <Avatar src={provider.icon} name={provider.name} size="lg" />
         <div className="prov-tile-name">

@@ -97,6 +97,11 @@ export const chains: Chain[] = [
   { id: 'mantle',    name: 'Mantle',     symbol: 'MNT',  chainId: 5000,  icon: chainIcon(5000),  category: 'l2',  color: '#000000' },
   { id: 'gnosis',    name: 'Gnosis',     symbol: 'GNO',  chainId: 100,   icon: chainIcon(100),   category: 'evm', color: '#3e6957' },
   { id: 'sui',       name: 'Sui',        symbol: 'SUI',  chainId: 'sui', icon: chainIcon('sui'), category: 'other', color: '#4ca3ff' },
+  // The banner advertises Hyperliquid and two Direct providers ship endpoints
+  // for it, but it was missing from this list — so searching "hyperliquid"
+  // found nothing and the chain filter could not reach it. chainId 999 is
+  // HyperEVM; no artwork ships for it yet, hence the default mark.
+  { id: 'hyperliquid', name: 'Hyperliquid', symbol: 'HYPE', chainId: 999, icon: chainIcon('defaultChainIcon'), category: 'evm', color: '#97fce4' },
 ];
 
 export type RecentRequest = {

@@ -45,6 +45,20 @@ export function Segmented<T extends string>({
     const el = itemRefs.current.get(value);
     if (!el) return;
     setMarker({ left: el.offsetLeft, width: el.offsetWidth });
+
+    // When the row is wider than its box it scrolls, and the selected option
+    // can sit off-screen, and you then can't see which one is active. Nudge the
+    // list itself rather than calling scrollIntoView, which would also scroll
+    // the page vertically to reach it.
+    const list = listRef.current;
+    if (!list || list.scrollWidth <= list.clientWidth) return;
+    const pad = 12;
+    const left = el.offsetLeft - pad;
+    const right = el.offsetLeft + el.offsetWidth + pad;
+    if (left < list.scrollLeft) list.scrollLeft = left;
+    else if (right > list.scrollLeft + list.clientWidth) {
+      list.scrollLeft = right - list.clientWidth;
+    }
   }, [value]);
 
   useLayoutEffect(() => {
