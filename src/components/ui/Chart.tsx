@@ -35,6 +35,17 @@ export const chartCursor = {
 export const chartBarCursor = { fill: 'var(--ub-blue-soft)' } as const;
 
 /**
+ * A limit drawn across a plot: a plan ceiling, a target, an SLA. Dashed and in
+ * the danger ink, because a reference line is a line you do not want to cross.
+ * Name it in the chart's legend; a bare rule on a plot is a riddle.
+ */
+export const chartRefLine = {
+  stroke: 'var(--ub-danger)',
+  strokeDasharray: '4 4',
+  strokeWidth: 1.5,
+} as const;
+
+/**
  * X axis for a time-bucketed series, keyed on `label`. Ticks collide once a
  * window is more than a dozen buckets wide, so hand Recharts a minimum gap and
  * let it drop the overlap rather than rotating the labels.

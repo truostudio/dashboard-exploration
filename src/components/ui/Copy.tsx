@@ -58,13 +58,24 @@ export function CopyButton({
   return (
     <button
       type="button"
-      className={`btn ${variant === 'ghost' ? 'ghost' : ''} ${iconOnly ? 'icon-only' : ''} ${className}`.trim()}
+      className={`btn ${variant === 'ghost' ? 'ghost' : ''} ${iconOnly ? 'icon-only' : ''} ${done ? 'is-copied' : ''} ${className}`.trim()}
       onClick={(e) => { e.stopPropagation(); copy(value, key); }}
       disabled={disabled}
       aria-label={iconOnly ? `Copy ${value}` : undefined}
     >
-      {done ? <Icon.Check size={size} /> : <Icon.Copy size={size} />}
-      {label && (done ? copiedLabel : label)}
+      {/* Both states stay mounted and cross-fade, see `.swap` in index.css.
+          Swapping the nodes resized the button mid-click, which moved the thing
+          the pointer was still on. */}
+      <span className="swap-icon" aria-hidden>
+        <Icon.Copy size={size} className="swap-idle" />
+        <Icon.Check size={size} className="swap-done" />
+      </span>
+      {label && (
+        <span className="swap">
+          <span className="swap-idle">{label}</span>
+          <span className="swap-done">{copiedLabel}</span>
+        </span>
+      )}
     </button>
   );
 }

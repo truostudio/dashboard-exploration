@@ -17,11 +17,10 @@ import { chains, providers } from './mock';
    Range + chain
    ============================================================ */
 
-export type RangeId = '1h' | '24h' | '7d' | '30d';
+export type RangeId = '1d' | '7d' | '30d';
 
 export const ranges: { id: RangeId; label: string; window: string; prior: string }[] = [
-  { id: '1h', label: '1H', window: 'Past hour', prior: 'prior hour' },
-  { id: '24h', label: '24H', window: 'Past 24 hours', prior: 'prior day' },
+  { id: '1d', label: '1D', window: 'Past 24 hours', prior: 'prior day' },
   { id: '7d', label: '7D', window: 'Past 7 days', prior: 'prior week' },
   { id: '30d', label: '30D', window: 'Past 30 days', prior: 'prior month' },
 ];
@@ -95,15 +94,7 @@ function buckets(range: RangeId): Bucket[] {
     return { hod: d.getUTCHours() + d.getUTCMinutes() / 60, dow: d.getUTCDay() };
   };
 
-  if (range === '1h') {
-    // 12 × 5 minutes
-    return Array.from({ length: 12 }, (_, i) => {
-      const ms = NOW - (11 - i) * 5 * MIN;
-      const d = new Date(ms);
-      return { label: `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`, ...at(ms) };
-    });
-  }
-  if (range === '24h') {
+  if (range === '1d') {
     // 12 × 2 hours
     return Array.from({ length: 12 }, (_, i) => {
       const ms = NOW - (11 - i) * 2 * HOUR;
@@ -136,7 +127,7 @@ const weekly = (dow: number) => (dow === 0 || dow === 6 ? 0.72 : 1.07);
  */
 function weights(range: RangeId, bs: Bucket[], key: string) {
   const r = rng(key);
-  const byHour = range === '1h' || range === '24h';
+  const byHour = range === '1d';
   return bs.map((b) => {
     const base = byHour ? diurnal(b.hod) : weekly(b.dow);
     return Math.max(0.05, base * (0.92 + r() * 0.16));
@@ -169,10 +160,10 @@ function spread(total: number, w: number[]) {
 const REQUESTS_30D = 2_410_442;
 const PER_HOUR = REQUESTS_30D / 720;
 
-const HOURS: Record<RangeId, number> = { '1h': 1, '24h': 24, '7d': 168, '30d': 720 };
+const HOURS: Record<RangeId, number> = { '1d': 24, '7d': 168, '30d': 720 };
 
 /** Growth against the preceding window of the same length. */
-const GROWTH: Record<RangeId, number> = { '1h': 0.048, '24h': 0.124, '7d': 0.081, '30d': 0.236 };
+const GROWTH: Record<RangeId, number> = { '1d': 0.124, '7d': 0.081, '30d': 0.236 };
 
 /** List price. Uniblock bills CUs, not calls. */
 export const PRICE_PER_MILLION_CU = 24;
@@ -423,7 +414,7 @@ function build(range: RangeId, chain: ChainFilter) {
   // The last bucket of a sub-day range sits at the afternoon peak, so a 1h
   // window reads high against the flat hourly average. That is the point.
   const shapeAvg =
-    range === '1h' || range === '24h'
+    range === '1d'
       ? bs.reduce((a, b) => a + diurnal(b.hod), 0) / bs.length
       : bs.reduce((a, b) => a + weekly(b.dow), 0) / bs.length;
 
@@ -468,7 +459,7 @@ function build(range: RangeId, chain: ChainFilter) {
   const errNoise = rng(`${key}:errors`);
   const health: HealthPoint[] = totals.map((t, i) => {
     // Errors spike where load spikes, plus one deliberate incident.
-    const incident = range !== '1h' && i === Math.floor(bs.length * 0.62) ? 6.4 : 1;
+    const incident = i === Math.floor(bs.length * 0.62) ? 6.4 : 1;
     const f = Math.round(t * ERROR_RATE * (0.6 + errNoise() * 0.9) * incident);
     return { label: labels[i], successful: t - f, failed: f };
   });
@@ -476,7 +467,7 @@ function build(range: RangeId, chain: ChainFilter) {
   /* ---- latency ---- */
   const latNoise = rng(`${key}:latency`);
   const latency: LatencyPoint[] = bs.map((b, i) => {
-    const load = range === '1h' || range === '24h' ? diurnal(b.hod) : weekly(b.dow);
+    const load = range === '1d' ? diurnal(b.hod) : weekly(b.dow);
     // Latency tracks load super-linearly: queueing, not bandwidth.
     const f = Math.pow(load, 1.35) * (0.96 + latNoise() * 0.08) * latencyBias;
     return {
@@ -502,7 +493,7 @@ function build(range: RangeId, chain: ChainFilter) {
   const routing: RoutingPoint[] = totals.map((t, i) => {
     // Rates apply to the routable slice only, not the whole bucket.
     const r = t * ROUTED_SHARE;
-    const incident = range !== '1h' && i === Math.floor(bs.length * 0.62) ? 7.8 : 1;
+    const incident = i === Math.floor(bs.length * 0.62) ? 7.8 : 1;
     const failover = Math.round(r * failoverRate * (0.55 + foNoise() * 0.95) * incident);
     const hedged = Math.round(r * hedgeRate * (0.9 + foNoise() * 0.2));
     return { label: labels[i], primary: Math.round(r) - failover, failover, hedged };
@@ -577,12 +568,10 @@ function build(range: RangeId, chain: ChainFilter) {
     .sort((a, b) => b.ms - a.ms)
     .map(({ ms, ...f }) => {
       const d = new Date(ms);
-      // Any window longer than an hour can cross midnight, and a bare clock
-      // time then reads as out of order even when the rows are sorted.
-      const at =
-        range === '1h'
-          ? `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`
-          : `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+      // Every window here is at least a day, so all of them can cross midnight:
+      // a bare clock time would read as out of order even when the rows are
+      // sorted. The date always leads.
+      const at = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
       return { ...f, at };
     });
 
@@ -733,7 +722,7 @@ function build(range: RangeId, chain: ChainFilter) {
   const wsNoise = rng(`${key}:ws`);
   const wsBase = 1240 * share;
   const wsSeries: WsPoint[] = bs.map((b, i) => {
-    const load = range === '1h' || range === '24h' ? diurnal(b.hod) : weekly(b.dow);
+    const load = range === '1d' ? diurnal(b.hod) : weekly(b.dow);
     const connections = Math.round(wsBase * load * (0.95 + wsNoise() * 0.1));
     return {
       label: labels[i],
@@ -836,6 +825,57 @@ function build(range: RangeId, chain: ChainFilter) {
   const cuLimit = 40_000_000;
   const cuMonth = Math.round(PER_HOUR * 720 * CU_PER_REQUEST * chainShare('all'));
   const daysToLimit = Math.max(0, Math.round((cuLimit - cuMonth) / (cuMonth / 30)));
+
+  /* ---- throughput against the plan ceiling ----
+     A rate limit is a burst problem, not a monthly one, so this window is fixed
+     at six hours of five-minute buckets no matter which range is selected: a
+     month of five-minute peaks is 8,640 points nobody can read, and averaging
+     them away would hide the exact spikes the ceiling is about.
+
+     Each point is the highest requests-per-second seen inside that bucket, so a
+     peak far above the window's average is normal and not a contradiction. */
+  const THROUGHPUT_HOURS = 6;
+  const BUCKET_MIN = 5;
+  const planRps = 25;
+  const tNoise = rng(`${key}:throughput`);
+  const tBuckets = (THROUGHPUT_HOURS * 60) / BUCKET_MIN;
+  const throughputSeries = Array.from({ length: tBuckets }, (_, i) => {
+    const ms = NOW - (tBuckets - 1 - i) * BUCKET_MIN * MIN;
+    const d = new Date(ms);
+    const load = diurnal(d.getUTCHours() + d.getUTCMinutes() / 60);
+    // Two seeded bursts, so the ceiling has something to be near.
+    const burst = i === 21 ? 2.55 : i === 52 ? 2.72 : i === 53 ? 1.9 : 1;
+    const rps = Math.max(1, Math.round(6.4 * load * burst * (0.78 + tNoise() * 0.5)));
+    return { label: `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`, rps };
+  });
+  const peak = throughputSeries.reduce((a, b) => (b.rps > a.rps ? b : a));
+  const overBuckets = throughputSeries.filter((b) => b.rps > planRps);
+  /* The series is what the client *attempted*. Served throughput cannot exceed
+     the ceiling by definition, so the area above the line is not traffic you
+     handled: it is the 429s. Counting them as (excess rps x bucket seconds) is
+     what makes the rejection figure agree with the shape of the chart. */
+  const throttled = Math.round(
+    overBuckets.reduce((n, b) => n + (b.rps - planRps) * BUCKET_MIN * 60, 0),
+  );
+
+  const throughput = {
+    planName: 'Free',
+    planRps,
+    bucketMinutes: BUCKET_MIN,
+    windowHours: THROUGHPUT_HOURS,
+    series: throughputSeries,
+    peakRps: peak.rps,
+    peakAt: peak.label,
+    /** How much of the ceiling the busiest bucket left unused, 0 once it is over. */
+    headroomPct: Math.max(0, (1 - peak.rps / planRps) * 100),
+    /** How far past the ceiling the busiest bucket went. */
+    overByRps: Math.max(0, peak.rps - planRps),
+    /** Buckets that went over the limit. */
+    atCeiling: overBuckets.length,
+    throttled,
+    /** The next plan's ceiling, for the upgrade line. */
+    nextPlan: { name: 'Startup', rps: 250 },
+  };
 
   const cost = {
     spend,
@@ -977,6 +1017,21 @@ function build(range: RangeId, chain: ChainFilter) {
       ),
       providerCount: eligible.length,
       degraded: providerStats.filter((p) => p.status === 'degraded').length,
+      /**
+       * The shape of one rescued request: how long the failing upstream was
+       * given before the router gave up on it, and how long the provider that
+       * actually answered took. A re-route is not free, and a panel that only
+       * counts the saves is telling half the story: the other half is that
+       * these calls came back slow, and came back.
+       */
+      retry: {
+        /** Detection budget: the failing attempt, up to the health cutoff. */
+        firstMs: Math.round(p95 * 1.2),
+        /** The second lane, served by the fastest healthy provider. */
+        secondMs: Math.round(Math.min(...providerStats.map((p) => p.p50))),
+        /** What the same call costs when the first choice answers. */
+        baselineMs: p50,
+      },
     },
     failovers,
 
@@ -992,6 +1047,7 @@ function build(range: RangeId, chain: ChainFilter) {
     },
 
     cost,
+    throughput,
     errors,
     recentFailures,
     slowest,

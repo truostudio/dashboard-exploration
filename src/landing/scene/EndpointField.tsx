@@ -12,7 +12,7 @@ import {
  * Footer signature: an orbital phosphor nucleus.
  *
  * Same Bayer dither and hero palette (cyan / ink / dark plate), but a
- * different silhouette from the routing cone — concentric rings around a
+ * different silhouette from the routing cone, concentric rings around a
  * single core, not lanes. The closing band is about one interface; this is
  * that nucleus, not a flipped funnel.
  */
@@ -287,7 +287,7 @@ export function EndpointField() {
     function spawn() {
       const free = sparks.find((s) => s.dead);
       if (!free) return;
-      // Prefer outer rings — sparks fall inward toward the nucleus.
+      // Prefer outer rings, sparks fall inward toward the nucleus.
       free.ring = Math.min(RINGS.length - 1, Math.floor(Math.random() * RINGS.length));
       free.a0 = Math.random() * Math.PI * 2;
       free.t = 0;
@@ -429,7 +429,7 @@ export function EndpointField() {
           pSize[base + t] = 0.11 * fall;
 
           if (t === 0) {
-            // Light nearby lattice — cheap hash neighborhood.
+            // Light nearby lattice, cheap hash neighborhood.
             const lx = Math.floor((v.x + 3) * 5);
             const ly = Math.floor((v.y + 3) * 5);
             const lz = Math.floor((v.z + 3) * 5);

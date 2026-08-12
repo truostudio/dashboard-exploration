@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '../components/Icons';
-import { Barcode } from '../components/Barcode';
 import { Segmented } from '../components/Segmented';
 import { SquareMeter } from '../components/SquareMeter';
 import { AnimatedNumber } from '../components/AnimatedNumber';
@@ -10,11 +9,13 @@ import {
   ViewToolbar, SectionHeader, SearchInput,
   Badge, MethodBadge, Dot,
   Avatar, AvatarStack,
-  Spec, BarList, StatTiles, Legend, Meter, Empty,
+  Spec, BarList, StatTiles, Legend, Meter, Empty, Figure, TraceBar,
   Table, TableFoot, RowChevron,
   CopyButton,
   Field, TextInput, Select, Form, FormActions,
-  FilterPopover, FilterGroup,
+  Popover, FilterPopover, FilterGroup,
+  Modal, ModalFoot, Stepper,
+  NavList, NavRow,
 } from '../components/ui';
 import { chains } from '../data/mock';
 import './Components.css';
@@ -140,6 +141,43 @@ const UTILITIES: [string, string][] = [
 
 const ICON_NAMES = Object.keys(Icon) as (keyof typeof Icon)[];
 
+/** The page index. Order matches the sections below; keep them in step. */
+const INDEX: { label: string; items: [string, string][] }[] = [
+  {
+    label: 'Foundations',
+    items: [
+      ['colour', 'Colour'],
+      ['type', 'Typography'],
+      ['scale', 'Scale'],
+      ['utilities', 'Utilities'],
+      ['icons', 'Icons'],
+    ],
+  },
+  {
+    label: 'Components',
+    items: [
+      ['buttons', 'Buttons'],
+      ['inputs', 'Inputs'],
+      ['tabs', 'Tabs'],
+      ['popovers', 'Popovers'],
+      ['modals', 'Modals'],
+      ['surfaces', 'Surfaces'],
+      ['lists', 'Lists'],
+      ['toolbars', 'Toolbars'],
+      ['indicators', 'Indicators'],
+      ['data', 'Data'],
+      ['charts', 'Charts'],
+    ],
+  },
+  {
+    label: 'Patterns',
+    items: [
+      ['responsive', 'Responsive'],
+      ['shell', 'Shell'],
+    ],
+  },
+];
+
 const BREAKPOINTS: [string, string][] = [
   ['1180px', 'Topbar search shrinks to 220px.'],
   ['1000px', 'Shell goes single-column. Sidebar becomes an off-canvas drawer behind a scrim; hamburger appears; topbar search hides.'],
@@ -163,6 +201,7 @@ export function Components() {
   const [text, setText] = useState('0xab5801a7d398351b8be11c439e05c5b3259aec9b');
   const [sel, setSel] = useState('ethereum');
   const [page, setPage] = useState(1);
+  const [demoModal, setDemoModal] = useState(false);
 
   return (
     <div className="view lib">
@@ -203,6 +242,21 @@ export function Components() {
           </div>
         </div>
       </Panel>
+
+      {/* Pinned index. A library you have to scroll to navigate is a document,
+          not a library. */}
+      <nav className="lib-index" aria-label="Library sections">
+        {INDEX.map((group) => (
+          <div key={group.label} className="lib-index-group">
+            <span className="lib-index-label">{group.label}</span>
+            <div className="lib-index-links">
+              {group.items.map(([id, label]) => (
+                <a key={id} className="lib-index-link" href={`#${id}`}>{label}</a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
 
       {/* ---------------- Colour ---------------- */}
       <LibSection id="colour" title="Colour" note="Token names are stable across themes; only the values flip.">
@@ -331,80 +385,74 @@ export function Components() {
         </div>
       </LibSection>
 
-      {/* ---------------- Surfaces ---------------- */}
-      <LibSection id="surfaces" title="Surfaces">
-        <Entry
-          name="Panel"
-          desc="Base container. Carries four registration brackets by default."
-          props={[['marks', 'boolean | 4 = 4'], ['flush', 'boolean'], ['className', 'string'], ['id', 'string']]}
-          code={`<Panel marks={4} flush={false}>\n  {children}\n</Panel>`}
-        >
-          <Panel>Panel content</Panel>
+      {/* ---------------- Buttons ---------------- */}
+      <LibSection id="buttons" title="Buttons and actions" note="One class, five variants. Chips and the boxed mono action live here too.">
+        <Entry name="Buttons" desc="Plain elements, not a component. One class, five variants. Hover/focus draws the standard corner-tick accent and nothing else, with no glow ring. .primary swaps the tick colour to --ub-accent-on-blue (ink in light, white in dark) since a blue tick is invisible on the blue fill."
+          props={[['.btn', 'base'], ['.primary', 'brand fill'], ['.dark', 'inverted'], ['.ghost', 'transparent'], ['.danger', 'destructive'], ['.icon-only', 'square 32px'], ['.small', '28px']]}
+          code={`<button className="btn primary">Send</button>\n<button className="btn ghost icon-only" aria-label="Copy"><Icon.Copy size={14} /></button>`}>
+          <div className="lib-row">
+            <button className="btn">Default</button>
+            <button className="btn primary">Primary</button>
+            <button className="btn dark">Dark</button>
+            <button className="btn ghost">Ghost</button>
+            <button className="btn danger">Danger</button>
+            <button className="btn" disabled>Disabled</button>
+            <button className="btn ghost icon-only" aria-label="Copy"><Icon.Copy size={14} /></button>
+          </div>
+          <p className="dim lib-hint">Hover Primary to see the corner accent switch to the on-blue token instead of brand blue.</p>
         </Entry>
-
-        <Entry
-          name="PanelHead"
-          desc="Header row: eyebrow, title, subtitle, and a right-hand actions slot."
-          props={[['title', 'ReactNode'], ['eyebrow', 'ReactNode'], ['sub', 'ReactNode'], ['actions', 'ReactNode'], ['inset', 'boolean']]}
-          code={`<PanelHead\n  eyebrow="Last 30 days"\n  title="Total requests"\n  sub="Live snapshot."\n  actions={<button className="btn">Manage</button>}\n/>`}
-        >
-          <Panel marks={false}>
-            <PanelHead
-              eyebrow="Last 30 days"
-              title="Total requests"
-              sub="Live snapshot."
-              actions={<button className="btn">Manage</button>}
-            />
-          </Panel>
+        <Entry name="CopyButton / useCopy"
+          desc="Clipboard with a transient confirmation. The hook keys by row so one instance serves a list."
+          props={[['value', 'string'], ['copyKey', 'string'], ['label', 'string'], ['variant', "'ghost' | 'default'"], ['size', 'number']]}
+          code={`<CopyButton value={endpoint.path} />\n\nconst { copy, isCopied } = useCopy();\ncopy(url, rowKey);`}>
+          <div className="lib-row">
+            <CopyButton value="ub_live_8f4c2a91" />
+            <CopyButton value="ub_live_8f4c2a91" copyKey="labelled" label="Copy key" variant="default" size={13} />
+          </div>
         </Entry>
-
-        <Entry
-          name="TitledPanel"
-          desc="Panel + PanelHead together. The common case."
-          code={`<TitledPanel eyebrow="Live" title="Test an Endpoint" sub="Send a request.">\n  {children}\n</TitledPanel>`}
-        >
-          <TitledPanel eyebrow="Live" title="Test an Endpoint" sub="Send a request." marks={false}>
-            <span className="dim">Body</span>
-          </TitledPanel>
+        <Entry name="Chips" desc="Filter chips. Plain elements; .on marks the active one."
+          code={`<button className={\`chip \${active ? 'on' : ''}\`}>Token</button>`}>
+          <div className="lib-row">
+            <button className="chip on">All</button>
+            <button className="chip">Token</button>
+            <button className="chip">NFT</button>
+          </div>
         </Entry>
-
-        <Entry name="Empty" desc="Dashed placeholder for no-data states. bare drops the border/background for use inside a table cell. Add icon + title for the richer shape analytics charts and stat panels want when a project has no traffic yet."
-          props={[['bare', 'boolean'], ['icon', 'ReactNode'], ['title', 'ReactNode']]}
-          code={`<Empty>No results match your filters.</Empty>\n\n<Empty icon={<Icon.Chart size={20} />} title="No data yet">\n  Once traffic starts flowing, this chart fills in automatically.\n</Empty>`}>
-          <div className="lib-stack">
-            <div className="lib-row lib-row-stretch">
-              <Empty>No results match your filters.</Empty>
-              <Empty bare>Bare — no border or fill, for a table cell.</Empty>
-            </div>
-            <Empty icon={<Icon.Chart size={20} />} title="No data yet">
-              Once traffic starts flowing, this chart fills in automatically.
-            </Empty>
+        <Entry name="btn-blk" desc="Boxed mono action. Square, hairline, mono label: a stamped tag rather than a rounded UI button. Pairs with the inverted hero."
+          props={[['.is-solid', 'filled primary'], ['.is-bare', 'underlined tertiary'], ['.on-light', 'for pale surfaces']]}
+          code={`<button className="btn-blk on-light is-solid">Run</button>
+<button className="btn-blk on-light">Open docs</button>`}>
+          <div className="lib-row">
+            <button className="btn-blk on-light is-solid">Run sample request</button>
+            <button className="btn-blk on-light">Open docs</button>
+            <button className="btn-blk on-light is-bare">Migrating?</button>
           </div>
         </Entry>
       </LibSection>
 
-      {/* ---------------- Navigation & toolbars ---------------- */}
-      <LibSection id="toolbars" title="Toolbars and navigation">
-        <Entry
-          name="ViewToolbar"
-          desc="Bar above a view: identity left, controls right. Pass lead to replace the title block."
-          props={[['title', 'ReactNode'], ['count', 'ReactNode'], ['lead', 'ReactNode'], ['className', 'string']]}
-          code={`<ViewToolbar title="All providers" count="24 providers">\n  <SearchInput compact value={q} onChange={setQ} />\n</ViewToolbar>`}
-        >
-          <ViewToolbar title="All providers" count="24 providers">
-            <SearchInput compact value={search} onChange={setSearch} placeholder="Search…" />
-          </ViewToolbar>
+      {/* ---------------- Inputs ---------------- */}
+      <LibSection id="inputs" title="Inputs and fields" note="Field wraps a labelled control. Views should not hand-roll input markup.">
+        <Entry name="Field / TextInput / Select / Form / FormActions"
+          desc="Field wraps a labelled control. Use as='label' when it wraps a single input."
+          props={[['Field', 'label, as?: label | div'], ['TextInput', 'value, onChange, placeholder?, type?'], ['Select', 'value, onChange, options, width?']]}
+          code={`<Form>\n  <Field label="Endpoint URL" as="label">\n    <TextInput value={url} onChange={setUrl} placeholder="https://…" />\n  </Field>\n  <FormActions>\n    <button className="btn primary">Create</button>\n  </FormActions>\n</Form>`}>
+          <Form>
+            <Field label="Address" as="label">
+              <TextInput value={text} onChange={setText} />
+            </Field>
+            <Field label="Chain" as="label">
+              <Select
+                value={sel}
+                onChange={setSel}
+                options={['ethereum', 'base', 'polygon', 'solana'].map((c) => ({ value: c, label: c }))}
+              />
+            </Field>
+            <FormActions>
+              <button className="btn primary"><Icon.Play size={13} /> Send request</button>
+              <button className="btn">Cancel</button>
+            </FormActions>
+          </Form>
         </Entry>
-
-        <Entry
-          name="SectionHeader"
-          desc="Heading between sections of a view."
-          props={[['title', 'ReactNode'], ['meta', 'ReactNode'], ['lead', 'boolean']]}
-          code={`<SectionHeader lead title="Spotlight" meta="Featured integrations" />`}
-        >
-          <SectionHeader lead title="Spotlight" meta="Featured integrations" />
-        </Entry>
-
         <Entry
           name="SearchInput"
           desc="compact caps at 240px; grow fills its container; hint takes the ⌘K chip."
@@ -413,11 +461,14 @@ export function Components() {
         >
           <SearchInput compact value={search} onChange={setSearch} placeholder="Search…" />
         </Entry>
+      </LibSection>
 
+      {/* ---------------- Tabs ---------------- */}
+      <LibSection id="tabs" title="Tabs and switches" note="Picking one of several has exactly one appearance in this system.">
         <Entry
           name="Segmented"
           from="../components/Segmented"
-          desc="Every toggle and tab in the app. The marker travels between options; arrow keys move selection."
+          desc="Every toggle and tab in the app: one bordered row of cells, one travelling marker, arrow keys move selection. `tab` differs from `seg` in ARIA (tablist/tab) and height, not in look. Picking one of several should not have two appearances."
           props={[['options', '{ value, label }[]'], ['value', 'T'], ['onChange', '(v: T) => void'], ["variant", "'seg' | 'tab'"], ['label', 'string']]}
           code={`<Segmented\n  value={sort}\n  onChange={setSort}\n  options={[\n    { value: 'trending', label: 'Trending' },\n    { value: 'alpha', label: 'Alphabetical' },\n  ]}\n/>`}
         >
@@ -446,11 +497,37 @@ export function Components() {
             />
           </div>
         </Entry>
+      </LibSection>
 
+      {/* ---------------- Popovers ---------------- */}
+      <LibSection id="popovers" title="Dropdowns and popovers" note="Anything that drops a panel composes Popover: it is what keeps a panel on screen.">
+        <Entry
+          name="Popover"
+          from="../components/ui/Popover"
+          desc="Trigger plus a panel positioned against the window, not its parent: it measures the panel, prefers the requested edge, and clamps back inside the viewport on both axes, so a trigger near an edge cannot push the panel off-screen. Portalled to the body, dismissed by Escape or the backdrop. FilterPopover and the notifications bell are both this."
+          props={[['trigger', '(open: boolean) => ReactNode'], ['triggerClassName / triggerLabel', 'string'], ['label', 'string'], ['align', "'left' | 'right'"], ['foot', '(close) => ReactNode'], ['children', 'ReactNode | (close) => ReactNode']]}
+          code={`<Popover\n  label="Notifications"\n  align="right"\n  triggerClassName="btn ghost icon-only"\n  trigger={() => <Icon.Bell size={15} />}\n  foot={(close) => <button className="btn small" onClick={close}>Close</button>}\n>\n  {(close) => <ul>…</ul>}\n</Popover>`}
+        >
+          <Popover
+            label="Demo popover"
+            triggerClassName="btn"
+            trigger={(open) => <>{open ? 'Close' : 'Open'} a popover</>}
+            foot={(close) => (
+              <>
+                <span className="dim">Footer slot</span>
+                <button className="btn primary small" onClick={close}>Done</button>
+              </>
+            )}
+          >
+            <div className="popover-pad">
+              <span className="dim">Anything can go in the body.</span>
+            </div>
+          </Popover>
+        </Entry>
         <Entry
           name="FilterPopover / FilterGroup"
           from="../components/ui/FilterPopover"
-          desc="Self-contained filter trigger + dropdown. Same anchored-menu recipe as the project switcher and WebSocket provider select: relative wrapper, absolute panel, full-screen backdrop to close on outside click, Escape to close. The trigger shows an active-count badge and tints blue when anything is selected."
+          desc="The filter trigger and its chip groups, on top of Popover. The trigger shows an active-count badge and tints blue when anything is selected."
           props={[['activeCount', 'number = 0'], ['onClear', '() => void'], ['label', 'string = "Filters"'], ['align', "'left' | 'right' = 'left'"]]}
           code={`<FilterPopover activeCount={cat.length + method.length} onClear={clear}>\n  <FilterGroup label="Category">\n    <button className={\`chip \${on ? 'on' : ''}\`} onClick={toggle}>NFT</button>\n  </FilterGroup>\n</FilterPopover>`}
         >
@@ -489,126 +566,105 @@ export function Components() {
         </Entry>
       </LibSection>
 
-      {/* ---------------- Indicators ---------------- */}
-      <LibSection id="indicators" title="Indicators">
+      {/* ---------------- Modals ---------------- */}
+      <LibSection id="modals" title="Modals and windows" note="One dialog. Backdrop, Escape, and the header row belong to Modal.">
         <Entry
-          name="Badge"
-          desc="Tones: neutral, success, warning, danger, new, solid."
-          props={[['tone', "'neutral' | 'success' | 'warning' | 'danger' | 'new' | 'solid'"], ['className', 'string']]}
-          code={`<Badge tone="success">200 OK</Badge>`}
+          name="Modal / ModalFoot / Stepper"
+          desc="The app's one dialog. Backdrop, Escape, and the header row belong to Modal; nav takes a Stepper for a multi-part dialog. Stepper without onSelect is a wizard's progress readout; with it, the markers are page tabs."
+          props={[['open / onClose', 'boolean / () => void'], ['title / sub', 'ReactNode'], ['nav / foot', 'ReactNode'], ['Stepper', 'steps, current, onSelect?, checkDone?']]}
+          code={`<Modal\n  open={open}\n  onClose={close}\n  title="Week in review"\n  nav={<Stepper steps={pages} current={i} onSelect={go} />}\n  foot={<ModalFoot summary="1 / 6"><button className="btn primary">Next</button></ModalFoot>}\n>\n  {page}\n</Modal>`}>
+          <div className="lib-stack">
+            <Stepper
+              steps={[{ id: 'a', label: 'Project' }, { id: 'b', label: 'Chains' }, { id: 'c', label: 'Providers' }]}
+              current={1}
+              checkDone
+            />
+            <div className="lib-row">
+              <button className="btn" onClick={() => setDemoModal(true)}>Open a modal</button>
+            </div>
+          </div>
+          <Modal
+            open={demoModal}
+            onClose={() => setDemoModal(false)}
+            title="New project"
+            sub="Spin up a project with the chains and APIs you need."
+            nav={<Stepper steps={[{ id: 'a', label: 'Project' }, { id: 'b', label: 'Chains' }]} current={0} checkDone />}
+            foot={
+              <ModalFoot summary="Name your project to get started">
+                <button className="btn ghost" onClick={() => setDemoModal(false)}>Cancel</button>
+                <button className="btn primary" onClick={() => setDemoModal(false)}>Continue</button>
+              </ModalFoot>
+            }
+          >
+            <Field label="Project name" as="label">
+              <TextInput value={search} onChange={setSearch} placeholder="e.g. multi-chain-prod" />
+            </Field>
+          </Modal>
+        </Entry>
+      </LibSection>
+
+      {/* ---------------- Surfaces ---------------- */}
+      <LibSection id="surfaces" title="Surfaces and containers" note="Panels are instrument housings: square, hairline, bracketed.">
+        <Entry
+          name="Panel"
+          desc="Base container. Carries four registration brackets by default."
+          props={[['marks', 'boolean | 4 = 4'], ['flush', 'boolean'], ['className', 'string'], ['id', 'string']]}
+          code={`<Panel marks={4} flush={false}>\n  {children}\n</Panel>`}
         >
-          <div className="lib-row">
-            <Badge>neutral</Badge>
-            <Badge tone="success">success</Badge>
-            <Badge tone="warning">warning</Badge>
-            <Badge tone="danger">danger</Badge>
-            <Badge tone="new">new</Badge>
-            <Badge tone="solid">solid</Badge>
-          </div>
+          <Panel>Panel content</Panel>
         </Entry>
-
-        <Entry name="MethodBadge" desc="HTTP method, coloured consistently wherever an endpoint is listed."
-          props={[['method', "'GET' | 'POST' | 'WS'"]]}
-          code={`<MethodBadge method="GET" />`}>
-          <div className="lib-row">
-            <MethodBadge method="GET" />
-            <MethodBadge method="POST" />
-            <MethodBadge method="WS" />
-          </div>
+        <Entry
+          name="PanelHead"
+          desc="Header row: eyebrow, title, subtitle, and a right-hand actions slot."
+          props={[['title', 'ReactNode'], ['eyebrow', 'ReactNode'], ['sub', 'ReactNode'], ['actions', 'ReactNode'], ['inset', 'boolean']]}
+          code={`<PanelHead\n  eyebrow="Last 30 days"\n  title="Total requests"\n  sub="Live snapshot."\n  actions={<button className="btn">Manage</button>}\n/>`}
+        >
+          <Panel marks={false}>
+            <PanelHead
+              eyebrow="Last 30 days"
+              title="Total requests"
+              sub="Live snapshot."
+              actions={<button className="btn">Manage</button>}
+            />
+          </Panel>
         </Entry>
-
-        <Entry name="Dot" desc="Square status marker." props={[['tone', "'ok' | 'warn'"]]} code={`<Dot tone="ok" />`}>
-          <div className="lib-row">
-            <Dot /> <Dot tone="ok" /> <Dot tone="warn" />
-          </div>
+        <Entry
+          name="TitledPanel"
+          desc="Panel + PanelHead together. The common case."
+          code={`<TitledPanel eyebrow="Live" title="Test an Endpoint" sub="Send a request.">\n  {children}\n</TitledPanel>`}
+        >
+          <TitledPanel eyebrow="Live" title="Test an Endpoint" sub="Send a request." marks={false}>
+            <span className="dim">Body</span>
+          </TitledPanel>
         </Entry>
-
-        <Entry name="Meter" desc="Horizontal progress bar." props={[['value', 'number (0-100)'], ['size', "'sm' | 'md'"], ['color', 'string']]}
-          code={`<Meter value={62} />`}>
-          <div className="lib-stack-sm">
-            <Meter value={62} />
-            <Meter value={38} size="sm" />
-          </div>
-        </Entry>
-
-        <Entry name="SquareMeter" from="../components/SquareMeter"
-          desc="Square ring gauge. Stroke is measured along the perimeter, so a segment's share is linear."
-          props={[['segments', '{ value, color }[]'], ['value', 'string'], ['caption', 'string'], ['size', 'number = 132'], ['thickness', 'number = 10']]}
-          code={`<SquareMeter\n  value="98.2%"\n  caption="2xx"\n  segments={[\n    { value: 98.2, color: 'var(--ub-blue)' },\n    { value: 1.8, color: 'var(--ub-danger)' },\n  ]}\n/>`}>
-          <SquareMeter
-            value="98.2%"
-            caption="2xx"
-            segments={[
-              { value: 98.2, color: 'var(--ub-blue)' },
-              { value: 1.8, color: 'var(--ub-danger)' },
-            ]}
-          />
-        </Entry>
-
-        <Entry name="AnimatedNumber" from="../components/AnimatedNumber"
-          desc="Counts a formatted value up on mount. Respects prefers-reduced-motion."
-          props={[['value', 'string'], ['duration', 'number = 1100'], ['className', 'string']]}
-          code={`<AnimatedNumber value="1,474,250" />`}>
-          <span className="lib-t-2xl pixel"><AnimatedNumber value="1,474,250" /></span>
-        </Entry>
-
-        <Entry name="Avatar / AvatarStack" desc="Provider and chain artwork. Falls back to a pixel monogram when no icon ships."
-          props={[['src', 'string | undefined'], ['name', 'string'], ['size', "'sm' | 'md' | 'lg' | 'xl'"]]}
-          code={`<Avatar src={provider.icon} name={provider.name} size="lg" />\n<AvatarStack items={chains} more="300+" />`}>
-          <div className="lib-row">
-            <Avatar name="Dwellir" size="sm" />
-            <Avatar name="Dwellir" size="md" />
-            <Avatar src={chains[1].icon} name="Ethereum" size="lg" />
-            <Avatar name="Codex" size="xl" />
-            <AvatarStack items={chains.slice(0, 5)} more="300+" />
+        <Entry name="Empty" desc="Dashed placeholder for no-data states. bare drops the border/background for use inside a table cell. Add icon + title for the richer shape analytics charts and stat panels want when a project has no traffic yet."
+          props={[['bare', 'boolean'], ['icon', 'ReactNode'], ['title', 'ReactNode']]}
+          code={`<Empty>No results match your filters.</Empty>\n\n<Empty icon={<Icon.Chart size={20} />} title="No data yet">\n  Once traffic starts flowing, this chart fills in automatically.\n</Empty>`}>
+          <div className="lib-stack">
+            <div className="lib-row lib-row-stretch">
+              <Empty>No results match your filters.</Empty>
+              <Empty bare>Bare: no border or fill, for a table cell.</Empty>
+            </div>
+            <Empty icon={<Icon.Chart size={20} />} title="No data yet">
+              Once traffic starts flowing, this chart fills in automatically.
+            </Empty>
           </div>
         </Entry>
       </LibSection>
 
-      {/* ---------------- Data ---------------- */}
-      <LibSection id="data" title="Data display">
-        <Entry name="Spec" desc="Label/value rows in tabular mono. Keeps figures comparable across cards."
-          props={[['rows', '{ label, value }[]']]}
-          code={`<Spec rows={[\n  { label: 'Endpoints', value: 55 },\n  { label: 'Categories', value: 7 },\n]} />`}>
-          <Spec rows={[{ label: 'Endpoints', value: 55 }, { label: 'Categories', value: 7 }]} />
+      {/* ---------------- Lists ---------------- */}
+      <LibSection id="lists" title="Lists and rows" note="Rows that go somewhere, and rows that hold data.">
+        <Entry
+          name="NavList / NavRow"
+          desc="A stack of rows that go somewhere: leading mark, title, optional second line, optional right-hand figure, chevron. Settings' project actions, the overview's API ledger, and the onboarding checklist are all this row. Use boxed when the stack has to draw its own container; dense for a list inside a card."
+          props={[['NavList', 'boxed?: boolean'], ['icon', 'ReactNode'], ['title / sub / meta', 'ReactNode'], ['tone', "'neutral' | 'brand' | 'danger'"], ['dense', 'boolean'], ['onClick', '() => void']]}
+          code={`<NavList boxed>\n  <NavRow\n    tone="brand"\n    icon={<Icon.Coin size={16} />}\n    title="Token API"\n    sub="Balances, metadata, transfers."\n    meta="12 endpoints"\n    onClick={() => go('apis-unified')}\n  />\n</NavList>`}>
+          <NavList boxed>
+            <NavRow tone="brand" icon={<Icon.Coin size={16} />} title="Token API" sub="Balances, metadata, transfers." meta="12 endpoints" />
+            <NavRow icon={<Icon.Settings size={16} />} title="Rename project" sub="Edit the name shown on the dashboard." />
+            <NavRow tone="danger" icon={<Icon.Trash size={16} />} title="Archive project" sub="Remove it from the dashboard." />
+          </NavList>
         </Entry>
-
-        <Entry name="BarList" desc="Ranked rows with a proportional bar."
-          props={[['items', '{ id, label, meta?, share, value, color? }[]']]}
-          code={`<BarList items={[\n  { id: 'a', label: '/token/balance', meta: '184,230 calls', share: 100, value: '100%' },\n]} />`}>
-          <BarList
-            items={[
-              { id: 'a', label: <span className="mono">/token/balance</span>, meta: '184,230 calls', share: 100, value: '100%' },
-              { id: 'b', label: <span className="mono">eth_call</span>, meta: '121,084 calls', share: 66, value: '66%' },
-            ]}
-          />
-        </Entry>
-
-        <Entry name="StatTiles" desc="Bordered row of figures. Pass columns for a fixed grid, omit it to flex."
-          props={[['tiles', '{ id, label, value, foot? }[]'], ['columns', 'number']]}
-          code={`<StatTiles columns={3} tiles={[\n  { id: 'total', label: 'Total requests', value: '1,474,250' },\n]} />`}>
-          <StatTiles
-            columns={3}
-            tiles={[
-              { id: 't', label: 'Total requests', value: '1,474,250' },
-              { id: 's', label: 'Success rate', value: '99.4%' },
-              { id: 'l', label: 'Avg latency', value: '38 ms' },
-            ]}
-          />
-        </Entry>
-
-        <Entry name="Legend" desc="Keyed list beside a meter or chart."
-          props={[['items', '{ id, label, value, tone? }[]']]}
-          code={`<Legend items={[{ id: '2xx', tone: 'success', label: '2xx', value: '2,367,840' }]} />`}>
-          <Legend
-            items={[
-              { id: '2xx', tone: 'success', label: '2xx Success', value: '2,367,840' },
-              { id: '4xx', tone: 'warning', label: '4xx Client error', value: '33,746' },
-              { id: '5xx', tone: 'danger', label: '5xx Server error', value: '9,641' },
-            ]}
-          />
-        </Entry>
-
         <Entry name="Table / TableFoot / RowChevron"
           desc="Columns are declared; rows are children. RowChevron marks a row that opens something."
           props={[['columns', '{ key, header?, align? }[]'], ['ruled', 'boolean'], ['page / pages / onChange / summary', 'TableFoot']]}
@@ -631,84 +687,157 @@ export function Components() {
         </Entry>
       </LibSection>
 
-      {/* ---------------- Forms ---------------- */}
-      <LibSection id="forms" title="Forms and actions">
-        <Entry name="Field / TextInput / Select / Form / FormActions"
-          desc="Field wraps a labelled control. Use as='label' when it wraps a single input."
-          props={[['Field', 'label, as?: label | div'], ['TextInput', 'value, onChange, placeholder?, type?'], ['Select', 'value, onChange, options, width?']]}
-          code={`<Form>\n  <Field label="Endpoint URL" as="label">\n    <TextInput value={url} onChange={setUrl} placeholder="https://…" />\n  </Field>\n  <FormActions>\n    <button className="btn primary">Create</button>\n  </FormActions>\n</Form>`}>
-          <Form>
-            <Field label="Address" as="label">
-              <TextInput value={text} onChange={setText} />
-            </Field>
-            <Field label="Chain" as="label">
-              <Select
-                value={sel}
-                onChange={setSel}
-                options={['ethereum', 'base', 'polygon', 'solana'].map((c) => ({ value: c, label: c }))}
-              />
-            </Field>
-            <FormActions>
-              <button className="btn primary"><Icon.Play size={13} /> Send request</button>
-              <button className="btn">Cancel</button>
-            </FormActions>
-          </Form>
+      {/* ---------------- Toolbars ---------------- */}
+      <LibSection id="toolbars" title="Toolbars and headers" note="The bar above a view, and the head above a section.">
+        <Entry
+          name="ViewToolbar"
+          desc="Bar above a view: identity left, controls right. Pass lead to replace the title block."
+          props={[['title', 'ReactNode'], ['count', 'ReactNode'], ['lead', 'ReactNode'], ['className', 'string']]}
+          code={`<ViewToolbar title="All providers" count="24 providers">\n  <SearchInput compact value={q} onChange={setQ} />\n</ViewToolbar>`}
+        >
+          <ViewToolbar title="All providers" count="24 providers">
+            <SearchInput compact value={search} onChange={setSearch} placeholder="Search…" />
+          </ViewToolbar>
         </Entry>
-
-        <Entry name="Buttons" desc="Plain elements, not a component. One class, five variants. Hover/focus draws the standard corner-tick accent and nothing else — no glow ring. .primary swaps the tick colour to --ub-accent-on-blue (ink in light, white in dark) since a blue tick is invisible on the blue fill."
-          props={[['.btn', 'base'], ['.primary', 'brand fill'], ['.dark', 'inverted'], ['.ghost', 'transparent'], ['.danger', 'destructive'], ['.icon-only', 'square 32px'], ['.small', '28px']]}
-          code={`<button className="btn primary">Send</button>\n<button className="btn ghost icon-only" aria-label="Copy"><Icon.Copy size={14} /></button>`}>
-          <div className="lib-row">
-            <button className="btn">Default</button>
-            <button className="btn primary">Primary</button>
-            <button className="btn dark">Dark</button>
-            <button className="btn ghost">Ghost</button>
-            <button className="btn danger">Danger</button>
-            <button className="btn" disabled>Disabled</button>
-            <button className="btn ghost icon-only" aria-label="Copy"><Icon.Copy size={14} /></button>
-          </div>
-          <p className="dim lib-hint">Hover Primary to see the corner accent switch to the on-blue token instead of brand blue.</p>
+        <Entry
+          name="SectionHeader"
+          desc="Heading between sections of a view."
+          props={[['title', 'ReactNode'], ['meta', 'ReactNode'], ['lead', 'boolean']]}
+          code={`<SectionHeader lead title="Spotlight" meta="Featured integrations" />`}
+        >
+          <SectionHeader lead title="Spotlight" meta="Featured integrations" />
         </Entry>
+      </LibSection>
 
-        <Entry name="CopyButton / useCopy"
-          desc="Clipboard with a transient confirmation. The hook keys by row so one instance serves a list."
-          props={[['value', 'string'], ['copyKey', 'string'], ['label', 'string'], ['variant', "'ghost' | 'default'"], ['size', 'number']]}
-          code={`<CopyButton value={endpoint.path} />\n\nconst { copy, isCopied } = useCopy();\ncopy(url, rowKey);`}>
+      {/* ---------------- Indicators ---------------- */}
+      <LibSection id="indicators" title="Indicators" note="State at a glance: badges, dots, meters, artwork.">
+        <Entry
+          name="Badge"
+          desc="Tones: neutral, success, warning, danger, new, solid."
+          props={[['tone', "'neutral' | 'success' | 'warning' | 'danger' | 'new' | 'solid'"], ['className', 'string']]}
+          code={`<Badge tone="success">200 OK</Badge>`}
+        >
           <div className="lib-row">
-            <CopyButton value="ub_live_8f4c2a91" />
-            <CopyButton value="ub_live_8f4c2a91" copyKey="labelled" label="Copy key" variant="default" size={13} />
+            <Badge>neutral</Badge>
+            <Badge tone="success">success</Badge>
+            <Badge tone="warning">warning</Badge>
+            <Badge tone="danger">danger</Badge>
+            <Badge tone="new">new</Badge>
+            <Badge tone="solid">solid</Badge>
           </div>
         </Entry>
-
-        <Entry name="Chips" desc="Filter chips. Plain elements; .on marks the active one."
-          code={`<button className={\`chip \${active ? 'on' : ''}\`}>Token</button>`}>
+        <Entry name="MethodBadge" desc="HTTP method, coloured consistently wherever an endpoint is listed."
+          props={[['method', "'GET' | 'POST' | 'WS'"]]}
+          code={`<MethodBadge method="GET" />`}>
           <div className="lib-row">
-            <button className="chip on">All</button>
-            <button className="chip">Token</button>
-            <button className="chip">NFT</button>
+            <MethodBadge method="GET" />
+            <MethodBadge method="POST" />
+            <MethodBadge method="WS" />
+          </div>
+        </Entry>
+        <Entry name="Dot" desc="Square status marker." props={[['tone', "'ok' | 'warn'"]]} code={`<Dot tone="ok" />`}>
+          <div className="lib-row">
+            <Dot /> <Dot tone="ok" /> <Dot tone="warn" />
+          </div>
+        </Entry>
+        <Entry name="Meter" desc="Horizontal progress bar." props={[['value', 'number (0-100)'], ['size', "'sm' | 'md'"], ['color', 'string']]}
+          code={`<Meter value={62} />`}>
+          <div className="lib-stack-sm">
+            <Meter value={62} />
+            <Meter value={38} size="sm" />
+          </div>
+        </Entry>
+        <Entry name="SquareMeter" from="../components/SquareMeter"
+          desc="Square ring gauge. Stroke is measured along the perimeter, so a segment's share is linear."
+          props={[['segments', '{ value, color }[]'], ['value', 'string'], ['caption', 'string'], ['size', 'number = 132'], ['thickness', 'number = 10']]}
+          code={`<SquareMeter\n  value="98.2%"\n  caption="2xx"\n  segments={[\n    { value: 98.2, color: 'var(--ub-blue)' },\n    { value: 1.8, color: 'var(--ub-danger)' },\n  ]}\n/>`}>
+          <SquareMeter
+            value="98.2%"
+            caption="2xx"
+            segments={[
+              { value: 98.2, color: 'var(--ub-blue)' },
+              { value: 1.8, color: 'var(--ub-danger)' },
+            ]}
+          />
+        </Entry>
+        <Entry name="AnimatedNumber" from="../components/AnimatedNumber"
+          desc="Counts a formatted value up on mount. Respects prefers-reduced-motion."
+          props={[['value', 'string'], ['duration', 'number = 1100'], ['className', 'string']]}
+          code={`<AnimatedNumber value="1,474,250" />`}>
+          <span className="lib-t-2xl pixel"><AnimatedNumber value="1,474,250" /></span>
+        </Entry>
+        <Entry name="Avatar / AvatarStack" desc="Provider and chain artwork. Falls back to a pixel monogram when no icon ships."
+          props={[['src', 'string | undefined'], ['name', 'string'], ['size', "'sm' | 'md' | 'lg' | 'xl'"]]}
+          code={`<Avatar src={provider.icon} name={provider.name} size="lg" />\n<AvatarStack items={chains} more="300+" />`}>
+          <div className="lib-row">
+            <Avatar name="Dwellir" size="sm" />
+            <Avatar name="Dwellir" size="md" />
+            <Avatar src={chains[1].icon} name="Ethereum" size="lg" />
+            <Avatar name="Codex" size="xl" />
+            <AvatarStack items={chains.slice(0, 5)} more="300+" />
           </div>
         </Entry>
       </LibSection>
 
-      {/* ---------------- Brand devices ---------------- */}
-      <LibSection id="devices" title="Brand devices" note="Ornament with a source. These carry the product's personality; use them instead of a gradient.">
-        <Entry name="Barcode" desc="A real series drawn as a tape print — dense rules with a hairline range and a heavier body. Deterministic, so the same data always draws the same band."
-          props={[['values', 'number[]'], ['columns', 'number (default 88)'], ['height', 'number'], ['accentEvery', 'number'], ['className', "'on-light' on pale surfaces"]]}
-          code={`<Barcode values={series} height={104} />
-<Barcode values={series} className="on-light" />`}>
-          <div className="lib-row" style={{ display: 'block' }}>
-            <Barcode values={Array.from({ length: 30 }, (_, i) => Math.sin(i / 3) * 40 + 60)} height={72} className="on-light" />
+      {/* ---------------- Data ---------------- */}
+      <LibSection id="data" title="Data display" note="Figures and the shapes that make them comparable.">
+        <Entry name="Figure" desc="A headline numeral and the unit that makes it mean something. StatTiles is the bordered row of these; this is the one that stands alone. Pass a Num as the value to have it count up."
+          props={[['value', 'ReactNode'], ['unit', 'ReactNode'], ['size', "'md' | 'lg'"]]}
+          code={`<Figure value={<Num value={412908} format={int} />} unit="requests routed" />`}>
+          <div className="lib-row">
+            <Figure value="423,500" unit="requests routed" />
+            <Figure size="md" value="$4,180" unit="saved this week" />
           </div>
         </Entry>
-        <Entry name="btn-blk" desc="Boxed mono action. Square, hairline, mono label — a stamped tag rather than a rounded UI button. Pairs with the inverted hero."
-          props={[['.is-solid', 'filled primary'], ['.is-bare', 'underlined tertiary'], ['.on-light', 'for pale surfaces']]}
-          code={`<button className="btn-blk on-light is-solid">Run</button>
-<button className="btn-blk on-light">Open docs</button>`}>
-          <div className="lib-row">
-            <button className="btn-blk on-light is-solid">Run sample request</button>
-            <button className="btn-blk on-light">Open docs</button>
-            <button className="btn-blk on-light is-bare">Migrating?</button>
-          </div>
+        <Entry name="TraceBar" desc="One request's time, in the order it was spent. The baseline tick is what the same call costs when nothing goes wrong, so overhead is a distance rather than a number to be trusted."
+          props={[['segments', "{ id, label, ms, tone? }[]"], ['baseline', '{ ms, label }'], ['totalLabel', 'ReactNode']]}
+          code={`<TraceBar\n  segments={[\n    { id: 'lost', label: 'First choice, given up on', ms: 181, tone: 'danger' },\n    { id: 'served', label: 'Next healthy provider, served', ms: 51 },\n  ]}\n  baseline={{ ms: 64, label: 'A clean first-choice call' }}\n  totalLabel="What the caller waited"\n/>`}>
+          <TraceBar
+            segments={[
+              { id: 'lost', label: 'First choice, given up on', ms: 181, tone: 'danger' },
+              { id: 'served', label: 'Next healthy provider, served', ms: 51 },
+            ]}
+            baseline={{ ms: 64, label: 'A clean first-choice call' }}
+            totalLabel="What the caller waited"
+          />
+        </Entry>
+        <Entry name="Spec" desc="Label/value rows in tabular mono. Keeps figures comparable across cards."
+          props={[['rows', '{ label, value }[]']]}
+          code={`<Spec rows={[\n  { label: 'Endpoints', value: 55 },\n  { label: 'Categories', value: 7 },\n]} />`}>
+          <Spec rows={[{ label: 'Endpoints', value: 55 }, { label: 'Categories', value: 7 }]} />
+        </Entry>
+        <Entry name="BarList" desc="Ranked rows with a proportional bar."
+          props={[['items', '{ id, label, meta?, share, value, color? }[]']]}
+          code={`<BarList items={[\n  { id: 'a', label: '/token/balance', meta: '184,230 calls', share: 100, value: '100%' },\n]} />`}>
+          <BarList
+            items={[
+              { id: 'a', label: <span className="mono">/token/balance</span>, meta: '184,230 calls', share: 100, value: '100%' },
+              { id: 'b', label: <span className="mono">eth_call</span>, meta: '121,084 calls', share: 66, value: '66%' },
+            ]}
+          />
+        </Entry>
+        <Entry name="StatTiles" desc="Bordered row of figures. Pass columns for a fixed grid, omit it to flex."
+          props={[['tiles', '{ id, label, value, foot? }[]'], ['columns', 'number']]}
+          code={`<StatTiles columns={3} tiles={[\n  { id: 'total', label: 'Total requests', value: '1,474,250' },\n]} />`}>
+          <StatTiles
+            columns={3}
+            tiles={[
+              { id: 't', label: 'Total requests', value: '1,474,250' },
+              { id: 's', label: 'Success rate', value: '99.4%' },
+              { id: 'l', label: 'Avg latency', value: '38 ms' },
+            ]}
+          />
+        </Entry>
+        <Entry name="Legend" desc="Keyed list beside a meter or chart."
+          props={[['items', '{ id, label, value, tone? }[]']]}
+          code={`<Legend items={[{ id: '2xx', tone: 'success', label: '2xx', value: '2,367,840' }]} />`}>
+          <Legend
+            items={[
+              { id: '2xx', tone: 'success', label: '2xx Success', value: '2,367,840' },
+              { id: '4xx', tone: 'warning', label: '4xx Client error', value: '33,746' },
+              { id: '5xx', tone: 'danger', label: '5xx Server error', value: '9,641' },
+            ]}
+          />
         </Entry>
       </LibSection>
 
@@ -747,10 +876,10 @@ export function Components() {
 
         <Entry name="Other conventions" desc="Reuse these instead of inventing new mobile behaviour.">
           <ul className="lib-resp-list">
-            <li>Tables scroll horizontally via <code className="mono">.table-wrap {'{'} overflow-x: auto {'}'}</code> — columns never stack.</li>
+            <li>Tables scroll horizontally via <code className="mono">.table-wrap {'{'} overflow-x: auto {'}'}</code>. Columns never stack.</li>
             <li>Toolbar rows (<code className="mono">.ep-controls</code>, <code className="mono">.composer-row</code>, <code className="mono">.picker-head</code>) are <code className="mono">flex-wrap: wrap</code> with a <code className="mono">min-width</code> on fixed children.</li>
             <li>Modals and drawers size with <code className="mono">width: min(Npx, 100%)</code>, never a bare pixel width.</li>
-            <li>Don't truncate (<code className="mono">text-overflow: ellipsis</code>) a string that hides an interactive element — wrap it instead, as the site banner message does under 560px.</li>
+            <li>Don't truncate (<code className="mono">text-overflow: ellipsis</code>) a string that hides an interactive element. Wrap it instead, as the site banner message does under 560px.</li>
           </ul>
         </Entry>
       </LibSection>
@@ -782,6 +911,7 @@ export function Components() {
             code={`const { theme, toggleTheme } = useTheme();`} />
         </div>
       </LibSection>
+
     </div>
   );
 }

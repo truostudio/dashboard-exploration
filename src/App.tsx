@@ -164,7 +164,7 @@ function App() {
 
   /**
    * Navigation and the address bar move together. `push` is false only when the
-   * URL already changed on its own — i.e. the user pressed Back — otherwise the
+   * URL already changed on its own, i.e. the user pressed Back, otherwise the
    * history stack would grow an entry every time it was popped.
    */
   const go = (id: ViewId, focus?: { endpoint?: string; chain?: string }, push = true) => {
@@ -246,6 +246,7 @@ function App() {
           subtitle={meta.subtitle}
           onNewProject={() => setNewProjectOpen(true)}
           onMenu={() => setNavOpen(true)}
+          onNavigate={(id) => go(id)}
           onSearch={() => setPaletteOpen(true)}
           theme={theme}
           onToggleTheme={toggleTheme}

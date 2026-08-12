@@ -28,7 +28,7 @@ export function SiteBanner({ onNavigate }: Props) {
     try {
       localStorage.setItem(STORAGE_KEY, '1');
     } catch {
-      // Private mode — dismiss lasts for this session only.
+      // Private mode, dismiss lasts for this session only.
     }
   };
 

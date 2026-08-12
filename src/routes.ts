@@ -6,7 +6,7 @@ import type { ViewId } from './App';
  * The shell held its view in `useState` with no router, so every screen shared
  * one URL: nothing was linkable, the back button left the app, and a palette
  * jump could not be shared with a teammate. This is deliberately a hand-rolled
- * History API mapping rather than a router dependency — the app has exactly one
+ * History API mapping rather than a router dependency, the app has exactly one
  * level of navigation, and the whole surface is the table below.
  */
 

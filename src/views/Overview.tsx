@@ -3,9 +3,10 @@ import { Area, AreaChart, Tooltip, XAxis } from 'recharts';
 import { Icon } from '../components/Icons';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import { GetStarted } from '../components/GetStarted';
+import { WeekInReviewCard, WeekInReviewModal } from '../components/WeekInReview';
 import { Segmented } from '../components/Segmented';
 import {
-  Panel, TitledPanel, StatTiles, Badge, MethodBadge, Select, CopyButton, useCopy,
+  Panel, TitledPanel, StatTiles, Badge, MethodBadge, Select, CopyButton, NavList, NavRow,
 } from '../components/ui';
 import { ChartFrame, ChartTooltip, chartAxis, chartAxisLine, chartCursor } from '../components/ui/Chart';
 import type { Step } from '../components/GetStarted';
@@ -14,10 +15,10 @@ import type { ViewId } from '../App';
 
 const API_KEY = 'ub_live_8f4c2a91b73e5a90c1f6d8e2b5a7c3d9';
 
-const exploreCards = [
-  { title: 'JSON-RPC reference', description: 'Browse supported methods, request/response formats, and examples.', target: 'json-rpc' as ViewId },
-  { title: 'Token API',          description: 'Token metadata, balances, and contract-related token data.',        target: 'apis-unified' as ViewId },
-  { title: 'Transaction API',    description: 'Transaction lookups and transaction-related data.',                  target: 'apis-unified' as ViewId },
+const exploreCards: { title: string; description: string; meta: string; icon: keyof typeof Icon; target: ViewId }[] = [
+  { title: 'JSON-RPC reference', description: 'Supported methods, request and response formats, worked examples.', meta: '148 methods', icon: 'Nodes',  target: 'json-rpc' },
+  { title: 'Token API',          description: 'Token metadata, balances, and contract-level token data.',           meta: '12 endpoints', icon: 'Coin',  target: 'apis-unified' },
+  { title: 'Transaction API',    description: 'Transaction lookups, receipts, and decoded transfers.',              meta: '9 endpoints',  icon: 'Tx',    target: 'apis-unified' },
 ];
 
 const prompts: { label: string; template: string }[] = [
@@ -52,10 +53,14 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
   const [running, setRunning] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [promptIdx, setPromptIdx] = useState(0);
-  const { copy, isCopied } = useCopy();
+  const [weekOpen, setWeekOpen] = useState(false);
 
   const masked = `${API_KEY.slice(0, 11)}${'•'.repeat(14)}`;
+  /* The prompt is meant to be pasted into an agent, so the copy carries the
+     real key, but it is also sitting on screen in a shared window, so what
+     renders is masked the same way the key strip masks it. */
   const promptText = prompts[promptIdx].template.replace(/{apiKey}/g, API_KEY);
+  const promptShown = prompts[promptIdx].template.replace(/{apiKey}/g, masked);
 
   function run() {
     setRunning(true);
@@ -71,13 +76,11 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
   }
 
   return (
-    <div className="view">
-      {showGetStarted && (
-        <div className="rise rise-1">
-          <GetStarted steps={steps} onNavigate={onNavigate} onDismiss={onDismissGetStarted} />
-        </div>
-      )}
-
+    /* Two tracks: the working column, and a narrow rail for the things you
+       glance at rather than operate, onboarding progress and the weekly
+       recap. The rail sticks so it stays with you down a long overview. */
+    <div className="view ov-layout">
+      <div className="ov-main">
       {/* API key strip */}
       <Panel className="keystrip rise rise-1">
         <Icon.Key size={16} className="dim" />
@@ -101,7 +104,9 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
           ]}
         />
         <ChartFrame height={220}>
-            <AreaChart data={overviewUsage.rows} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+            {/* The last tick centres on the final point, so the right margin
+                has to hold half a date label or it clips at the panel edge. */}
+            <AreaChart data={overviewUsage.rows} margin={{ top: 8, right: 30, left: 8, bottom: 0 }}>
               <defs>
                 <linearGradient id="ovFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--ub-blue)" stopOpacity={0.26} />
@@ -134,17 +139,32 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
         </ChartFrame>
       </TitledPanel>
 
-      {/* Explore APIs */}
-      <section className="explore-grid rise rise-3">
-        {exploreCards.map((c) => (
-          <button key={c.title} className="explore-card" onClick={() => onNavigate(c.target)}>
-            <span className="explore-icon"><Icon.Code size={20} /></span>
-            <span className="explore-title">{c.title}</span>
-            <span className="explore-desc dim">{c.description}</span>
-            <Icon.External size={16} className="explore-ext" />
-          </button>
-        ))}
-      </section>
+      {/* Explore APIs, a ledger, not a card row. Three tiles cannot hold a
+          line each in the working column without wrapping into an orphan row,
+          and stacked rows keep every description on one measure. */}
+      <TitledPanel
+        className="rise rise-3"
+        flush
+        title="Explore the APIs"
+        sub="Where to look next, by surface."
+      >
+        <NavList>
+          {exploreCards.map((c) => {
+            const I = Icon[c.icon];
+            return (
+              <NavRow
+                key={c.title}
+                tone="brand"
+                icon={<I size={16} />}
+                title={c.title}
+                sub={c.description}
+                meta={c.meta}
+                onClick={() => onNavigate(c.target)}
+              />
+            );
+          })}
+        </NavList>
+      </TitledPanel>
 
       {/* Test an Endpoint */}
       <TitledPanel
@@ -222,14 +242,38 @@ export function Overview({ steps, showGetStarted, onNavigate, onDismissGetStarte
           <div className="code-tabs">
             <span className="mono dim code-filename">prompt.txt</span>
             <span className="code-tabs-spacer" />
-            <button className="btn code-copy" onClick={() => copy(promptText, 'prompt')}>
-              {isCopied('prompt') ? <Icon.Check size={12} /> : <Icon.Copy size={12} />}
-              {isCopied('prompt') ? 'Copied' : 'Copy'}
-            </button>
+            {/* Copies the live key even though the pane shows it masked. */}
+            <CopyButton
+              value={promptText}
+              copyKey="prompt"
+              variant="default"
+              label="Copy"
+              size={12}
+              className="code-copy"
+            />
           </div>
-          <pre className="code-pre prompt-pre">{promptText}</pre>
+          <pre className="code-pre prompt-pre">{promptShown}</pre>
         </div>
       </TitledPanel>
+      </div>
+
+      <aside className="ov-rail rise rise-2" aria-label="Highlights">
+        {/* The inner track is what sticks; the aside itself has to keep the
+            full row height or there is nothing for it to travel through. */}
+        <div className="ov-rail-inner">
+          {showGetStarted && (
+            <GetStarted
+              variant="rail"
+              steps={steps}
+              onNavigate={onNavigate}
+              onDismiss={onDismissGetStarted}
+            />
+          )}
+          <WeekInReviewCard onOpen={() => setWeekOpen(true)} />
+        </div>
+      </aside>
+
+      <WeekInReviewModal open={weekOpen} onClose={() => setWeekOpen(false)} />
     </div>
   );
 }

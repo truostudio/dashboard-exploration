@@ -1,5 +1,5 @@
 /**
- * Shared UI primitives — Panel, Table, StatTiles, SectionHeader, Empty.
+ * Shared UI primitives. Panel, Table, StatTiles, SectionHeader, Empty.
  * Imported by the dashboard (via App.css) and by landing. Keep shell/layout
  * chrome out of this file so marketing pages don't inherit dashboard layout.
  */

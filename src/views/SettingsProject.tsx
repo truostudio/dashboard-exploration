@@ -1,5 +1,5 @@
 import { Icon } from '../components/Icons';
-import { Panel, PanelHead, TitledPanel, Table, ViewToolbar, CopyButton } from '../components/ui';
+import { Panel, PanelHead, TitledPanel, Table, ViewToolbar, CopyButton, NavList, NavRow } from '../components/ui';
 import { apiKeys } from '../data/mock';
 
 const columns = [
@@ -52,21 +52,20 @@ export function SettingsProject() {
       </Panel>
 
       <TitledPanel title="Manage Project" className="rise rise-3">
-        <div className="manage-list">
+        <NavList boxed>
           {manageRows.map((row) => {
             const I = Icon[row.icon];
             return (
-              <button key={row.id} className="manage-row">
-                <span className={`manage-avatar ${row.danger ? 'danger' : ''}`.trim()}><I size={16} /></span>
-                <span className="manage-text">
-                  <span className="manage-title">{row.title}</span>
-                  <span className="dim">{row.sub}</span>
-                </span>
-                <Icon.Chevron size={15} className="dim" />
-              </button>
+              <NavRow
+                key={row.id}
+                tone={row.danger ? 'danger' : 'neutral'}
+                icon={<I size={16} />}
+                title={row.title}
+                sub={row.sub}
+              />
             );
           })}
-        </div>
+        </NavList>
       </TitledPanel>
     </div>
   );

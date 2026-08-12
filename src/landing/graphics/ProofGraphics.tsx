@@ -16,11 +16,11 @@ import { directProviders } from '../../data/catalog';
    ============================================================ */
 
 /* Eight bricks per course, so the count has to be a multiple of eight or the
-   wall ends ragged — which is the whole point of building it out of blocks. */
+   wall ends ragged, which is the whole point of building it out of blocks. */
 const MESH = directProviders.filter((p) => p.icon);
 
 /**
- * The scan does not walk the mesh in reading order — a left-to-right sweep
+ * The scan does not walk the mesh in reading order, a left-to-right sweep
  * looks like a loading bar. It hops, the way a health check polls.
  */
 export function ProviderMesh({ cols = 7, rows = 2 }: { cols?: number; rows?: number }) {
@@ -72,7 +72,7 @@ const METRICS = ['latency', 'cost', 'reliability'] as const;
 /**
  * With the window focused the scores re-run, so you watch the decision being
  * made rather than reading its result. Keying the wrapper on `on` remounts the
- * bars, which restarts their fill animation from zero — no state needed, and
+ * bars, which restarts their fill animation from zero, no state needed, and
  * no effect that writes state during render.
  */
 export function RouteRace({ on = false }: { on?: boolean }) {

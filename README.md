@@ -1,73 +1,43 @@
-# React + TypeScript + Vite
+# Uniblock dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A working redesign of the Uniblock dashboard, built in code rather than in a design tool
+so what you see is what ships. React + Vite + plain CSS. No Tailwind, no CSS-in-JS, no
+third-party component library, the design system is hand-built and lives in this repo.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # typechecks, then builds
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Start here
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| If you are… | Read |
+|-------------|------|
+| **implementing this for real** | [`public/what-is-real.md`](public/what-is-real.md) **first**, which interactions actually work, which are simulated, and which controls are inert. Then [`public/component-library-handoff.md`](public/component-library-handoff.md), tokens, every primitive with its props, where each component's CSS lives, and how to swap the mock data for a real API. Written to be pasted into an LLM whole. |
+| **an agent working in this repo** | [`CLAUDE.md`](CLAUDE.md), the short version of the rules, plus what to check before you finish. |
+| **looking for a component** | Run the app and open **`/components`**. Every primitive, live, with copyable snippets. It is the source of truth; the handoff doc mirrors it. |
+| **picking up the marketing site** | [`HANDOFF.md`](HANDOFF.md), the landing pages at `/landing-page-<slug>`. |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Layout
+
 ```
+src/
+  index.css          tokens + foundations (both themes)
+  App.css            component and view styles
+  components/ui/     the primitives: one barrel export
+  components/        app composites: Sidebar, Topbar, Notifications, …
+  views/             one file per screen
+  data/              all content, and the seam where a real API goes
+  landing/           the marketing site
+```
+
+## The short version of the rules
+
+Compose from the primitives instead of writing new markup. Colour, space, type, shadow
+and motion come from CSS variables, never literals. Everything is square. All chrome is
+12px. Icons are Phosphor only, through `Icons.tsx`. Blue means exactly one thing: the
+Uniblock path.
+
+The rest, including the reasoning, is in the two documents above.

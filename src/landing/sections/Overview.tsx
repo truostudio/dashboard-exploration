@@ -12,9 +12,9 @@ import { overview } from '../content/home';
  *
  * There used to be a focus that advanced on a timer, lighting one block's
  * border and label blue in turn. From the outside that reads as things going
- * blue at random — a viewer has no idea what "focused" means or why it moved.
+ * blue at random, a viewer has no idea what "focused" means or why it moved.
  * It is gone. Blue now marks only what it marks everywhere else on the page:
- * the Uniblock path — the provider that won, the single invoice, the live tail.
+ * the Uniblock path, the provider that won, the single invoice, the live tail.
  *
  * Pairs wrap in `.lp-pair`. Desktop column order is DOM order; mobile always
  * re-stacks the note above the graphic regardless of how the pair is written.
@@ -24,7 +24,7 @@ const FEATURES = Object.fromEntries(overview.features.map((f) => [f.id, f]));
 
 type Tab = (typeof overview.tabs)[number];
 
-/** The endpoint surface, browsable — the proof for "3,000+ APIs". */
+/** The endpoint surface, browsable, the proof for "3,000+ APIs". */
 function Explorer() {
   const [tab, setTab] = useState<Tab>(overview.tabs[0]);
 
@@ -142,7 +142,7 @@ export function Overview() {
 
         {/* Last, and full width. The four claims above are paired blocks; a
             12-wide block between them broke that rhythm and read as a one-off.
-            At the end it is a closing statement instead — the four arguments,
+            At the end it is a closing statement instead, the four arguments,
             then the traffic they are arguing about. */}
         <Win
           w={12}

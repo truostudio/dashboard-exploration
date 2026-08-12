@@ -16,7 +16,7 @@ function cssColor(name: string): THREE.Color {
   return new THREE.Color(v || '#000000');
 }
 
-/** Plate behind the canvas — `--ub-canvas`. */
+/** Plate behind the canvas, `--ub-canvas`. */
 export function scenePlate(): string {
   return cssVar('--ub-canvas') || '#F3F4F3';
 }
@@ -30,12 +30,12 @@ export function sceneInk(theme: SceneTheme = readSceneTheme()): THREE.Color {
   return cssColor(theme === 'light' ? '--ub-text-3' : '--ub-black');
 }
 
-/** Quiet lattice guides (persistent path) — `--ub-text-3`. */
+/** Quiet lattice guides (persistent path), `--ub-text-3`. */
 export function sceneDim(): THREE.Color {
   return cssColor('--ub-text-3');
 }
 
-/** Brand cores / winning packets — `--ub-blue` only, both themes. */
+/** Brand cores / winning packets, `--ub-blue` only, both themes. */
 export function sceneBrand(): THREE.Color {
   return cssColor('--ub-blue');
 }

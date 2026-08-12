@@ -2,7 +2,7 @@ import { Band, SectionRule } from './Band';
 import { trusted } from '../content/home';
 
 /**
- * Customers field — numbered chapter in the page sequence. Static board:
+ * Customers field, numbered chapter in the page sequence. Static board:
  * six logos left, six right, title in the centre. Page rails own the L/R
  * edges so the board never doubles them.
  */

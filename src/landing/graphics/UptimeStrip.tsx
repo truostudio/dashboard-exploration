@@ -6,7 +6,7 @@ import { infra } from '../content/home';
  *
  * This replaces a square ring gauge showing a single number. A ring is a
  * dashboard ornament: it states 99.99% without showing anything. A status
- * strip is the terminal form of the same claim — you can see where the
+ * strip is the terminal form of the same claim, you can see where the
  * degradations were, how rare they are, and that the record is continuous.
  * Same component grammar as the provider mesh: a real data surface inside a
  * panel, not a graphic standing in for one.

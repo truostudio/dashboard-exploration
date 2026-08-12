@@ -1,6 +1,8 @@
 import { Icon } from './Icons';
+import { Notifications } from './Notifications';
 
 import type { Theme } from '../theme';
+import type { ViewId } from '../App';
 
 type Props = {
   section?: string;
@@ -8,6 +10,8 @@ type Props = {
   subtitle?: string;
   onNewProject: () => void;
   onMenu?: () => void;
+  /** Lets a notification row take you where it is about. */
+  onNavigate: (id: ViewId) => void;
   /** Opens the command palette. The field is a button, not an input. */
   onSearch?: () => void;
   theme: Theme;
@@ -21,6 +25,7 @@ export function Topbar({
   subtitle,
   onNewProject,
   onMenu,
+  onNavigate,
   onSearch,
   theme,
   onToggleTheme,
@@ -47,17 +52,10 @@ export function Topbar({
         {subtitle && <p className="tb-subtitle">{subtitle}</p>}
       </div>
 
+      {/* Ambient controls first, then the things you act with: theme and the
+          bell are settings you glance at, so they lead; search and the primary
+          action sit closest to the edge you reach for. */}
       <div className="tb-actions">
-        {/* Deliberately a button wearing a field's clothes. It used to be a real
-            input whose value went nowhere, which meant typing here silently did
-            nothing — worse than no field at all. Now it opens the palette that
-            actually searches, and the ⌘K hint is true. */}
-        <button className="tb-searchbtn" onClick={onSearch} aria-label="Search endpoints and pages">
-          <Icon.Search size={15} className="tb-searchbtn-icon" />
-          <span className="tb-searchbtn-text">Search endpoints, chains, docs…</span>
-          <span className="kbd">⌘K</span>
-        </button>
-
         <button
           className="btn ghost icon-only theme-toggle"
           onClick={onToggleTheme}
@@ -68,8 +66,16 @@ export function Topbar({
           <Icon.Moon size={15} className="theme-icon moon" />
         </button>
 
-        <button className="btn ghost icon-only" aria-label="Notifications">
-          <Icon.Bell size={15} />
+        <Notifications onNavigate={onNavigate} />
+
+        {/* Deliberately a button wearing a field's clothes. It used to be a real
+            input whose value went nowhere, which meant typing here silently did
+            nothing, worse than no field at all. Now it opens the palette that
+            actually searches, and the ⌘K hint is true. */}
+        <button className="tb-searchbtn" onClick={onSearch} aria-label="Search endpoints and pages">
+          <Icon.Search size={15} className="tb-searchbtn-icon" />
+          <span className="tb-searchbtn-text">Search endpoints, chains, docs…</span>
+          <span className="kbd">⌘K</span>
         </button>
 
         <button className="btn tb-new-project" onClick={onNewProject}>

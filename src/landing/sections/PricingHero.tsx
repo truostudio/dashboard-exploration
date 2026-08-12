@@ -2,7 +2,7 @@ import { Icon } from '../../components/Icons';
 import { pricingPage } from '../content/pricing';
 
 /**
- * Pricing page hero — invert plate, display type, one CTA. No WebGL artifact
+ * Pricing page hero, invert plate, display type, one CTA. No WebGL artifact
  * here; the plans table below is the instrument.
  */
 export function PricingHero() {

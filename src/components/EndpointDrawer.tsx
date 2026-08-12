@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from './Icons';
-import { Avatar, AvatarStack, MethodBadge, CopyButton, SearchInput, Empty } from './ui';
+import { Avatar, MethodBadge, CopyButton, SearchInput, Empty } from './ui';
 import { groupByCategory, platformStats } from '../data/catalog';
 import type { ApiEndpoint } from '../data/catalog';
 import { chains } from '../data/mock';
@@ -22,12 +22,9 @@ export type DrawerSource = {
   /** Real total from the docs, may exceed `endpoints.length`. */
   totalCount?: number;
   /** Real category list, used when the endpoint list isn't transcribed. */
-  categories?: string[];
+  categories?: { label: string; count: number }[];
   docsUrl?: string;
 };
-
-/** Chain artwork shown against unified endpoints. */
-const CHAIN_PREVIEW = chains.slice(0, 6);
 
 type Props = {
   source: DrawerSource | null;
@@ -36,6 +33,7 @@ type Props = {
 
 export function EndpointDrawer({ source, onClose }: Props) {
   const [query, setQuery] = useState('');
+  const [chainsOpen, setChainsOpen] = useState(false);
 
   // Reset the filter whenever a different thing is opened.
   useEffect(() => {
@@ -82,7 +80,11 @@ export function EndpointDrawer({ source, onClose }: Props) {
       <aside className="drawer marks" onClick={(e) => e.stopPropagation()}>
         <header className="drawer-head">
           <div className="drawer-id">
-            <Avatar src={source.icon} name={source.title} size="xl" />
+            {/* Direct providers have logos; the Unified API is not a vendor and
+                has none, so the avatar fell back to a monogram, a circle
+                containing the first letter of the category it already says
+                underneath. No mark is better than a made-up one. */}
+            {source.surface === 'direct' && <Avatar src={source.icon} name={source.title} size="xl" />}
             <div className="drawer-titles">
               <span className="eyebrow">{source.eyebrow}</span>
               <h2 className="drawer-title">{source.title}</h2>
@@ -114,24 +116,35 @@ export function EndpointDrawer({ source, onClose }: Props) {
           </div>
         </div>
 
+        {/* Collapsed by default. This list was written when the app carried
+            sixteen chains; it now carries all 83 the docs publish, which pushed
+            the endpoints, the reason the drawer is open, most of a screen
+            down. It is reference material, so it opens on request. */}
         {source.surface === 'unified' && (
           <section className="drawer-chains">
-            <header className="drawer-chains-head">
+            <button
+              type="button"
+              className="drawer-chains-head"
+              aria-expanded={chainsOpen}
+              onClick={() => setChainsOpen((o) => !o)}
+            >
+              <Icon.ChevronDown size={12} className={`drawer-chains-caret ${chainsOpen ? 'open' : ''}`} />
               <span className="eyebrow">Supported chains</span>
-              <span className="mono dim">{platformStats.chains}</span>
-            </header>
-            <ul className="drawer-chain-list">
-              {chains.map((chain) => (
-                <li key={chain.id} className="drawer-chain">
-                  <img className="drawer-chain-icon" src={chain.icon} alt="" />
-                  <span className="drawer-chain-name">{chain.name}</span>
-                  <span className="mono dim drawer-chain-sym">{chain.symbol}</span>
-                </li>
-              ))}
-              <li className="drawer-chain more">
-                <span className="drawer-chain-name dim">and more</span>
-              </li>
-            </ul>
+              <span className="mono dim">
+                {chains.length} listed · {platformStats.chains} supported
+              </span>
+            </button>
+            <div className={`drawer-chains-wrap ${chainsOpen ? 'open' : ''}`}>
+              <ul className="drawer-chain-list">
+                {chains.map((chain) => (
+                  <li key={chain.id} className="drawer-chain">
+                    <img className="drawer-chain-icon" src={chain.icon} alt="" />
+                    <span className="drawer-chain-name">{chain.name}</span>
+                    <span className="mono dim drawer-chain-sym">{chain.symbol}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         )}
 
@@ -160,12 +173,6 @@ export function EndpointDrawer({ source, onClose }: Props) {
                         <div className="drawer-row-text">
                           <span className="drawer-row-title">{endpoint.title}</span>
                           <span className="mono dim drawer-row-path">{endpoint.path}</span>
-                          {source.surface === 'unified' && (
-                            <span className="drawer-row-chains">
-                              <AvatarStack items={CHAIN_PREVIEW} />
-                              <span className="mono dim">{platformStats.chains} chains</span>
-                            </span>
-                          )}
                         </div>
                         <CopyButton value={endpoint.path} />
                       </li>
@@ -174,12 +181,6 @@ export function EndpointDrawer({ source, onClose }: Props) {
                 </section>
               ))}
               {groups.length === 0 && <Empty>No endpoints match “{query}”.</Empty>}
-              {total > source.endpoints.length && (
-                <p className="drawer-note dim">
-                  Showing {source.endpoints.length} of {total} endpoints. Open the full
-                  reference for the complete list.
-                </p>
-              )}
             </>
           ) : (
             /* No transcribed list, so show the real category breakdown instead. */
@@ -190,15 +191,12 @@ export function EndpointDrawer({ source, onClose }: Props) {
               </header>
               <ul className="drawer-cats">
                 {source.categories?.map((category) => (
-                  <li key={category} className="drawer-cat">
-                    <span className="drawer-cat-name">{category}</span>
+                  <li key={category.label} className="drawer-cat">
+                    <span className="drawer-cat-name">{category.label}</span>
+                    <span className="mono dim">{category.count}</span>
                   </li>
                 ))}
               </ul>
-              <p className="drawer-note dim">
-                {total} endpoints across these categories. Open the full reference for the
-                complete list.
-              </p>
             </section>
           )}
         </div>

@@ -1,7 +1,7 @@
 import { Band } from './Band';
 import { pricingPage } from '../content/pricing';
 
-/** Closing beat under the plans — one line, no card chrome. */
+/** Closing beat under the plans, one line, no card chrome. */
 export function PricingClose() {
   return (
     <Band className="lp-pricing-close lp-invert">

@@ -1,7 +1,7 @@
 /**
  * Home page copy, transcribed verbatim from the live marketing site
  * (https://www.uniblock.dev, fetched 2026-07-25). The redesign changes how this
- * content is presented, never the content itself — so every string a visitor
+ * content is presented, never the content itself, so every string a visitor
  * reads lives here rather than inline in JSX, and can be diffed against the
  * source in one pass.
  *
@@ -178,7 +178,7 @@ export const overview = {
    * Four endpoints per tab, taken from the categories in the public reference
    * at docs.uniblock.dev. The index there lists page slugs rather than request
    * paths, so the paths below follow the `uni/v1/<category>/<name>` shape the
-   * site already uses — the names are real, the prefix is the house style.
+   * site already uses, the names are real, the prefix is the house style.
    */
   endpoints: {
     'MARKET DATA': [
@@ -389,7 +389,7 @@ export const customerStories: CustomerStory[] = [
       'Security monitoring across chains meant a different vendor conversation for every network ' +
         'Hypernative needed to watch. The surface area grew faster than the team wanted to staff.',
       'With Uniblock, chain coverage expands without a new integration project. One contract, one ' +
-        'invoice, scored routes — the monitoring stack stays lean as the chain list grows.',
+        'invoice, scored routes, the monitoring stack stays lean as the chain list grows.',
     ],
     quote:
       '"We stopped treating RPC access like a fleet of one-offs. Uniblock is the layer we point ' +

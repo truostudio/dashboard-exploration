@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import {
-  Area, AreaChart, Bar, BarChart, Line, LineChart, CartesianGrid, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
+  Area, AreaChart, Bar, BarChart, Line, LineChart, CartesianGrid, ReferenceLine,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { Icon } from '../components/Icons';
 import { SquareMeter } from '../components/SquareMeter';
 import { Segmented } from '../components/Segmented';
 import {
   TitledPanel, Panel, Badge, MethodBadge, BarList, StatTiles, Legend, Meter, Delta, Avatar,
-  Table, Select, Spec, Num, Sparkline, SearchInput, FilterPopover, Empty,
+  Table, Select, Spec, Num, Sparkline, SearchInput, FilterPopover, Empty, TraceBar,
 } from '../components/ui';
 import type { Sort } from '../components/ui';
 import {
-  ChartFrame, ChartTooltip, chartAxis, chartGrid, chartCursor, chartBarCursor,
-  timeAxis, valueAxis,
+  ChartFrame, ChartTooltip, chartAxis, chartAxisLine, chartGrid, chartCursor, chartBarCursor,
+  chartRefLine, timeAxis, valueAxis,
 } from '../components/ui/Chart';
 import type { SeriesDef } from '../components/ui/Chart';
 import {
@@ -27,7 +27,7 @@ import type {
 
 /**
  * Named after the question, not the subsystem. The old set had seven tabs
- * organised around Uniblock's architecture — Latency, Errors, Compute — so
+ * organised around Uniblock's architecture. Latency, Errors, Compute, so
  * "which endpoint is costing me money" lived under a noun the user does not
  * think in. Latency and Errors are both "is it healthy", and JSON-RPC and
  * WebSockets are both "how is this protocol behaving", so each pair is one tab.
@@ -237,7 +237,7 @@ type EpKey = EndpointSort | 'endpoint' | 'trend' | 'chev';
 
 /**
  * `optional: false` columns are the ones the catalogue is unreadable without,
- * so they are not offered to the chooser at all — a column picker that lets you
+ * so they are not offered to the chooser at all, a column picker that lets you
  * hide the endpoint name is a picker that can break its own table.
  */
 const epColumns: {
@@ -293,7 +293,7 @@ function useAccordion() {
   /**
    * Backstop for the collapse. `transitionend` is the normal path, but a row
    * that is filtered out mid-collapse unmounts before it fires and comes back
-   * already at 0fr — no transition, no event, and the row stays mounted at
+   * already at 0fr, no transition, no event, and the row stays mounted at
    * zero height forever. A timer just past the transition length closes that
    * hole without slowing the common case, which still settles on the event.
    */
@@ -672,7 +672,7 @@ function EndpointsTab({
       />
 
       {/* Half the job this page exists for is "how much have I used, and how
-          much do I need" — it was a 12px line in the sidebar footer and a
+          much do I need", it was a 12px line in the sidebar footer and a
           different tab. Every figure here was already computed; none of it
           was on the page a user actually lands on. */}
       <TitledPanel
@@ -800,14 +800,35 @@ function ProvidersTab({ a, since }: { a: Snapshot; since: string }) {
         />
       </Panel>
 
+      {/* The claim and its cost, together. A panel that only counts the saves
+          is telling half the story: these calls came back slow, and they came
+          back. The trace is the half a sentence cannot carry. */}
       <Panel className="claim-panel">
-        <Icon.Shield size={18} className="claim-icon" />
-        <p className="claim-text">
-          <strong>{fmtCount(r.failedOver)}</strong> requests hit a provider that was failing and were
-          re-routed before your caller saw an error. That is{' '}
-          <strong>{fmtPct((r.failedOver / r.routed) * 100, 2)}</strong> of this window's traffic, spread
-          across <strong>{r.providerCount}</strong> upstreams you never had to sign a contract with.
-        </p>
+        <div className="claim-lead">
+          <Icon.Shield size={18} className="claim-icon" />
+          <p className="claim-text">
+            <strong>{fmtCount(r.failedOver)}</strong> requests hit a provider that was failing and were
+            re-routed before your caller saw an error. That is{' '}
+            <strong>{fmtPct((r.failedOver / r.routed) * 100, 2)}</strong> of this window's traffic, spread
+            across <strong>{r.providerCount}</strong> upstreams you never had to sign a contract with.
+            Every one of them returned <strong>200</strong>. Late, but answered.
+          </p>
+        </div>
+
+        <div className="claim-trace">
+          <header className="claim-trace-head">
+            <span className="eyebrow">A rescued request</span>
+            <Badge tone="success">200 OK</Badge>
+          </header>
+          <TraceBar
+            segments={[
+              { id: 'lost', label: 'First choice, given up on', ms: r.retry.firstMs, tone: 'danger' },
+              { id: 'served', label: 'Next healthy provider, served', ms: r.retry.secondMs },
+            ]}
+            baseline={{ ms: r.retry.baselineMs, label: 'A clean first-choice call' }}
+            totalLabel="What the caller waited"
+          />
+        </div>
       </Panel>
 
       <TitledPanel
@@ -1132,10 +1153,16 @@ function WebSocketsTab({ a, bare }: { a: Snapshot; bare?: boolean }) {
 
 function ComputeTab({ a, since }: { a: Snapshot; since: string }) {
   const c = a.cost;
+  const t = a.throughput;
   const cuPct = Math.round((c.cuMonth / c.cuLimit) * 100);
   const compute: SeriesDef[] = [
     { key: 'http', name: 'HTTP', color: C.blue },
     { key: 'wss', name: 'WebSocket', color: C.violet },
+  ];
+  // Both series named, so the dashed rule on the plot is not a riddle.
+  const throughput: SeriesDef[] = [
+    { key: 'rps', name: 'Attempted requests per second', color: C.blue },
+    { key: 'ceiling', name: `${t.planName} plan ceiling · ${t.planRps} rps`, color: C.danger, line: true },
   ];
   const saving = c.multiVendorCost - c.spend;
   const savingPct = (saving / c.multiVendorCost) * 100;
@@ -1203,6 +1230,74 @@ function ComputeTab({ a, since }: { a: Snapshot; since: string }) {
             // Not the Uniblock path, so not Uniblock blue.
             color: 'var(--ub-border)',
           }))}
+        />
+      </TitledPanel>
+
+      {/* Throughput is the other half of a plan: the allowance above says how
+          much you may use in a month, this says how fast you are allowed to use
+          it. Hitting the ceiling costs you 429s while the monthly figure still
+          looks healthy, which is exactly the failure a CU meter cannot show. */}
+      <TitledPanel
+        title="Peak throughput against your plan"
+        sub={`The highest rate attempted in each ${t.bucketMinutes}-minute bucket, past ${t.windowHours} hours. Anything above the ceiling was rejected as 429, so the area over the line is not traffic you served. A rate limit is a burst problem, which is why this window is fixed regardless of the range above.`}
+        actions={
+          <Badge tone={t.atCeiling > 0 ? 'danger' : t.headroomPct < 25 ? 'warning' : 'success'}>
+            {t.atCeiling > 0
+              ? `${t.atCeiling} bucket${t.atCeiling === 1 ? '' : 's'} over the ceiling`
+              : `${fmtPct(t.headroomPct, 0)} headroom`}
+          </Badge>
+        }
+      >
+        <ChartFrame height={220} series={throughput}>
+          <AreaChart data={t.series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="rpsFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={C.blue} stopOpacity={0.26} />
+                <stop offset="100%" stopColor={C.blue} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid {...chartGrid} />
+            <XAxis dataKey="label" {...chartAxis} axisLine={chartAxisLine} tickMargin={8} minTickGap={48} />
+            {/* Headroom above the ceiling, so the line is read against the limit
+                rather than against the tallest spike. */}
+            <YAxis
+              {...valueAxis(40, (v) => String(v))}
+              domain={[0, (max: number) => Math.max(Math.ceil(t.planRps * 1.15), Math.ceil(max * 1.05))]}
+            />
+            <Tooltip
+              content={<ChartTooltip valueFormatter={(v) => `${v} rps`} />}
+              cursor={chartCursor}
+            />
+            <ReferenceLine y={t.planRps} {...chartRefLine} />
+            <Area
+              type="monotone"
+              dataKey="rps"
+              stroke={C.blue}
+              strokeWidth={2}
+              fill="url(#rpsFill)"
+              name="Peak rps"
+            />
+          </AreaChart>
+        </ChartFrame>
+        <Spec
+          rows={[
+            {
+              label: 'Busiest bucket',
+              value: <span className="mono">{t.peakRps} rps · {t.peakAt}</span>,
+            },
+            { label: `${t.planName} plan ceiling`, value: <span className="mono">{t.planRps} rps</span> },
+            t.overByRps > 0
+              ? { label: 'Peak over the ceiling', value: <span className="mono">+{t.overByRps} rps</span> }
+              : { label: 'Headroom at peak', value: <span className="mono">{fmtPct(t.headroomPct, 0)}</span> },
+            {
+              label: 'Requests rejected as 429',
+              value: <span className="mono">{fmtCount(t.throttled)}</span>,
+            },
+            {
+              label: `${t.nextPlan.name} plan ceiling`,
+              value: <span className="mono">{t.nextPlan.rps} rps</span>,
+            },
+          ]}
         />
       </TitledPanel>
 
@@ -1507,7 +1602,7 @@ export function Analytics({
   onFocusHandled?: () => void;
 } = {}) {
   const [tab, setTab] = useState<Tab>('Endpoints');
-  const [range, setRange] = useState<RangeId>('24h');
+  const [range, setRange] = useState<RangeId>('1d');
   const [chain, setChain] = useState<ChainFilter>('all');
 
   const a = analytics(range, chain);

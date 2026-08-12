@@ -9,12 +9,12 @@ import { Icon } from '../../components/Icons';
  * paragraph of subtext and a filled button beside an outlined one, with an SVG
  * diagram floating on the right. That is the most-shipped hero composition on
  * the internet, and the diagram was a second signature artifact fighting the
- * WebGL network behind it — two focal objects means neither reads.
+ * WebGL network behind it, two focal objects means neither reads.
  *
  * What it is: the network owns the frame. Type is anchored to the floor of the
  * viewport instead of stacked down the middle, so the artifact keeps the open
- * space above it. Actions use the same `.btn` system as the dashboard — primary
- * + default, with icons — so the landing speaks the product's control language.
+ * space above it. Actions use the same `.btn` system as the dashboard, primary
+ * + default, with icons, so the landing speaks the product's control language.
  */
 export function Hero() {
   const cmd = useTypedCycle(hero.cmdPrefix, hero.cmdPaths);
@@ -51,7 +51,7 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Floor strip — no reveal offset (would clip under hero overflow). */}
+      {/* Floor strip, no reveal offset (would clip under hero overflow). */}
       <div className="lp-hero-status">
         {coverage.stats.map((stat) => (
           <span key={stat.id} className="lp-status-item">

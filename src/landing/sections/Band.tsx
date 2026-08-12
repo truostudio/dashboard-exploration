@@ -24,7 +24,7 @@ export function Band({
 /**
  * The section divider: a dither field.
  *
- * This replaces a strip of mono chrome — `04 · THE FULL STACK · 3 LAYERS` —
+ * This replaces a strip of mono chrome, `04 · THE FULL STACK · 3 LAYERS`,
  * that announced three things nobody asked for and coloured one of them.
  *
  * What replaced it was a ticked scale bar, which was still just an unrounded

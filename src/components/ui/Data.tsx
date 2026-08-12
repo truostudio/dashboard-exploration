@@ -22,7 +22,7 @@ function places(n: number) {
  * A figure that counts up to its value instead of appearing at it.
  *
  * Takes the number and the formatter rather than formatted text, because the
- * whole point is to format each intermediate frame — handed a string there is
+ * whole point is to format each intermediate frame, handed a string there is
  * nothing to interpolate.
  *
  * Runs on mount by design. The Analytics view remounts its tab on every range
@@ -194,6 +194,35 @@ export function BarList({ items }: { items: BarItem[] }) {
   );
 }
 
+/* ---------------- Figure ---------------- */
+
+/**
+ * A single headline number with the unit that makes it mean something.
+ *
+ * `StatTiles` is the bordered row of these; this is the one that stands alone,
+ * a deck page, a summary card. Pass a `Num` as the value to have it count up.
+ */
+export function Figure({
+  value,
+  /** The caption under the numeral. A figure without one is a riddle. */
+  unit,
+  /** `lg` is the hero size; `md` steps down for a list of several. */
+  size = 'lg',
+  className = '',
+}: {
+  value: ReactNode;
+  unit?: ReactNode;
+  size?: 'md' | 'lg';
+  className?: string;
+}) {
+  return (
+    <figure className={`figure is-${size} ${className}`.trim()}>
+      <span className="pixel figure-num">{value}</span>
+      {unit && <figcaption className="figure-unit">{unit}</figcaption>}
+    </figure>
+  );
+}
+
 /* ---------------- Stat tiles ---------------- */
 
 export type StatTile = {
@@ -257,6 +286,78 @@ export function Meter({
   );
 }
 
+/* ---------------- Trace bar ---------------- */
+
+export type TraceSegment = {
+  id: string;
+  label: ReactNode;
+  ms: number;
+  tone?: 'brand' | 'danger' | 'warning' | 'neutral';
+};
+
+/**
+ * One request's time, in the order it was spent.
+ *
+ * Built for the failover story, where the honest version of "we saved this
+ * call" has to show what the save cost: a wasted attempt, then a good one. The
+ * baseline tick is what the same call takes when nothing goes wrong, so the
+ * overhead is a distance you can see rather than a number to be trusted.
+ */
+export function TraceBar({
+  segments,
+  baseline,
+  totalLabel = 'total',
+}: {
+  segments: TraceSegment[];
+  baseline?: { ms: number; label: ReactNode };
+  totalLabel?: ReactNode;
+}) {
+  const total = segments.reduce((sum, s) => sum + s.ms, 0) || 1;
+  const ms = (n: number) => `${n} ms`;
+
+  return (
+    <div className="trace">
+      <div className="trace-track" role="img" aria-label={`${totalLabel} ${ms(total)}`}>
+        {segments.map((s) => (
+          <span
+            key={s.id}
+            className={`trace-seg is-${s.tone ?? 'brand'}`}
+            style={{ '--w': `${(s.ms / total) * 100}%` } as CSSProperties}
+          />
+        ))}
+        {baseline && baseline.ms < total && (
+          <span
+            className="trace-tick"
+            style={{ '--x': `${(baseline.ms / total) * 100}%` } as CSSProperties}
+          />
+        )}
+      </div>
+
+      <ul className="trace-key">
+        {segments.map((s) => (
+          <li key={s.id}>
+            <span className={`trace-dot is-${s.tone ?? 'brand'}`} aria-hidden />
+            <span className="trace-key-label">{s.label}</span>
+            <span className="mono trace-key-val">{ms(s.ms)}</span>
+          </li>
+        ))}
+        <li className="trace-total">
+          <span className="trace-key-label">{totalLabel}</span>
+          <span className="mono trace-key-val">{ms(total)}</span>
+        </li>
+        {baseline && (
+          <li className="trace-baseline">
+            <span className="trace-key-label">{baseline.label}</span>
+            <span className="mono trace-key-val">
+              {ms(baseline.ms)} <span className="dim">· +{ms(total - baseline.ms)}</span>
+            </span>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 /* ---------------- Legend ---------------- */
 
 export type LegendItem = {
@@ -290,7 +391,7 @@ export function Empty({
 }: {
   children?: ReactNode;
   bare?: boolean;
-  /** Adds an icon + title above the description, the "no data yet" shape charts and stat panels want. */
+  /** Adds an icon + title above the description: the "no data yet" shape charts and stat panels want. */
   icon?: ReactNode;
   title?: ReactNode;
 }) {

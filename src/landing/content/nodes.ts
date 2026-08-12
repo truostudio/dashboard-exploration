@@ -222,7 +222,7 @@ export const nodesPage = {
       {
         q: 'What happens if the exact server I need isn’t in stock?',
         a:
-          'We build it. Custom configurations use the same peak-spec parts — highest-clock CPUs, ' +
+          'We build it. Custom configurations use the same peak-spec parts, highest-clock CPUs, ' +
           'fast memory, enterprise NVMe. Lead times run from next-day to a few weeks depending on parts.',
       },
       {
@@ -241,7 +241,7 @@ export const nodesPage = {
         q: 'Bare metal or managed: what’s the difference?',
         a:
           'Bare metal gives you full root on your own server. Managed keeps the node performant and ' +
-          'up to date — you consume endpoints, with optional colocated servers in the same facility.',
+          'up to date, you consume endpoints, with optional colocated servers in the same facility.',
       },
       {
         q: 'Can I run a validator and a trading bot on the same node?',
@@ -252,7 +252,7 @@ export const nodesPage = {
       {
         q: 'How is this different from Uniblock’s shared RPC plans?',
         a:
-          'Shared routing is multi-tenant and usage-based. Dedicated reserves metal for your team — ' +
+          'Shared routing is multi-tenant and usage-based. Dedicated reserves metal for your team, ' +
           'predictable performance and monthly cost when isolation or steady load matters.',
       },
       {

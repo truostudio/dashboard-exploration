@@ -33,7 +33,7 @@ export function Webhooks() {
         {webhooks.length === 0 ? (
           <Empty icon={<Icon.Webhook size={22} />} title="No webhooks yet">
             Subscribe to address activity, contract events, NFT transfers, or swaps and Uniblock
-            will post them to your endpoint as they happen — with retries and signed payloads, so
+            will post them to your endpoint as they happen, with retries and signed payloads, so
             you never poll for them.
           </Empty>
         ) : (

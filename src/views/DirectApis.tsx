@@ -55,13 +55,14 @@ function FeatureCard({ provider, onOpen }: CardProps) {
         ]}
       />
 
+      {/* Every category, not the first three and a "+4". The chips wrap, and a
+          provider's category list is exactly what a card is scanned for. */}
       <div className="prov-feature-cats">
-        {provider.categories.slice(0, 3).map((c) => (
-          <span key={c} className="offering-chip">{c}</span>
+        {provider.categories.map((c) => (
+          <span key={c.label} className="offering-chip">
+            {c.label} <span className="dim">{c.count}</span>
+          </span>
         ))}
-        {provider.categories.length > 3 && (
-          <span className="offering-chip">+{provider.categories.length - 3}</span>
-        )}
       </div>
 
       <span className="prov-feature-cta mono">
@@ -84,12 +85,11 @@ function ProviderTile({ provider, onOpen }: CardProps) {
         <Icon.Chevron size={14} className="prov-tile-chev" />
       </div>
       <div className="prov-tile-cats">
-        {provider.categories.slice(0, 3).map((c) => (
-          <span key={c} className="offering-chip">{c}</span>
+        {provider.categories.map((c) => (
+          <span key={c.label} className="offering-chip">
+            {c.label} <span className="dim">{c.count}</span>
+          </span>
         ))}
-        {provider.categories.length > 3 && (
-          <span className="offering-chip">+{provider.categories.length - 3}</span>
-        )}
       </div>
       <div className="prov-tile-meta">
         <span className="mono">{provider.endpointCount} endpoints</span>
@@ -115,7 +115,7 @@ export function DirectApis() {
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.subtitle.toLowerCase().includes(q) ||
-        p.categories.some((c) => c.toLowerCase().includes(q)),
+        p.categories.some((c) => c.label.toLowerCase().includes(q)),
     );
   }, [q, searching]);
 

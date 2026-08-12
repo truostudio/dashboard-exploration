@@ -8,7 +8,7 @@ import { directProviders } from '../../data/catalog';
  * The page claims Uniblock scores every request and routes it to the best
  * provider. Every other graphic here asserts that with a diagram; this one
  * just shows the traffic. Lines append at a plausible request rate, the
- * winner is named, and roughly one in nine hedges — so the motion is the
+ * winner is named, and roughly one in nine hedges, so the motion is the
  * argument rather than decoration on top of it.
  */
 
@@ -102,7 +102,7 @@ export function LogStream({ on = false }: { on?: boolean }) {
           <span className="log-route">{line.route}</span>
           <span className="log-chain">{line.chain}</span>
           <span className="log-prov">{line.provider}</span>
-          {/* The latency, drawn as well as printed — the strip is wide, so it
+          {/* The latency, drawn as well as printed, the strip is wide, so it
               may as well carry the shape of the distribution. */}
           <span className="log-bar" aria-hidden>
             <i style={{ width: `${Math.min(100, (line.ms / MS_CEIL) * 100)}%` }} />

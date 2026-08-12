@@ -64,16 +64,19 @@
   z-index: 70;
 }
 
+/* Inset matches `.sb-nav` and `.sb-bottom` so the switcher, the Quickstart
+   card, every nav row, and the docs link all share one left and right edge. */
 .sb-top {
   position: relative;
-  padding: 16px 12px 12px;
+  padding: 16px 8px 12px;
   flex: none;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  /* 8px more than the rail inset, which is where the nav rows' labels start. */
+  padding: 0 8px;
   margin-bottom: 14px;
 }
 .brand-logo {
@@ -94,9 +97,17 @@
   border: 1px solid var(--ub-line-strong);
   background: var(--ub-elevated);
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s var(--ease-io), background 0.15s var(--ease-io);
+  transition: background 0.14s var(--ease-io), border-color 0.14s var(--ease-io);
 }
-.project-switcher:hover { border-color: var(--ub-border); background: var(--ub-sunken); }
+/* The rail's hover, the same one `.nav-item`, `.nav-child` and `.sb-doc` use:
+   the surface lifts to `--ub-hover` and the border firms up, on the rail's own
+   0.14s. This was the one control in the sidebar that did something else, it
+   sank to `--ub-sunken`, so it moved away from the pointer while the Quickstart
+   card directly below it moved toward it. */
+.project-switcher:hover {
+  background: var(--ub-hover);
+  border-color: var(--ub-border);
+}
 .project-switcher svg { flex: none; color: var(--ub-text-3); margin-left: auto; }
 
 .ps-dot {
@@ -116,8 +127,8 @@
 
 .ps-menu {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  left: 8px;
+  right: 8px;
   top: calc(100% - 8px);
   z-index: 30;
   padding: 6px;
@@ -160,11 +171,31 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 4px 8px 20px;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  /* The rail is chrome, not content; a permanent gutter would eat 15px of a
+     240px column for a list that usually fits. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ub-border) transparent;
 }
+/* Every row holds its size and the list scrolls instead. Flex items shrink by
+   default, so on a laptop-height window the whole nav used to compress, 30px
+   rows squeezing to 22px, section labels colliding with their items, rather
+   than overflowing into the scroll this column already has. */
+/* `.nav-group` is display:contents, so its children are the real flex items. */
+.sb-nav > *,
+.nav-group > * { flex: none; }
+.sb-nav::-webkit-scrollbar { width: 10px; }
+.sb-nav::-webkit-scrollbar-track { background: transparent; }
+.sb-nav::-webkit-scrollbar-thumb {
+  background: var(--ub-border);
+  border: 3px solid var(--ub-elevated);
+  border-radius: 0;
+}
+.sb-nav::-webkit-scrollbar-thumb:hover { background: var(--ub-text-3); }
 
 /* Travelling active marker: the sidebar's version of .sgm-marker */
 .nav-marker {
@@ -576,7 +607,11 @@
 .tb-search input::placeholder { color: var(--ub-text-3); }
 .tb-search input[type='search']::-webkit-search-cancel-button { display: none; }
 .tb-search .kbd { flex: none; }
-.tb-search.small { width: 100%; max-width: 240px; }
+/* 240px cut the input to 190px, which clipped any placeholder longer than about
+   thirty characters, "Search networks by name or chain ID…" among them. The
+   cap exists so the field does not run the width of a toolbar, not to make it
+   too small to read. */
+.tb-search.small { width: 100%; max-width: 320px; }
 .tb-search.grow { flex: 1; max-width: none; }
 /* Keep the toolbar on one line at desktop widths */
 .view-toolbar .ep-controls { flex-wrap: nowrap; }
@@ -761,6 +796,29 @@
    KPIs & stat tiles
    ============================================================ */
 
+/* ---- Figure ----
+   A headline numeral and the unit that makes it mean something. `StatTiles`
+   is the bordered row of these; this is the one that stands alone. */
+.figure { display: flex; flex-direction: column; gap: 4px; }
+.figure-num {
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--ub-black);
+}
+.figure.is-lg .figure-num { font-size: var(--fs-2xl); }
+.figure.is-md .figure-num { font-size: var(--fs-xl); }
+.figure-unit {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  color: var(--ub-text-2);
+}
+@media (max-width: 560px) {
+  .figure.is-lg .figure-num { font-size: var(--fs-xl); }
+}
+
 /* Three-up stat row inside a panel */
 .kpi-tiles {
   display: grid;
@@ -868,7 +926,7 @@
   line-height: var(--lh-body);
 }
 /* `min-width: 0` on the column lets the grid track shrink, but the children
-   still overflow it — an endpoint path is one unbreakable token, so it ran
+   still overflow it, an endpoint path is one unbreakable token, so it ran
    straight across the bar. Wrapped rather than truncated on purpose: the part
    that distinguishes these rows is the tail (`…/getNFTsForOwner`), which is
    exactly what an ellipsis would eat. */
@@ -1251,6 +1309,111 @@
 }
 .keystrip .btn:last-child { margin-left: auto; }
 
+/* ============================================================
+   NavList / NavRow
+   ------------------------------------------------------------
+   One recipe for every "row that goes somewhere": the overview's API ledger,
+   the settings project actions, the onboarding checklist in the rail. Rows
+   were being re-cut per view; they are declared here once and varied by prop.
+   ============================================================ */
+.nav-list { list-style: none; display: flex; flex-direction: column; }
+/* Boxed: a stack that has to draw its own container. Flush inside a panel,
+   the panel head already draws the rule above the first row. */
+.nav-list.is-boxed {
+  border: 1px solid var(--ub-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.nav-list > .nav-list-item:first-child > .nav-row { border-top: none; }
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 24px;
+  border: 0;
+  border-top: 1px solid var(--ub-line);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.16s var(--ease-io);
+}
+.nav-row:hover { background: var(--ub-hover); }
+.nav-row:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: -2px; }
+.nav-list.is-boxed .nav-row { padding: 16px 20px; }
+.nav-row-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid transparent;
+  transition: background 0.16s var(--ease-io), border-color 0.16s var(--ease-io), color 0.16s var(--ease-io);
+}
+.nav-row-mark.is-neutral { background: var(--ub-grid); color: var(--ub-text-2); }
+.nav-row-mark.is-brand {
+  border-color: var(--ub-blue-border);
+  background: var(--ub-blue-soft);
+  color: var(--ub-blue-ink);
+}
+.nav-row-mark.is-danger { background: var(--ub-danger-soft); color: var(--ub-danger-ink); }
+.nav-row:hover .nav-row-mark.is-brand {
+  background: var(--ub-blue);
+  border-color: var(--ub-blue);
+  color: var(--ub-white);
+}
+.nav-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.nav-row-title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 550;
+  color: var(--ub-black);
+  transition: color 0.16s var(--ease-io);
+}
+.nav-row-sub { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.nav-row-meta { flex: none; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.nav-row-go {
+  flex: none;
+  color: var(--ub-text-3);
+  transition: transform 0.16s var(--ease-io), color 0.16s var(--ease-io);
+}
+.nav-row:hover .nav-row-go { transform: translateX(3px); color: var(--ub-blue); }
+
+/* Dense: inside a card rather than across a panel. The mark brings its own
+   box, the title drops to chrome size, and the hover is the chevron alone,
+   a full-bleed fill cannot reach the card's padded edge. */
+.nav-row.is-dense { padding: 10px 0; gap: 10px; }
+.nav-row.is-dense:hover { background: none; }
+.nav-row.is-dense .nav-row-mark {
+  width: auto;
+  height: auto;
+  border: 0;
+  background: none;
+}
+.nav-row.is-dense .nav-row-title {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  color: var(--ub-text-2);
+}
+.nav-row.is-dense:hover .nav-row-title { color: var(--ub-black); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-row:hover .nav-row-go { transform: none; }
+}
+@media (max-width: 560px) {
+  .nav-row { padding: 14px 20px; gap: 12px; }
+  .nav-row-meta { display: none; }
+}
+
 .explore-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
@@ -1304,6 +1467,45 @@
   transition: all 0.25s var(--ease-out);
 }
 .explore-card:hover .explore-ext { opacity: 1; transform: none; color: var(--ub-blue); }
+
+/* ============================================================
+   Overview: working column + rail
+   ------------------------------------------------------------
+   The left track is where you do things. The right one is where you look at
+   things, onboarding progress and the weekly recap, so it is narrower, it
+   sticks, and nothing in it is wider than a glance.
+   ============================================================ */
+.ov-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+}
+.ov-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.ov-rail { min-width: 0; }
+.ov-rail-inner {
+  position: sticky;
+  top: calc(var(--topbar-h) + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 1100px) {
+  .ov-layout { grid-template-columns: minmax(0, 1fr); }
+  /* Stacked, the rail leads: onboarding before instrumentation. */
+  .ov-rail { order: -1; }
+  .ov-rail-inner {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    align-items: start;
+  }
+}
 
 /* ---- Get started checklist ---- */
 .getstarted {
@@ -1360,7 +1562,10 @@
   color: var(--ub-text-3);
 }
 .gs-marker .mono { font-family: var(--font-pixel); }
-.gs-step.done .gs-marker {
+/* `.gs-step.done` is the panel build's wrapper; the rail build puts the state
+   on the marker itself, since NavRow owns the row. */
+.gs-step.done .gs-marker,
+.gs-marker.done {
   background: var(--ub-blue);
   border-color: var(--ub-blue);
   color: var(--ub-white);
@@ -1380,6 +1585,158 @@
 .gs-step.done .gs-label { color: var(--ub-text-3); font-weight: 450; }
 .gs-desc { font-size: var(--fs-micro); line-height: var(--lh-micro); }
 .gs-step .btn { flex: none; }
+
+/* ---- Get started, rail build ----
+   Same checklist at a third of the width: the meter goes full-bleed under the
+   heading, descriptions drop, and each step becomes one target instead of a
+   label sitting next to a button that means the same thing. */
+.getstarted.is-rail { padding: 20px; }
+.getstarted.is-rail .getstarted-head {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding-right: 28px;
+}
+.getstarted.is-rail .panel-title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.getstarted.is-rail .getstarted-head-right { display: block; }
+.getstarted.is-rail .qs-bar-wide { width: 100%; }
+.getstarted-dismiss { position: absolute; top: 12px; right: 12px; }
+/* The rail rows are NavRow (dense); only the marker is the checklist's own. */
+.getstarted.is-rail .gs-marker { width: 22px; height: 22px; }
+.getstarted.is-rail .nav-row.is-done .nav-row-title { color: var(--ub-text-3); }
+
+/* ============================================================
+   Week in review
+   ------------------------------------------------------------
+   A rail teaser and a six-page deck. Every page is one figure, one sentence
+   that says what the figure means, and the arithmetic underneath it, the
+   claim and its working never get separated.
+   ============================================================ */
+/* The surface is `Panel`; this is only the stack inside it. */
+.wir-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+}
+.wir-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wir-card-range { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.wir-card-trend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wir-card-cta { width: 100%; justify-content: space-between; }
+.wir-card-cta svg { transition: transform 0.16s var(--ease-io); }
+.wir-card-cta:hover svg { transform: translateX(3px); }
+
+/* The trend draws itself in rather than arriving finished. */
+.wir-card-spark .sparkline-line {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: wirDraw 0.9s var(--ease-out) 0.25s forwards;
+}
+.wir-card-spark .sparkline-fill,
+.wir-card-spark .sparkline-dot { animation: fadeIn 0.5s var(--ease-out) 0.7s both; }
+@keyframes wirDraw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .wir-card-cta:hover svg { transform: none; }
+  .wir-card-spark .sparkline-line { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+}
+
+/* ---- The deck ---- */
+.wir-modal { width: min(920px, 100%); }
+.wir-modal .stepper { gap: 4px; }
+.wir-modal .step { background: none; cursor: pointer; }
+.wir-modal .step:hover { color: var(--ub-black); }
+
+/* The stage holds the height between pages and animates to the next one, so
+   turning a page is a movement rather than the modal snapping to a new size
+   under your pointer. The page itself enters from the side you came from. */
+.wir-stage {
+  overflow: hidden;
+  transition: height 0.38s var(--ease-out);
+}
+.wir-stage-inner { animation: wirPage 0.36s var(--ease-out) both; }
+.wir-stage-inner.is-back { animation-name: wirPageBack; }
+@keyframes wirPage {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes wirPageBack {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+.wir-share { display: inline-flex; animation: wirShare 0.3s var(--ease-out) both; }
+@keyframes wirShare {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wir-stage { transition: none; }
+  .wir-stage-inner, .wir-share { animation: none; }
+}
+
+.wir-page {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.wir-page-lead { display: flex; flex-direction: column; gap: 12px; }
+.wir-lede {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ub-text-2);
+}
+.wir-lede strong { color: var(--ub-black); font-weight: 500; }
+.wir-page-detail { display: flex; flex-direction: column; gap: 20px; }
+
+.wir-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+
+.wir-recap { display: flex; flex-direction: column; gap: 20px; }
+.wir-recap-head { display: flex; flex-direction: column; gap: 8px; }
+.wir-recap-title {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.wir-recap-list { display: flex; flex-direction: column; }
+.wir-recap-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ub-line);
+}
+.wir-recap-row:last-child { border-bottom: 1px solid var(--ub-line); }
+.wir-recap-label {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+}
+.wir-recap-foot {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  max-width: 60ch;
+}
+
+@media (max-width: 760px) {
+  .wir-page { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}
 
 /* ============================================================
    Quickstart
@@ -1455,11 +1812,9 @@
 /* ============================================================
    Unified APIs
    ============================================================ */
-.chip-strip {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+/* The category switch is a Segmented control; it only needs to be allowed to
+   run the full width and scroll, rather than sit inline in a toolbar. */
+.cat-strip { align-self: flex-start; max-width: 100%; }
 
 .unified-grid {
   display: grid;
@@ -1608,6 +1963,11 @@
   line-height: var(--lh-micro);
 }
 .spec dt {
+  /* Flex so a label can carry a leading icon and still sit on the baseline
+     of the figure opposite it. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--fs-label);
   line-height: var(--lh-label);
   letter-spacing: 0.04em;
@@ -1726,12 +2086,16 @@
 }
 .prov-tile .prov-monogram { width: 36px; height: 36px; font-size: var(--fs-body); }
 
+/* Two lines before it clips. A provider files under as many as twelve
+   categories, and one nowrap line cut most of them off, the column is how you
+   tell HelloMoon (DeFi, NFT, SocialFi…) from Mempool (Other). */
 .cat-inline {
-  display: inline-block;
-  max-width: 320px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  max-width: 420px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
 }
@@ -1968,7 +2332,7 @@
 /* ============================================================
    Filter popover
    ============================================================ */
-.filter-pop { position: relative; }
+.popover-anchor { position: relative; }
 .filter-pop-trigger { gap: 8px; }
 .filter-pop-trigger.active {
   border-color: var(--ub-blue-border);
@@ -1988,27 +2352,35 @@
   line-height: 1;
 }
 
-.filter-pop-menu {
-  position: absolute;
+/* Fixed, and placed by the component against the viewport, see Popover.
+   Absolute positioning put it off-screen wherever the trigger sat near an edge,
+   and left it at the mercy of any ancestor with a clip. */
+.popover {
+  position: fixed;
   z-index: 120;
-  top: calc(100% + 6px);
-  left: 0;
-  width: min(320px, 100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 100vw - 24px);
+  /* Set from the measured space on whichever side it opened. */
+  max-height: var(--pop-max-h, 70vh);
   border-radius: var(--radius-md);
   background: var(--ub-elevated);
   border: 1px solid var(--ub-line-strong);
   box-shadow: var(--shadow-hard);
   animation: rise 0.18s var(--ease-out) forwards;
 }
-.filter-pop-menu.right { left: auto; right: 0; }
-
-.filter-pop-body {
+.popover-body {
+  /* A long list scrolls inside the panel rather than growing past the window:
+     there are 21 Direct categories, and news keeps arriving. */
+  min-height: 0;
+  overflow-y: auto;
+}
+.filter-pop-menu .popover-body {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
   max-height: 360px;
-  overflow-y: auto;
 }
 .filter-pop-group { display: flex; flex-direction: column; gap: 8px; }
 .filter-pop-label {
@@ -2020,7 +2392,7 @@
 }
 .filter-pop-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
-.filter-pop-foot {
+.popover-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2028,6 +2400,8 @@
   padding: 10px 16px;
   border-top: 1px solid var(--ub-line);
   background: var(--ub-sunken);
+  /* Stays put while the body above it scrolls. */
+  flex: none;
 }
 .filter-pop-clear {
   height: 28px;
@@ -2044,7 +2418,117 @@
 .filter-pop-clear:hover:not(:disabled) { color: var(--ub-black); }
 .filter-pop-clear:disabled { color: var(--ub-text-3); text-decoration: none; cursor: default; }
 
-.filter-pop-backdrop { position: fixed; inset: 0; z-index: 115; }
+/* Opt-in padding for a popover body that is prose or controls rather than a
+   full-bleed list. */
+.popover-pad { padding: 16px; }
+
+.popover-backdrop { position: fixed; inset: 0; z-index: 115; }
+
+/* ---- Notifications ----
+   The bell's feed, on the shared Popover. Rows are a list of events, so they
+   carry the same anatomy as NavRow, mark, text, where it goes, at feed
+   density, with unread state as the one thing added. */
+.notif-trigger { position: relative; overflow: visible; }
+.notif-badge {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--ub-blue);
+  color: var(--ub-white);
+  font-size: var(--fs-label);
+  line-height: 1;
+}
+.notif-pop { width: min(400px, 100vw - 24px); }
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ub-line);
+}
+.notif-head .mono { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.notif-list { list-style: none; }
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-top: 1px solid var(--ub-line);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.16s var(--ease-io);
+}
+.notif-list li:first-child .notif-row { border-top: none; }
+.notif-row:hover { background: var(--ub-hover); }
+.notif-row:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: -2px; }
+.notif-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  margin-top: 1px;
+  border: 1px solid transparent;
+}
+.notif-mark.is-news {
+  border-color: var(--ub-blue-border);
+  background: var(--ub-blue-soft);
+  color: var(--ub-blue-ink);
+}
+.notif-mark.is-status { background: var(--ub-warning-soft); color: var(--ub-warning-ink); }
+.notif-mark.is-account { background: var(--ub-grid); color: var(--ub-text-2); }
+.notif-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.notif-title {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 550;
+  color: var(--ub-black);
+}
+.notif-body { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.notif-meta { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.notif-meta .mono { font-size: var(--fs-label); line-height: var(--lh-label); }
+.notif-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  color: var(--ub-blue-ink);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 0.16s var(--ease-io), transform 0.16s var(--ease-io);
+}
+.notif-row:hover .notif-cta,
+.notif-row:focus-visible .notif-cta { opacity: 1; transform: none; }
+/* Unread carries a mark, not a colour wash: the list stays readable when
+   everything is unread, which is exactly when it is longest. */
+.notif-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin-top: 7px;
+  background: var(--ub-blue);
+}
+.notif-row.is-unread .notif-title { color: var(--ub-black); }
+.notif-row:not(.is-unread) .notif-title { color: var(--ub-text-2); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) {
+  .notif-cta { transform: none; }
+}
 
 /* ============================================================
    Settings
@@ -2055,49 +2539,7 @@
   gap: 20px;
 }
 
-.manage-list {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--ub-line);
-  overflow: hidden;
-}
-.manage-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--ub-line);
-  text-align: left;
-  transition: background 0.14s var(--ease-io);
-}
-.manage-row:first-child { border-top: none; }
-.manage-row:hover { background: var(--ub-sunken); }
-.manage-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: var(--radius-sm);
-  background: var(--ub-grid);
-  color: var(--ub-text-2);
-}
-.manage-avatar.danger { background: var(--ub-danger-soft); color: var(--ub-danger-ink); }
-.manage-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-.manage-title {
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  font-weight: 500;
-}
-.manage-text .dim { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+/* Project actions use NavList/NavRow. */
 
 /* ---- Plans ---- */
 .plans-grid {
@@ -2265,6 +2707,12 @@
   border-color: var(--ub-blue);
   color: var(--ub-white);
 }
+/* Tab build: the markers are buttons, so they need the affordances a div
+   never had. */
+.step.is-tab { background: none; border-color: transparent; cursor: pointer; }
+.step.is-tab:hover { color: var(--ub-black); }
+.step.is-tab.active { border-color: var(--ub-blue-border); background: var(--ub-blue-wash); }
+.step.is-tab:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: -2px; }
 .step.done { color: var(--ub-text-2); }
 .step.done .step-dot {
   background: var(--ub-black);
@@ -2540,9 +2988,14 @@
   flex: none;
 }
 
+/* One line, not two 24px numerals in their own band. These are reference
+   figures, how many endpoints, how many categories, and at display size they
+   were spending ~80px of a flyout whose job is the list underneath. */
 .drawer-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 8px 24px;
   border-top: 1px solid var(--ub-line);
   border-bottom: 1px solid var(--ub-line);
   background: var(--ub-sunken);
@@ -2550,15 +3003,12 @@
 }
 .drawer-stat {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 16px 24px;
-  border-left: 1px solid var(--ub-line);
+  align-items: baseline;
+  gap: 6px;
 }
-.drawer-stat:first-child { border-left: none; }
 .drawer-stat-num {
-  font-size: var(--fs-xl);
-  line-height: var(--lh-xl);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
   color: var(--ub-black);
 }
 .drawer-stat-label {
@@ -2660,9 +3110,45 @@
 .drawer-chains-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 24px 8px;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 24px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s var(--ease-io);
+}
+.drawer-chains-head:hover { background: var(--ub-hover); }
+.drawer-chains-head .mono { margin-left: auto; }
+.drawer-chains-caret {
+  flex: none;
+  color: var(--ub-text-3);
+  transition: transform 0.25s var(--ease-out);
+}
+.drawer-chains-caret.open { transform: rotate(180deg); }
+
+/* Same disclosure as the nav groups: 0fr → 1fr animates cleanly where a
+   max-height guess would either clip 83 rows or ease against dead space. */
+.drawer-chains-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s var(--ease-out);
+}
+.drawer-chains-wrap.open { grid-template-rows: 1fr; }
+.drawer-chains-wrap > * { overflow: hidden; }
+/* Long enough to browse, short enough to stay a section rather than a page. */
+/* The grid child must carry no vertical padding: `0fr` collapses its content
+   box but not its padding, which is what left a 16px strip peeking under a
+   collapsed section. Vertical padding is added back only when open. */
+.drawer-chains-wrap > * { min-height: 0; }
+.drawer-chains-wrap .drawer-chain-list {
+  padding-block: 0;
+  max-height: none;
+  overflow: hidden;
+}
+.drawer-chains-wrap.open .drawer-chain-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-bottom: 16px;
 }
 .drawer-chains-head .mono {
   font-size: var(--fs-micro);
@@ -2976,12 +3462,15 @@
   gap: 20px;
   flex-wrap: wrap;
 }
-.analytics-bar .sgm-tab { flex: 1 1 420px; }
+/* Hugs its labels. The old underline variant spanned the bar; a bordered
+   control that stretches is just a long empty box. */
+.analytics-bar .sgm-tab { flex: 0 1 auto; min-width: 0; }
 .analytics-filters {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-bottom: 6px;
+  /* The tabs hug their labels, so the filters take the far edge themselves. */
+  margin-left: auto;
 }
 .analytics-filters .input {
   height: 32px;
@@ -3028,16 +3517,104 @@
 
 /* ---- Claim: one sentence stating what the panel above proves ---- */
 .claim-panel {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  /* Centred, not top-aligned: the claim is three lines and the trace is a
+     card, so anchoring both to the top left a hole under the text. */
+  align-items: center;
+  gap: 32px;
   padding: 20px 24px;
   border-color: var(--ub-blue-border);
   background: var(--ub-blue-wash);
 }
+.claim-lead { display: flex; align-items: flex-start; gap: 12px; }
 .claim-icon { flex: none; color: var(--ub-blue); margin-top: 2px; }
+/* The trace is the receipt for the claim beside it, so it gets its own plate
+   rather than floating on the wash. */
+.claim-trace {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--ub-blue-border);
+  background: var(--ub-elevated);
+}
+.claim-trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .claim-panel { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+
+/* ---- Trace bar ----
+   One request's time in the order it was spent. The tick is what the same call
+   costs when nothing goes wrong, so the overhead is a distance, not a number
+   you have to take on faith. */
+.trace { display: flex; flex-direction: column; gap: 10px; }
+.trace-track {
+  position: relative;
+  display: flex;
+  height: 10px;
+  background: var(--ub-grid);
+  overflow: hidden;
+}
+.trace-seg {
+  width: var(--w, 0%);
+  height: 100%;
+  transform-origin: left;
+  animation: barGrow 0.7s var(--ease-out);
+}
+.trace-seg.is-brand { background: var(--ub-blue); }
+.trace-seg.is-danger { background: var(--ub-danger); }
+.trace-seg.is-warning { background: var(--ub-warning); }
+.trace-seg.is-neutral { background: var(--ub-text-3); }
+/* Hairline over the fill, drawn on top so it reads as a measurement rather
+   than another segment. */
+.trace-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: var(--x, 0%);
+  width: 1px;
+  background: var(--ub-black);
+}
+.trace-key { list-style: none; display: flex; flex-direction: column; }
+.trace-key li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--ub-line);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+}
+.trace-key li:first-child { border-top: none; }
+.trace-dot { width: 8px; height: 8px; flex: none; }
+.trace-dot.is-brand { background: var(--ub-blue); }
+.trace-dot.is-danger { background: var(--ub-danger); }
+.trace-dot.is-warning { background: var(--ub-warning); }
+.trace-dot.is-neutral { background: var(--ub-text-3); }
+.trace-key-label { flex: 1; min-width: 0; }
+.trace-key-val { flex: none; color: var(--ub-black); }
+.trace-total .trace-key-label,
+.trace-total .trace-key-val { font-weight: 550; color: var(--ub-black); }
+/* The baseline row is annotation, not a lane: no swatch, indented to the same
+   text column as the ones that have one. */
+.trace-baseline .trace-key-label,
+.trace-baseline .trace-key-val { color: var(--ub-text-3); }
+.trace-total .trace-key-label,
+.trace-baseline .trace-key-label { padding-left: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  .trace-seg { animation: none; }
+}
 .claim-text {
-  max-width: 88ch;
+  /* A comfortable measure, which also gives the column enough height to sit
+     against the trace instead of floating above it. */
+  max-width: 56ch;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--ub-text-2);
@@ -3196,7 +3773,9 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 0 24px 20px;
+  /* The head above is a flush panel head with its own rule; without the top
+     pad the search field sits on that hairline. */
+  padding: 20px 24px;
 }
 .ep-filter-note {
   font-size: var(--fs-micro);
@@ -3217,8 +3796,8 @@
    Label tiers
    ------------------------------------------------------------
    Uppercase + 0.1em mono is ONE tier, and it belongs to table headers. It was
-   previously the treatment for every label in the app — tile captions, spec
-   terms, split headings, drawer stats, meter captions — six tiers shouting in
+   previously the treatment for every label in the app, tile captions, spec
+   terms, split headings, drawer stats, meter captions, six tiers shouting in
    the same voice, which flattens the hierarchy instead of creating one. The
    rest now sit in sentence-case sans at --ub-text-2: quieter, and readable as
    a deliberate second rank rather than the same rule applied everywhere.
@@ -3439,7 +4018,7 @@
   cursor: pointer;
   border-left: 2px solid transparent;
 }
-/* Highlight follows the keyboard, so it is one class rather than :hover —
+/* Highlight follows the keyboard, so it is one class rather than :hover,
    otherwise the mouse resting anywhere fights the arrow keys for the marker. */
 .cmdk-row.is-active {
   background: var(--ub-blue-wash);
@@ -3574,7 +4153,7 @@
 /* ============================================================
    API Tester
    ------------------------------------------------------------
-   The request line reads as one object — method, URL, send — instead of being
+   The request line reads as one object, method, URL, send, instead of being
    split across two labelled panels where you could never see what you were
    actually sending.
    ============================================================ */
@@ -3636,24 +4215,73 @@
 .chain-detail-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .chain-ep-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .chain-ep {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--lead) minmax(0, 1fr) auto var(--trail);
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
+  gap: 0 12px;
+  min-height: 34px;
   border-bottom: 1px solid var(--ub-line);
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
 }
+/* The badge is the row's lead mark, so it shares the column the status squares
+   use rather than pushing the path out by its own width. */
+.chain-ep > .method-badge { justify-self: start; }
 .chain-ep:last-child { border-bottom: none; }
-.chain-ep-path { flex: none; color: var(--ub-black); }
+.chain-ep-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ub-black);
+}
+/* Right-aligned, so the stacked confirmation aligns to the same edge. */
+.chain-ep-meta.swap { justify-items: end; }
 .chain-ep-meta {
-  margin-left: auto;
+  grid-column: 3;
   min-width: 0;
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Copyable rows. The row is the button, this is a catalogue, and the only
+   thing anyone wants from a row is its path in their clipboard, so there is no
+   separate control to aim at. The fill bleeds 8px past the text on both sides
+   so the hit area reads as a row rather than as a word. */
+.chain-ep-item { display: contents; }
+.chain-ep-item:last-child .chain-ep { border-bottom: none; }
+.chain-ep-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+  transition: background 0.14s var(--ease-io);
+}
+.chain-ep-btn:hover { background: var(--ub-hover); }
+.chain-ep-btn:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: -2px; }
+/* Pointer-down lands immediately, no transition on the way in. The clipboard
+   write is async, so without this the first thing that happens is nothing, and
+   the row reads as unresponsive no matter how good the confirmation is. */
+.chain-ep-btn:active {
+  background: var(--ub-blue-wash);
+  transition-duration: 0s;
+}
+/* Then one pulse of the same wash decaying to nothing: the receipt. */
+.chain-ep-btn.is-copied { animation: copy-ack 0.55s var(--ease-out); }
+
+/* The icon is a hint, not a target: it fades up with the row, and stays up once
+   the row has been copied. */
+.chain-ep-copy {
+  flex: none;
+  color: var(--ub-text-3);
+  opacity: 0;
+  transition: opacity 0.14s var(--ease-io);
+}
+.chain-ep-btn:hover .chain-ep-copy,
+.chain-ep-btn:focus-visible .chain-ep-copy,
+.chain-ep-btn.is-copied .chain-ep-copy { opacity: 1; }
 
 /* ---- Quickstart hero contents ---- */
 .qs-hero-inner { position: relative; z-index: 1; max-width: 58ch; }
@@ -3677,7 +4305,7 @@
 }
 .qs-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
 
-/* Boxed mono actions. Square, hairline, no fill unless it is the primary —
+/* Boxed mono actions. Square, hairline, no fill unless it is the primary,
    the reference language is a stamped label, not a rounded UI button. */
 .btn-blk {
   display: inline-flex;
@@ -3692,10 +4320,20 @@
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   cursor: pointer;
-  transition: background 0.14s var(--ease-out), border-color 0.14s var(--ease-out);
+  /* Same interaction recipe as .btn: colour settles, the press is instant, and
+     the registration brackets (index.css) carry the hover. */
+  transition:
+    background-color 0.14s var(--ease-out),
+    border-color 0.14s var(--ease-out),
+    color 0.14s var(--ease-out),
+    transform 0.08s var(--ease-io);
 }
 .btn-blk:hover { border-color: var(--ub-white); background: rgba(255, 255, 255, 0.08); }
+.btn-blk:active { transform: translateY(1px); }
 .btn-blk:focus-visible { outline: 2px solid var(--ub-blue); outline-offset: 2px; }
+/* The bare variant is a text link, not a box, brackets would sit inside the
+   words, so its underline and colour lift stay the whole hover. */
+.btn-blk.is-bare::after { content: none; }
 .btn-blk.is-solid {
   background: var(--ub-blue);
   border-color: var(--ub-blue);
@@ -3712,21 +4350,10 @@
 }
 .btn-blk.is-bare:hover { background: transparent; color: var(--ub-white); }
 
-/* ---- Barcode ---- */
-.barcode { display: block; width: 100%; }
-.barcode-bar { fill: rgba(255, 255, 255, 0.30); }
-/* The hairline range sits back so the bodies carry the pattern. */
-.barcode-bar.is-range { fill: rgba(255, 255, 255, 0.16); }
-.barcode-bar.is-accent { fill: var(--ub-blue); }
-.barcode-bar.is-accent.is-range { fill: rgba(31, 182, 255, 0.45); }
 .qs-hero-code { position: relative; z-index: 0; margin-bottom: -1px; }
 
-/* Light-surface variants, so the barcode and the boxed action are brand
-   devices rather than things that only exist on the one dark panel. */
-.barcode.on-light .barcode-bar { fill: rgba(13, 14, 13, 0.42); }
-.barcode.on-light .barcode-bar.is-range { fill: rgba(13, 14, 13, 0.16); }
-.barcode.on-light .barcode-bar.is-accent { fill: var(--ub-blue); }
-.barcode.on-light .barcode-bar.is-accent.is-range { fill: rgba(31, 182, 255, 0.45); }
+/* Light-surface variant, so the boxed action is a brand device rather than
+   something that only exists on the one dark panel. */
 
 .btn-blk.on-light {
   border-color: var(--ub-border);
@@ -3739,6 +4366,15 @@
   color: var(--ub-white);
 }
 .btn-blk.on-light.is-solid:hover { background: var(--ub-black-hover); border-color: var(--ub-black-hover); }
+/* The on-light solid is an ink fill, not a blue one, so the brand-blue tick
+   reads fine and the on-blue swap from index.css is undone here. */
+.btn-blk.on-light.is-solid::after {
+  background-image:
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0);
+}
 .btn-blk.on-light.is-bare { border-color: transparent; color: var(--ub-text-2); }
 .btn-blk.on-light.is-bare:hover { color: var(--ub-black); background: transparent; }
 
@@ -3766,45 +4402,164 @@
 }
 
 
-/* ---- Dither ---- */
-.dither {
+/* ---- Dither ----
+   `dither-gl`, not `dither`: the landing stylesheet owns `.dither` for its CSS
+   dot-grid and is bundled on every route, so the shorter name silently won the
+   cascade here and collapsed the canvas into a strip in the flow. */
+.dither-gl {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
 }
-.dither-canvas { display: block; width: 100%; height: 100%; }
-
-/* Pinned to the right of the hero and faded out toward the copy, so the field
-   is texture at the edge rather than a wash under the headline. */
-.qs-hero-dither {
-  left: auto;
-  right: 0;
-  width: min(58%, 720px);
-  opacity: 0.9;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%, #000 100%);
-  mask-image: linear-gradient(90deg, transparent, #000 42%, #000 100%);
+.dither-gl-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The canvas paints at CSS resolution; on a 2x screen this keeps the cells
+     square-edged instead of smearing them into a blur. */
+  image-rendering: pixelated;
 }
+
+/* Full-bleed. The falloff lives in the shader's coverage ramp rather than in a
+   CSS mask, fading opacity would grey the ink out, while fading coverage
+   thins the dots out, which is what a screen actually does. */
+.qs-hero-dither { opacity: 0.85; }
+/* Narrow panels have no clear column to give the field, so it drops back to
+   texture rather than competing with the copy for the same pixels. */
 @media (max-width: 900px) {
-  .qs-hero-dither { width: 100%; opacity: 0.4; }
+  .qs-hero-dither { opacity: 0.38; }
 }
 
-/* ---- Chain coverage strip ---- */
-.chain-cov {
+/* ---- Chain coverage readout ----
+   Rows, not cards. `auto-fill` with a wide minimum means a second column only
+   appears when a full one fits, so eight rows go 8×1 or 4×2 and never leave a
+   row of orphans across five squeezed columns. */
+/* Layout: the two readouts share a row on anything wide enough for both, and
+   stack below that. Together they are the answer to "what is here"; the lists
+   underneath are the catalogue itself, and they are what the row was opened
+   for, so the head gets one screen-band, not two. */
+.chain-head {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 24px 32px;
+  align-items: start;
+}
+/* Grid items refuse to shrink past their content by default, and the readouts
+   inside are themselves grids, without this the head drops to one column
+   while there is still room for two. */
+.chain-head > * { min-width: 0; }
+
+/* The documented request line for this chain. */
+.chain-req { display: flex; flex-direction: column; gap: 8px; }
+.chain-req-row {
+  display: grid;
+  grid-template-columns: var(--lead) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 12px;
+  min-height: 34px;
+  border-bottom: 1px solid var(--ub-line);
+}
+.chain-req-url {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-black);
+}
+.chain-req-row .btn { flex: none; }
+
+/* The chain's own search. A catalogue entry that cannot be searched is a list,
+   and these run to hundreds of rows across three surfaces. */
+.chain-find {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
-.chain-cov-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 14px 16px;
-  background: var(--ub-elevated);
-  border: 1px solid var(--ub-line);
+.chain-find-count { flex: none; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* Chain artwork inside a filter chip. */
+.chip-mark {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  object-fit: contain;
 }
-.chain-cov-cell.is-on { border-color: var(--ub-border-soft); }
+
+/* Method-group filter chips, above the method list. */
+.chain-ns-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+
+/* Section head: title left, ownership mark right. */
+.ep-split-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+/* The brand lockup, quiet, it marks the surface as ours without competing
+   with the heading it sits beside. The provider-icon files bake in a white
+   background, which is why this is the transparent logo instead. */
+.ep-split-mark {
+  height: 14px;
+  width: auto;
+  flex: none;
+  opacity: 0.75;
+}
+:root[data-theme='dark'] .ep-split-mark { filter: brightness(0) invert(1); }
+
+.chain-cov-group { display: flex; flex-direction: column; gap: 8px; }
+.chain-cov-cap {
+  font-family: var(--font-pixel-label);
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+}
+.chain-cov {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  column-gap: 32px;
+  border-top: 1px solid var(--ub-line);
+}
+/* Every row in the panel, readout, request, endpoint, runs on this one
+   template, so the lead marks share a column, the labels share a left edge, and
+   the values share a right edge. Before this there were five different left
+   edges inside the same panel and nothing lined up with anything.
+
+   `--lead` is sized to the widest mark the column has to hold, which is a
+   method badge; `--trail` is the copy affordance, reserved on every row so the
+   values above and below it end at the same x. */
+.chain-detail { --lead: 46px; --trail: 18px; }
+.chain-cov-row {
+  display: grid;
+  grid-template-columns: var(--lead) minmax(0, 1fr) auto var(--trail);
+  align-items: center;
+  gap: 0 12px;
+  height: 34px;
+  border-bottom: 1px solid var(--ub-line);
+}
+/* The label sits in the second column; the value in the third, hard right. */
+.chain-cov-row > .chain-cov-value { grid-column: 3; }
+/* Square, not a dot, and hollow when the surface is not covered, the state
+   survives being read in greyscale. */
+.chain-cov-mark {
+  justify-self: center;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--ub-border);
+}
+.chain-cov-row.is-on .chain-cov-mark {
+  border-color: var(--ub-success);
+  background: var(--ub-success);
+}
 .chain-cov-label {
   font-family: var(--font-pixel-label);
   font-size: var(--fs-label);
@@ -3813,7 +4568,17 @@
   text-transform: uppercase;
   color: var(--ub-text-2);
 }
-.chain-cov-note { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.chain-cov-value {
+  text-align: right;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chain-cov-row:not(.is-on) .chain-cov-label,
+.chain-cov-row:not(.is-on) .chain-cov-value { color: var(--ub-text-3); }
 
 /* Two columns of endpoints once there is room; ten rows in one column is a
    scroll, ten across two is a glance. */

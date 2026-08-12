@@ -3,7 +3,7 @@ import { directProviders } from '../../data/catalog';
 
 /**
  * Hero graphic. The Framer site used rendered artwork here; this states the
- * same claim with the product's own instrumentation — one request, every
+ * same claim with the product's own instrumentation, one request, every
  * candidate provider scored, the winner routed. Latencies are illustrative.
  */
 

@@ -1,7 +1,7 @@
 import { Icon } from '../../components/Icons';
 import { nodesPage } from '../content/nodes';
 
-/** Dedicated Nodes hero — invert plate, display type, dual CTAs. */
+/** Dedicated Nodes hero, invert plate, display type, dual CTAs. */
 export function NodesHero() {
   const { eyebrow, title, body, cta, ctaHref, lookingGlass } = nodesPage;
 

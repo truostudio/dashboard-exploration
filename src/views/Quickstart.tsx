@@ -113,12 +113,12 @@ export function Quickstart({
   return (
     <div className="view">
       {/* Textured with the house dither rather than inverted. The field is the
-          same Bayer/FBM effect the dashboard ships, inked in the brand blue and
-          frozen to one frame, masked off toward the copy so it never fights the
-          headline. */}
+          same Bayer/FBM effect the dashboard ships, inked in the brand blue,
+          drifting slowly across the full panel and thinning to nothing before it
+          reaches the copy so it never fights the headline. */}
       <section className="qs-hero marks-4 rise rise-1">
         <div className="qs-hero-inner">
-          <span className="eyebrow qs-hero-eyebrow">Quickstart / 00—05</span>
+          <span className="eyebrow qs-hero-eyebrow">Quickstart / 00-05</span>
           <h2 className="qs-hero-title">
             Make your first request<br />in under a minute.
           </h2>
@@ -141,7 +141,7 @@ export function Quickstart({
             </button>
           </div>
         </div>
-        <Dither animated={false} staticTime={7} className="qs-hero-dither" />
+        <Dither className="qs-hero-dither" />
       </section>
 
       <TitledPanel

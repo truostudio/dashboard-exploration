@@ -11,7 +11,7 @@ import {
 import { Band, BandHead, SectionRule } from './Band';
 import { nodesPage as n } from '../content/nodes';
 
-/** KPI strip — StatTiles inside TitledPanel, same as Overview / Components. */
+/** KPI strip. StatTiles inside TitledPanel, same as Overview / Components. */
 function NodesStats() {
   return (
     <Band className="lp-nodes-stats">
@@ -58,7 +58,7 @@ function NodesOverview() {
   );
 }
 
-/** Shared vs Dedicated — flush Panel + Table. */
+/** Shared vs Dedicated, flush Panel + Table. */
 function NodesCompare() {
   const columns = n.compare.columns.map((col, i) => ({
     key: String(i),
@@ -232,7 +232,7 @@ function NodesFaq() {
   );
 }
 
-/** Nodes middle bands — compose from the component library, not one-off chrome. */
+/** Nodes middle bands, compose from the component library, not one-off chrome. */
 export function NodesContent() {
   return (
     <>

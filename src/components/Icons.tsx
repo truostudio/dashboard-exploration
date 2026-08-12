@@ -58,7 +58,7 @@ import {
 } from '@phosphor-icons/react';
 
 /**
- * The icon set is Phosphor, unmodified. Nothing here is drawn by hand — the
+ * The icon set is Phosphor, unmodified. Nothing here is drawn by hand; the
  * table below aliases the vocabulary this app already speaks ("Tx", "Defi",
  * "Webhook") onto Phosphor's names, so every existing `<Icon.X />` call site
  * is untouched and there is no icon design to maintain. To change a picture,
@@ -69,7 +69,7 @@ export type IconProps = PhosphorIconProps & { size?: number };
 
 /**
  * Phosphor sizes to `1em`, which would take icons from whatever text they sit
- * beside — in 12px mono chrome that silently shrinks them. This system sizes
+ * beside, in 12px mono chrome that silently shrinks them. This system sizes
  * icons explicitly, so 16px stays the default, and `regular` is the weight
  * closest to the hairline everything else is drawn with.
  */

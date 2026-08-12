@@ -12,7 +12,7 @@ import {
 /**
  * The signature artifact: a CRT routing volume.
  *
- * Same product story throughout — one endpoint, scored provider lanes, hedges —
+ * Same product story throughout, one endpoint, scored provider lanes, hedges,
  * materialised as a 3D lattice of phosphor cells. Packets light the volume as
  * they travel. Bayer dither resolves the render to the same 1-bit field the
  * rest of the product speaks.
@@ -71,7 +71,7 @@ export function RequestStream() {
     }
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    // Cap DPR — full 2× on a full-viewport double-pass is the main GPU cost.
+    // Cap DPR, full 2× on a full-viewport double-pass is the main GPU cost.
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     renderer.setPixelRatio(dpr);
     renderer.setSize(el.clientWidth, el.clientHeight);
@@ -150,11 +150,11 @@ export function RequestStream() {
           float heroFloor = smoothstep(0.0, 0.2, vUv.y);
           heroClear *= mix(0.2, 1.0, heroFloor);
           // Narrow: type spans the whole measure, so a left/right split leaves
-          // the cone nowhere to go. Turn the split horizontal instead — the
+          // the cone nowhere to go. Turn the split horizontal instead, the
           // network takes the open space above the headline.
           float heroTop = smoothstep(0.4, 0.68, vUv.y);
           heroClear = mix(heroClear, heroTop, uNarrow);
-          // Footer mini-hero: same left clear as the opening — the volume
+          // Footer mini-hero: same left clear as the opening, the volume
           // reconstitutes on the right, beside the type.
           float footClear = smoothstep(0.3, 0.56, vUv.x);
           float footFloor = smoothstep(0.0, 0.16, vUv.y);
@@ -165,7 +165,7 @@ export function RequestStream() {
           if (ramp < bayer(cell)) discard;
 
           // Dark: phosphor cells are luminance-normalized (bright).
-          // Light: binary stamp — grey path vs --ub-blue (no mid mixes).
+          // Light: binary stamp, grey path vs --ub-blue (no mid mixes).
           if (uLight > 0.5) {
             // Grey path is near-achromatic; brand cyan has clear chroma + blue≥green.
             float mx = max(max(s.r, s.g), s.b);
@@ -231,7 +231,7 @@ export function RequestStream() {
             lPos[o * 3] = x;
             lPos[o * 3 + 1] = y;
             lPos[o * 3 + 2] = z;
-            // Quiet guide — denser near the entry, softer along the tube so
+            // Quiet guide, denser near the entry, softer along the tube so
             // the fan reads as lanes rather than a solid white wash.
             const rest = 0.07 + (1 - u) * 0.12 + (rad < 0.05 ? 0.045 : 0);
             lAmp[o] = rest;
@@ -324,7 +324,7 @@ export function RequestStream() {
           vec2 d = gl_PointCoord - vec2(0.5);
           float r = length(d);
           if (r > 0.5) discard;
-          // Soft phosphor core — dither will crunch it into cells.
+          // Soft phosphor core, dither will crunch it into cells.
           float a = smoothstep(0.5, 0.12, r);
           gl_FragColor = vec4(vColor, a);
         }`,
@@ -337,7 +337,7 @@ export function RequestStream() {
       ink = sceneInk(theme);
       dim = sceneDim();
       postMat.uniforms.uLight.value = theme === 'light' ? 1 : 0;
-      // Stamp uniforms are written raw to the canvas — use display sRGB so
+      // Stamp uniforms are written raw to the canvas, use display sRGB so
       // --ub-blue matches the logo/button (linear working values read as royal).
       (postMat.uniforms.uInk.value as THREE.Color).copy(ink).convertLinearToSRGB();
       (postMat.uniforms.uBrand.value as THREE.Color).copy(brand).convertLinearToSRGB();
@@ -381,7 +381,7 @@ export function RequestStream() {
 
       const vh = window.innerHeight;
       // Hero owns the artifact only while it still fills the viewport. Once the
-      // hero has scrolled off, presence must be zero — mid-page and footer sit
+      // hero has scrolled off, presence must be zero, mid-page and footer sit
       // on their own plates, not inside a reconstituting funnel.
       if (heroEl) {
         const r = heroEl.getBoundingClientRect();
@@ -468,7 +468,7 @@ export function RequestStream() {
         lCol[i3 + 2] += (lBase[i3 + 2] - lCol[i3 + 2]) * Math.min(1, dt * 3.2);
       }
 
-      // Full strength on the hero — the cone is the signature, not a sidebar.
+      // Full strength on the hero, the cone is the signature, not a sidebar.
       const presence = heroPresence;
 
       for (let i = 0; i < MAX; i++) {
@@ -517,7 +517,7 @@ export function RequestStream() {
           pCol[j + 2] = c.b;
           pSize[base + t] = (won ? 0.09 : 0.055) * fall;
 
-          // Light nearby lattice cells — coarse hash so we stay cheap.
+          // Light nearby lattice cells, coarse hash so we stay cheap.
           if (t === 0 && presence > 0.2) {
             const lx = Math.floor((v.x + 3) * 4);
             const ly = Math.floor((v.y + 2) * 4);

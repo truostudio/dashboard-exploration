@@ -112,7 +112,7 @@ export function useTypedCycle(
 }
 
 /**
- * True once the element has been on screen — so a window at the bottom of the
+ * True once the element has been on screen, so a window at the bottom of the
  * page isn't already twelve seconds into its animation when it is reached.
  */
 export function useVisible<T extends HTMLElement>() {

@@ -64,7 +64,7 @@ function MenuTable({ items, onNavigate }: { items: MenuItem[]; onNavigate: () =>
 }
 
 /**
- * Sticky instrument strip — mono indices, live chip, registration marks.
+ * Sticky instrument strip, mono indices, live chip, registration marks.
  * Mega-menu Panels mount on the wrap (document theme), not under lp-invert.
  * Desktop menus are hover popovers; mobile drawer stays tap-to-expand.
  */
@@ -171,7 +171,7 @@ export function LandingNav({ theme, onToggleTheme, overlay }: Props) {
         </a>
 
         <div className={`lp-nav-links ${drawerOpen ? 'open' : ''}`.trim()}>
-          {/* Sheet chrome — inert on desktop, where this row is the nav itself. */}
+          {/* Sheet chrome, inert on desktop, where this row is the nav itself. */}
           <div className="lp-nav-sheet-bar" aria-hidden>
             <span className="lp-nav-sheet-cmd">
               uniblock <span className="lp-nav-sheet-dim">ls</span> ./routes

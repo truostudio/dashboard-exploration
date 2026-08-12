@@ -10,7 +10,7 @@ import type { Billing } from '../content/home';
  * Pricing as one table. Plans across, capabilities down.
  *
  * On the home band the section head carries the pitch. On the pricing page
- * the hero already did that — so this band is only the instrument: billing
+ * the hero already did that, so this band is only the instrument: billing
  * chrome, then the table, then enterprise. No second and third H2 fighting
  * the hero.
  */

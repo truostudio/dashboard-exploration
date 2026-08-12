@@ -7,7 +7,7 @@ import { Panel, TitledPanel, Badge, Spec } from '../components/ui';
  * Empty is the *default* state here, not an error and not a loading gap:
  * dedicated nodes are an Enterprise arrangement that gets switched on after a
  * conversation, so almost every project that opens this page will never have
- * had one. That makes the empty state the real screen — it has to explain what
+ * had one. That makes the empty state the real screen, it has to explain what
  * the feature is and how to get it, rather than apologise for having no rows.
  */
 
@@ -79,7 +79,7 @@ export function Nodes() {
           rows={[
             { label: 'Chains', value: 'Which networks need dedicated capacity' },
             { label: 'Throughput', value: 'Sustained and peak requests per second' },
-            { label: 'Methods', value: 'Anything heavy — archive reads, traces, large log ranges' },
+            { label: 'Methods', value: 'Anything heavy: archive reads, traces, large log ranges' },
             { label: 'Regions', value: 'Where your callers are' },
             { label: 'Latency target', value: 'The p95 you are holding yourself to' },
           ]}

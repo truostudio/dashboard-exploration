@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
 import { Segmented } from '../components/Segmented';
-import { Field, TextInput, SearchInput, Badge } from '../components/ui';
+import { Field, TextInput, SearchInput, Badge, Modal, ModalFoot, Stepper } from '../components/ui';
 import { chains, providers } from '../data/mock';
 
 type Capability = 'unified' | 'direct' | 'json-rpc' | 'webhooks';
@@ -47,15 +47,6 @@ export function NewProject({ open, onClose }: Props) {
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
   const filteredChains = useMemo(() => {
     if (!chainQuery.trim()) return chains;
     const q = chainQuery.toLowerCase();
@@ -76,9 +67,12 @@ export function NewProject({ open, onClose }: Props) {
     return groups;
   }, [filteredChains]);
 
-  if (!open) return null;
-
-  const stepLabels = ['Project', 'Chains', 'Providers', 'Capabilities'];
+  const steps = [
+    { id: 'project', label: 'Project' },
+    { id: 'chains', label: 'Chains' },
+    { id: 'providers', label: 'Providers' },
+    { id: 'capabilities', label: 'Capabilities' },
+  ];
 
   function toggle<T>(set: Set<T>, value: T) {
     const next = new Set(set);
@@ -102,30 +96,31 @@ export function NewProject({ open, onClose }: Props) {
     selectedCaps.size > 0;
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="New project" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <header className="modal-head">
-          <div>
-            <h2 className="modal-title">New project</h2>
-            <p className="modal-sub dim">
-              Spin up a Uniblock project with the chains, providers, and APIs you need.
-            </p>
-          </div>
-          <button className="btn ghost icon-only" aria-label="Close" onClick={onClose}>
-            <Icon.X size={16} />
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="New project"
+      sub="Spin up a Uniblock project with the chains, providers, and APIs you need."
+      nav={<Stepper steps={steps} current={step} checkDone />}
+      foot={
+        <ModalFoot
+          summary={
+            <>
+              {step === 0 && 'Name your project to get started'}
+              {step === 1 && `${selectedChains.size} chain${selectedChains.size === 1 ? '' : 's'} selected`}
+              {step === 2 && `${selectedProviders.size} provider${selectedProviders.size === 1 ? '' : 's'} selected`}
+              {step === 3 && `${selectedCaps.size} capabilit${selectedCaps.size === 1 ? 'y' : 'ies'} selected`}
+            </>
+          }
+        >
+          <button className="btn ghost" onClick={onClose}>Cancel</button>
+          {step > 0 && <button className="btn" onClick={back}>Back</button>}
+          <button className="btn primary" onClick={next} disabled={!canAdvance}>
+            {step === 3 ? 'Create project' : 'Continue'}
           </button>
-        </header>
-
-        <div className="stepper">
-          {stepLabels.map((label, i) => (
-            <div key={label} className={`step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
-              <span className="step-dot">{i < step ? <Icon.Check size={11} /> : i + 1}</span>
-              <span className="step-label">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="modal-body">
+        </ModalFoot>
+      }
+    >
           {step === 0 && (
             <div className="form">
               <Field label="Project name" as="label">
@@ -251,26 +246,6 @@ export function NewProject({ open, onClose }: Props) {
               </div>
             </div>
           )}
-        </div>
-
-        <footer className="modal-foot">
-          <span className="dim modal-foot-sum">
-            {step === 0 && 'Name your project to get started'}
-            {step === 1 && `${selectedChains.size} chain${selectedChains.size === 1 ? '' : 's'} selected`}
-            {step === 2 && `${selectedProviders.size} provider${selectedProviders.size === 1 ? '' : 's'} selected`}
-            {step === 3 && `${selectedCaps.size} capabilit${selectedCaps.size === 1 ? 'y' : 'ies'} selected`}
-          </span>
-          <div className="modal-foot-actions">
-            <button className="btn ghost" onClick={onClose}>Cancel</button>
-            {step > 0 && (
-              <button className="btn" onClick={back}>Back</button>
-            )}
-            <button className="btn primary" onClick={next} disabled={!canAdvance}>
-              {step === 3 ? 'Create project' : 'Continue'}
-            </button>
-          </div>
-        </footer>
-      </div>
-    </div>
+    </Modal>
   );
 }

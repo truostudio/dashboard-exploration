@@ -81,7 +81,7 @@ export function CustomerStory() {
             <figcaption className="lp-quote-attr">{story.attribution}</figcaption>
           </figure>
 
-          {/* Inside the story column, not a full-measure row under it — as its
+          {/* Inside the story column, not a full-measure row under it, as its
               own band the figures read as belonging to the next section. */}
           <div className="lp-story-figures">
             {story.stats.map((stat) => (

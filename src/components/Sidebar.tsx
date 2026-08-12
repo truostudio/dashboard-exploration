@@ -30,7 +30,7 @@ function isGroup(e: NavEntry): e is NavGroup {
  * Sections, not a disclosure group.
  *
  * The old rail put Unified and Direct inside an "APIs" dropdown and left
- * JSON-RPC outside it as a sibling — which quietly claimed JSON-RPC is not an
+ * JSON-RPC outside it as a sibling, which quietly claimed JSON-RPC is not an
  * API. It is one of the three request surfaces the product is built on
  * (Unified, JSON-RPC, Direct), and the docs treat them as peers, so the nav
  * does too now.

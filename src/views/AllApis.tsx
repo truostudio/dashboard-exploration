@@ -7,7 +7,7 @@ import {
   FilterPopover, FilterGroup,
 } from '../components/ui';
 import type { DrawerSource } from '../components/EndpointDrawer';
-import { unifiedCategories, directProviders } from '../data/catalog';
+import { unifiedCategories, directProviders, unifiedIcon } from '../data/catalog';
 import type { ApiEndpoint } from '../data/catalog';
 
 type Surface = 'all' | 'unified' | 'direct';
@@ -21,7 +21,7 @@ type Row = {
   name: string;
   surface: 'unified' | 'direct';
   count: number;
-  categories: string[];
+  categories: { label: string; count: number }[];
   methods: string[];
   source: DrawerSource;
 };
@@ -31,13 +31,14 @@ const unifiedRows: Row[] = unifiedCategories.map((category) => ({
   name: category.label,
   surface: 'unified',
   count: category.endpoints.length,
-  categories: [category.label],
+  categories: [{ label: category.label, count: category.endpoints.length }],
   methods: [...new Set(category.endpoints.map((e) => e.method))],
   source: {
     eyebrow: 'Unified API',
     surface: 'unified',
     title: category.label,
     description: category.description,
+    icon: unifiedIcon,
     endpoints: category.endpoints,
     docsUrl: 'https://docs.uniblock.dev/reference/unified-api/overview-unified-apis',
   },
@@ -65,7 +66,7 @@ const directRows: Row[] = directProviders.map((provider) => ({
 
 const allRows: Row[] = [...unifiedRows, ...directRows];
 
-const ALL_CATEGORIES = [...new Set(allRows.flatMap((r) => r.categories))].sort();
+const ALL_CATEGORIES = [...new Set(allRows.flatMap((r) => r.categories.map((c) => c.label)))].sort();
 const METHOD_ORDER = ['GET', 'POST', 'WS'] as const;
 const ALL_METHODS = METHOD_ORDER.filter((m) => allRows.some((r) => r.methods.includes(m)));
 
@@ -96,14 +97,14 @@ export function AllApis() {
   const rows = useMemo(() => {
     let out = allRows;
     if (surface !== 'all') out = out.filter((r) => r.surface === surface);
-    if (categoryFilter.length) out = out.filter((r) => r.categories.some((c) => categoryFilter.includes(c)));
+    if (categoryFilter.length) out = out.filter((r) => r.categories.some((c) => categoryFilter.includes(c.label)));
     if (methodFilter.length) out = out.filter((r) => r.methods.some((m) => methodFilter.includes(m)));
     const q = search.trim().toLowerCase();
     if (q) {
       out = out.filter(
         (r) =>
           r.name.toLowerCase().includes(q) ||
-          r.categories.some((c) => c.toLowerCase().includes(q)) ||
+          r.categories.some((c) => c.label.toLowerCase().includes(q)) ||
           r.source.endpoints.some(
             (e) => e.path.toLowerCase().includes(q) || e.title.toLowerCase().includes(q),
           ),
@@ -195,8 +196,7 @@ export function AllApis() {
               </td>
               <td className="dim">
                 <span className="cat-inline">
-                  {row.categories.slice(0, 3).join(' · ')}
-                  {row.categories.length > 3 && ` +${row.categories.length - 3}`}
+                  {row.categories.map((c) => c.label).join(' · ')}
                 </span>
               </td>
               <td className="num mono">{row.count}</td>

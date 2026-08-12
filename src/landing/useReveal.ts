@@ -7,7 +7,7 @@ import { useEffect } from 'react';
  * component, so sections stay plain markup.
  *
  * Elements added later (a tab switching its rows) are picked up by the mutation
- * observer — only new nodes are scanned, not the whole tree on every DOM churn.
+ * observer, only new nodes are scanned, not the whole tree on every DOM churn.
  * Under `prefers-reduced-motion` everything is revealed immediately.
  */
 export function useReveal(enabled = true) {

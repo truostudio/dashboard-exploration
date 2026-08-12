@@ -1,3 +1,6 @@
+import { docChains, docNetworkCount } from './chains';
+import type { ChainCategory } from './chains';
+
 export type Project = {
   id: string;
   name: string;
@@ -55,17 +58,55 @@ export type Provider = {
   status: 'operational' | 'degraded';
   uptime: number;
   latencyMs: number;
+  docsUrl: string;
+  icon?: string;
 };
 
+const providerIcon = (file: string) => `/assets/icons/providers/${file}`;
+
+/**
+ * The provider directory, verbatim from
+ * https://docs.uniblock.dev/reference/resources/providers, all 33, with the
+ * docs' own one-line description and first-party documentation link.
+ *
+ * Status, uptime and latency are the one thing the docs cannot supply: they are
+ * this project's telemetry, so they are generated deterministically per id and
+ * are stable across renders rather than random.
+ */
 export const providers: Provider[] = [
-  { id: 'alchemy', name: 'Alchemy', description: 'Enhanced APIs and elastic node infra', status: 'operational', uptime: 99.99, latencyMs: 78 },
-  { id: 'infura', name: 'Infura', description: 'Reliable JSON-RPC across major chains', status: 'operational', uptime: 99.97, latencyMs: 92 },
-  { id: 'quicknode', name: 'QuickNode', description: 'Global edge nodes with addons', status: 'operational', uptime: 99.96, latencyMs: 71 },
-  { id: 'moralis', name: 'Moralis', description: 'Web3 data and authentication APIs', status: 'degraded', uptime: 99.7, latencyMs: 138 },
-  { id: 'chainstack', name: 'Chainstack', description: 'Dedicated and shared nodes', status: 'operational', uptime: 99.95, latencyMs: 102 },
-  { id: 'ankr', name: 'Ankr', description: 'Decentralized RPC infrastructure', status: 'operational', uptime: 99.92, latencyMs: 121 },
-  { id: 'helius', name: 'Helius', description: 'Solana-focused RPC and APIs', status: 'operational', uptime: 99.98, latencyMs: 64 },
-  { id: 'tatum', name: 'Tatum', description: 'Multi-chain SDK and node service', status: 'operational', uptime: 99.9, latencyMs: 145 },
+  { id: 'alchemy', name: 'Alchemy', description: 'Blockchain developer platform for apps, wallets, rollups, and onchain data.', status: 'operational', uptime: 99.94, latencyMs: 120, docsUrl: 'https://docs.alchemy.com/reference/api-overview', icon: providerIcon('Alchemy.webp') },
+  { id: 'allthatnode', name: 'AllThatNode', description: 'Multi-chain node and API infrastructure for blockchain builders and applications.', status: 'operational', uptime: 99.81, latencyMs: 124, docsUrl: 'https://docs.allthatnode.com/', icon: providerIcon('AllThatNode.webp') },
+  { id: 'ankr', name: 'Ankr', description: 'Web3 infrastructure for RPC, rollups, staking, and multichain app development.', status: 'operational', uptime: 99.65, latencyMs: 88, docsUrl: 'https://www.ankr.com/docs/', icon: providerIcon('Ankr.webp') },
+  { id: 'birdeye', name: 'Birdeye', description: 'Digital asset data platform for token, wallet, and onchain market intelligence.', status: 'operational', uptime: 99.75, latencyMs: 69, docsUrl: 'https://docs.birdeye.so/docs/overview', icon: providerIcon('Birdeye.webp') },
+  { id: 'blockdaemon', name: 'BlockDaemon', description: 'Blockchain infrastructure platform for node access, APIs, staking, and protocol connectivity.', status: 'operational', uptime: 99.8, latencyMs: 68, docsUrl: 'https://docs.blockdaemon.com/', icon: providerIcon('Blockdaemon.webp') },
+  { id: 'chainstack', name: 'Chainstack', description: 'Managed blockchain infrastructure and node services for web3 teams.', status: 'operational', uptime: 99.8, latencyMs: 72, docsUrl: 'https://docs.chainstack.com/', icon: providerIcon('Chainstack.webp') },
+  { id: 'coingecko', name: 'CoinGecko', description: 'Independent crypto data platform for prices, market data, NFTs, exchanges, and onchain analytics.', status: 'operational', uptime: 99.97, latencyMs: 98, docsUrl: 'https://docs.coingecko.com/reference/introduction', icon: providerIcon('CoinGecko.webp') },
+  { id: 'coinmarketcap', name: 'CoinMarketCap', description: 'Cryptocurrency market data platform for prices, listings, rankings, and research.', status: 'operational', uptime: 99.88, latencyMs: 110, docsUrl: 'https://coinmarketcap.com/api/documentation/v1/', icon: providerIcon('CoinMarketCap.webp') },
+  { id: 'goldrush', name: 'GoldRush', description: 'Unified blockchain data infrastructure for wallet, token, NFT, and transaction use cases.', status: 'operational', uptime: 99.85, latencyMs: 113, docsUrl: 'https://goldrush.mintlify.app/api-reference/overview', icon: providerIcon('GoldRush.svg') },
+  { id: 'cryptocompare', name: 'CryptoCompare', description: 'Digital asset market data and index provider for pricing, analytics, and benchmarks.', status: 'operational', uptime: 99.79, latencyMs: 55, docsUrl: 'https://developers.cryptocompare.com/', icon: providerIcon('CryptoCompare.webp') },
+  { id: 'defined', name: 'Defined', description: 'Onchain market data platform for tokens, DEXs, liquidity, and trading analytics.', status: 'operational', uptime: 99.52, latencyMs: 68, docsUrl: 'https://docs.defined.fi/reference/overview', icon: providerIcon('Defined.webp') },
+  { id: 'drpc', name: 'dRPC / DRPC', description: 'Distributed RPC infrastructure for fast, resilient blockchain access.', status: 'operational', uptime: 99.96, latencyMs: 121, docsUrl: 'https://drpc.org/docs' },
+  { id: 'dwellir', name: 'Dwellir', description: 'Web3 infrastructure platform for RPC access and blockchain node services.', status: 'operational', uptime: 99.94, latencyMs: 142, docsUrl: 'https://www.dwellir.com/docs' },
+  { id: 'etherscan', name: 'EtherScan', description: 'Blockchain explorer and API platform for onchain search, contracts, and transaction data.', status: 'operational', uptime: 99.78, latencyMs: 111, docsUrl: 'https://docs.etherscan.io/', icon: providerIcon('EtherScan.webp') },
+  { id: 'geniidata', name: 'GeniiData', description: 'Blockchain data platform for accessing onchain and ecosystem-specific data APIs.', status: 'degraded', uptime: 99.95, latencyMs: 106, docsUrl: 'https://geniidata.readme.io/reference/introduction', icon: providerIcon('GeniiData.webp') },
+  { id: 'helius', name: 'Helius', description: 'Solana developer platform for RPC, data, webhooks, and real-time infrastructure.', status: 'operational', uptime: 99.63, latencyMs: 149, docsUrl: 'https://docs.helius.dev/', icon: providerIcon('Helius.webp') },
+  { id: 'hellomoon', name: 'HelloMoon', description: 'Solana data and analytics platform for applications, traders, and protocols.', status: 'operational', uptime: 99.7, latencyMs: 59, docsUrl: 'https://docs.hellomoon.io/', icon: providerIcon('HelloMoon.webp') },
+  { id: 'infura', name: 'Infura', description: 'Web3 infrastructure and API access for building decentralized applications at scale.', status: 'operational', uptime: 99.6, latencyMs: 122, docsUrl: 'https://docs.infura.io/', icon: providerIcon('Infura.webp') },
+  { id: 'lunarcrush', name: 'LunarCrush', description: 'Social intelligence platform for crypto sentiment, creators, and market signals.', status: 'operational', uptime: 99.78, latencyMs: 117, docsUrl: 'https://lunarcrush.com/developers/api/endpoints', icon: providerIcon('LunarCrush.webp') },
+  { id: 'magiceden', name: 'MagicEden', description: 'Digital asset marketplace and trading platform for NFTs and tokens.', status: 'operational', uptime: 99.7, latencyMs: 76, docsUrl: 'https://docs.magiceden.io/', icon: providerIcon('MagicEden.webp') },
+  { id: 'mempool', name: 'Mempool', description: 'Bitcoin mempool explorer and API for fees, transactions, blocks, and network activity.', status: 'operational', uptime: 99.64, latencyMs: 75, docsUrl: 'https://mempool.space/docs/api/rest', icon: providerIcon('Mempool.webp') },
+  { id: 'moralis', name: 'Moralis', description: 'Web3 development platform for wallet, token, NFT, and blockchain data APIs.', status: 'operational', uptime: 99.66, latencyMs: 122, docsUrl: 'https://docs.moralis.com/', icon: providerIcon('Moralis.webp') },
+  { id: 'nodies', name: 'Nodies', description: 'Multi-chain RPC and node infrastructure for web3 developers and products.', status: 'operational', uptime: 99.61, latencyMs: 152, docsUrl: 'https://docs.nodies.app/', icon: providerIcon('Nodies.webp') },
+  { id: 'onfinality', name: 'OnFinality', description: 'Blockchain infrastructure and API platform for scalable web3 connectivity.', status: 'operational', uptime: 99.5, latencyMs: 116, docsUrl: 'https://documentation.onfinality.io/' },
+  { id: 'pokt', name: 'Pokt', description: 'Decentralized infrastructure network for RPC and blockchain data access.', status: 'operational', uptime: 99.79, latencyMs: 62, docsUrl: 'https://docs.pokt.network/', icon: providerIcon('Pokt.webp') },
+  { id: 'polymarket', name: 'Polymarket', description: 'Prediction markets platform for event-based trading and market probabilities.', status: 'operational', uptime: 99.95, latencyMs: 69, docsUrl: 'https://docs.polymarket.com/', icon: providerIcon('Polymarket.webp') },
+  { id: 'quicknode', name: 'QuickNode', description: 'Blockchain infrastructure platform for RPC, APIs, and developer tooling.', status: 'operational', uptime: 99.66, latencyMs: 116, docsUrl: 'https://www.quicknode.com/docs/', icon: providerIcon('QuickNode.webp') },
+  { id: 'shyft', name: 'Shyft', description: 'Solana development platform with APIs, RPCs, and callback infrastructure.', status: 'operational', uptime: 99.77, latencyMs: 72, docsUrl: 'https://docs.shyft.to/', icon: providerIcon('Shyft.webp') },
+  { id: 'solscan', name: 'SolScan', description: 'Solana explorer and data platform for accounts, tokens, NFTs, and transactions.', status: 'operational', uptime: 99.84, latencyMs: 90, docsUrl: 'https://pro-api.solscan.io/pro-api-docs/v2.0', icon: providerIcon('SolScan.webp') },
+  { id: 'tatum', name: 'Tatum', description: 'Blockchain development platform with unified APIs, infrastructure, and wallet tooling.', status: 'operational', uptime: 99.98, latencyMs: 125, docsUrl: 'https://docs.tatum.io/', icon: providerIcon('Tatum.webp') },
+  { id: 'thirdweb', name: 'Thirdweb', description: 'Full-stack web3 development platform for onchain apps and user experiences.', status: 'operational', uptime: 99.76, latencyMs: 153, docsUrl: 'https://portal.thirdweb.com/', icon: providerIcon('Thirdweb.webp') },
+  { id: 'tonapi', name: 'TonAPI', description: 'API platform for TON blockchain data, accounts, tokens, NFTs, and transactions.', status: 'operational', uptime: 99.9, latencyMs: 123, docsUrl: 'https://docs.tonconsole.com/tonapi/api-v2', icon: providerIcon('TonAPI.webp') },
+  { id: 'zerion', name: 'Zerion', description: 'Wallet and portfolio platform for tracking and interacting with onchain assets.', status: 'operational', uptime: 99.68, latencyMs: 67, docsUrl: 'https://developers.zerion.io/reference/endpoints-and-schema-details' },
 ];
 
 export type Chain = {
@@ -74,35 +115,18 @@ export type Chain = {
   symbol: string;
   chainId: string | number;
   icon: string;
-  category: 'evm' | 'solana' | 'bitcoin' | 'cosmos' | 'l2' | 'other';
-  color: string;
+  category: ChainCategory;
+  /** Only the chains the app already had brand artwork for carry a colour. */
+  color?: string;
 };
 
-const chainIcon = (file: string | number) => `/assets/icons/chain/${file}.webp`;
-
-// Real chains + real chainIds + real icon assets (popularity-ordered, per source)
-export const chains: Chain[] = [
-  { id: 'solana',    name: 'Solana',     symbol: 'SOL',  chainId: 'solana', icon: chainIcon('solana'), category: 'solana', color: '#9945ff' },
-  { id: 'ethereum',  name: 'Ethereum',   symbol: 'ETH',  chainId: 1,     icon: chainIcon(1),     category: 'evm', color: '#627eea' },
-  { id: 'bnb',       name: 'BNB Chain',  symbol: 'BNB',  chainId: 56,    icon: chainIcon(56),    category: 'evm', color: '#f0b90b' },
-  { id: 'base',      name: 'Base',       symbol: 'BASE', chainId: 8453,  icon: chainIcon(8453),  category: 'l2',  color: '#0052ff' },
-  { id: 'polygon',   name: 'Polygon',    symbol: 'POL',  chainId: 137,   icon: chainIcon(80002), category: 'evm', color: '#8247e5' },
-  { id: 'arbitrum',  name: 'Arbitrum',   symbol: 'ARB',  chainId: 42161, icon: chainIcon(42161), category: 'l2',  color: '#28a0f0' },
-  { id: 'optimism',  name: 'Optimism',   symbol: 'OP',   chainId: 10,    icon: chainIcon(10),    category: 'l2',  color: '#ff0420' },
-  { id: 'avalanche', name: 'Avalanche',  symbol: 'AVAX', chainId: 43114, icon: chainIcon(43114), category: 'evm', color: '#e84142' },
-  { id: 'fantom',    name: 'Fantom',     symbol: 'FTM',  chainId: 250,   icon: chainIcon(250),   category: 'evm', color: '#1969ff' },
-  { id: 'zksync',    name: 'zkSync Era', symbol: 'ZK',   chainId: 324,   icon: chainIcon(324),   category: 'l2',  color: '#8c8dfc' },
-  { id: 'linea',     name: 'Linea',      symbol: 'LINEA',chainId: 59144, icon: chainIcon(59144), category: 'l2',  color: '#61dfff' },
-  { id: 'blast',     name: 'Blast',      symbol: 'BLAST',chainId: 81457, icon: chainIcon(81457), category: 'l2',  color: '#fcfc03' },
-  { id: 'mantle',    name: 'Mantle',     symbol: 'MNT',  chainId: 5000,  icon: chainIcon(5000),  category: 'l2',  color: '#000000' },
-  { id: 'gnosis',    name: 'Gnosis',     symbol: 'GNO',  chainId: 100,   icon: chainIcon(100),   category: 'evm', color: '#3e6957' },
-  { id: 'sui',       name: 'Sui',        symbol: 'SUI',  chainId: 'sui', icon: chainIcon('sui'), category: 'other', color: '#4ca3ff' },
-  // The banner advertises Hyperliquid and two Direct providers ship endpoints
-  // for it, but it was missing from this list — so searching "hyperliquid"
-  // found nothing and the chain filter could not reach it. chainId 999 is
-  // HyperEVM; no artwork ships for it yet, hence the default mark.
-  { id: 'hyperliquid', name: 'Hyperliquid', symbol: 'HYPE', chainId: 999, icon: chainIcon('defaultChainIcon'), category: 'evm', color: '#97fce4' },
-];
+/**
+ * The chain directory is the docs' chain list, not a hand-picked sample: all 83
+ * chains with a published JSON-RPC reference. `docChains` already carries the
+ * shape this app wants, so this is a re-export rather than a second copy that
+ * can drift.
+ */
+export const chains: Chain[] = docChains;
 
 export type RecentRequest = {
   id: string;
@@ -174,6 +198,155 @@ export const overviewKpis = {
   successRate: 99.4,
   avgLatency: 38,
 };
+
+// ============ Week in review ============
+/**
+ * The weekly recap deck. Figures are scaled off the last seven rows of
+ * `overviewUsage` so the modal and the 30-day chart cannot disagree, and every
+ * page carries the arithmetic that produced its headline: a saving nobody can
+ * check is a saving nobody believes.
+ */
+const weekRows = overviewUsage.rows.slice(-7);
+const weekTotal = weekRows.reduce((sum, r) => sum + r.total, 0);
+
+export type WeekPageId = 'week' | 'failover' | 'providers' | 'cost' | 'time' | 'recap';
+
+export const weekInReview = {
+  label: 'Week 24',
+  range: 'Jun 8 – Jun 14',
+  requests: weekTotal,
+  requestsPrior: Math.round(weekTotal * 0.883),
+  series: weekRows.map((r) => r.total),
+  chains: 12,
+  successRate: 99.6,
+  p50: 38,
+
+  failover: {
+    triggers: 1284,
+    rescued: 1247,
+    /** Provider degradations Uniblock routed around before they reached you. */
+    incidents: 3,
+    worst: { provider: 'Moralis', minutes: 41, chain: 'Solana' },
+    /** Days since a request failed for want of a healthy provider. */
+    streakDays: 41,
+    byProvider: [
+      { name: 'Moralis',     count: 612 },
+      { name: 'Ankr',        count: 348 },
+      { name: 'Infura',      count: 201 },
+      { name: 'Blockdaemon', count: 123 },
+    ],
+  },
+
+  providers: {
+    used: 7,
+    /** One Uniblock contract stands in for the rest. */
+    contractsAvoided: 6,
+    names: ['Alchemy', 'QuickNode', 'Infura', 'Moralis', 'Ankr', 'Helius', 'Blockdaemon'],
+    split: [
+      { name: 'Alchemy',   pct: 38 },
+      { name: 'QuickNode', pct: 24 },
+      { name: 'Helius',    pct: 16 },
+      { name: 'Infura',    pct: 11 },
+      { name: 'Others',    pct: 11 },
+    ],
+  },
+
+  cost: {
+    savedWeek: 4180,
+    savedQtd: 18400,
+    /** What the same week costs buying each provider plan directly. */
+    directSpend: 6310,
+    uniblockSpend: 2130,
+    perMillion: 5.16,
+    perMillionDirect: 15.28,
+  },
+
+  time: {
+    /** Engineering hours not spent on integrations, incidents, and billing. */
+    hoursSaved: 31,
+    breakdown: [
+      { label: 'Provider integrations not written', hours: 16 },
+      { label: 'Incident response absorbed',        hours: 9 },
+      { label: 'Contract and invoice admin',        hours: 6 },
+    ],
+    /** Aggregate wait removed by routing to the fastest healthy provider. */
+    latencySavedMs: 14,
+    userHoursSaved: 1.6,
+  },
+} as const;
+
+// ============ Notifications ============
+/**
+ * The bell's feed: product news and account events, newest first. `target`
+ * makes a row navigable, which is the whole point of an announcement about a
+ * chain you can already call.
+ */
+export type NotificationKind = 'news' | 'status' | 'account';
+
+export type Notification = {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  ago: string;
+  unread: boolean;
+  /** Where the row goes when clicked. */
+  target?: 'apis-direct' | 'json-rpc' | 'chains' | 'analytics' | 'settings-billing' | 'webhooks';
+  cta?: string;
+};
+
+export const notifications: Notification[] = [
+  {
+    id: 'hyperliquid',
+    kind: 'news',
+    title: 'Hyperliquid is live',
+    body: 'Now available on Direct APIs and JSON-RPC. No plan change needed. Call it with the key you already have.',
+    ago: '2h ago',
+    unread: true,
+    target: 'apis-direct',
+    cta: 'Open Direct APIs',
+  },
+  {
+    id: 'failover-moralis',
+    kind: 'status',
+    title: 'Moralis degraded, traffic re-routed',
+    body: 'Solana calls failed over to Helius for 41 minutes. 612 requests were rescued; none reached your error handler.',
+    ago: 'Yesterday',
+    unread: true,
+    target: 'analytics',
+    cta: 'See routing',
+  },
+  {
+    id: 'webhook-retry',
+    kind: 'account',
+    title: 'Whale swap alerts paused',
+    body: 'Five consecutive delivery failures to hooks.slack.com. The subscription is paused until you resume it.',
+    ago: '3d ago',
+    unread: false,
+    target: 'webhooks',
+    cta: 'Review webhook',
+  },
+  {
+    id: 'cu-threshold',
+    kind: 'account',
+    title: '75% of monthly compute units used',
+    body: '6.2M of 40M CUs with 11 days left in the cycle. At the current rate you finish the month at about 9.4M.',
+    ago: '5d ago',
+    unread: false,
+    target: 'settings-billing',
+    cta: 'View usage',
+  },
+  {
+    id: 'chains-batch',
+    kind: 'news',
+    title: '12 chains added this month',
+    body: 'Including Katana, Plasma, and Sei v2. Unified endpoints work on all of them from day one.',
+    ago: '2w ago',
+    unread: false,
+    target: 'chains',
+    cta: 'Browse chains',
+  },
+];
 
 export type TeamMember = {
   id: string;
@@ -339,44 +512,6 @@ export const cuBreakdown = [
 ];
 
 // ============ Direct APIs ============
-export type DirectProvider = {
-  name: string;
-  subtitle: string;
-  icon: string;
-  endpoints: number;
-  chains: number;
-  featured?: boolean;
-};
-
-const provIcon = (file: string) => `/assets/icons/providers/${file}`;
-
-export const directProviders: DirectProvider[] = [
-  { name: 'Alchemy',    subtitle: 'Ethereum & L2 infra suite',  icon: provIcon('Alchemy.webp'),    endpoints: 64, chains: 18, featured: true },
-  { name: 'Helius',     subtitle: 'Best for Solana coverage',   icon: provIcon('Helius.webp'),     endpoints: 41, chains: 2,  featured: true },
-  { name: 'QuickNode',  subtitle: 'High-performance RPC',       icon: provIcon('QuickNode.webp'),  endpoints: 58, chains: 24, featured: true },
-  { name: 'Moralis',    subtitle: 'Web3 data & auth APIs',      icon: provIcon('Moralis.webp'),    endpoints: 47, chains: 16, featured: true },
-  { name: 'Infura',     subtitle: 'Ethereum & IPFS access',     icon: provIcon('Infura.webp'),     endpoints: 32, chains: 12 },
-  { name: 'Chainstack', subtitle: 'Enterprise node APIs',       icon: provIcon('Chainstack.webp'), endpoints: 28, chains: 20 },
-  { name: 'Ankr',       subtitle: 'Affordable multi-chain RPC', icon: provIcon('Ankr.webp'),       endpoints: 24, chains: 30 },
-  { name: 'GoldRush',   subtitle: 'Cross-chain on-chain data',  icon: provIcon('GoldRush.svg'),    endpoints: 38, chains: 22 },
-  { name: 'CoinGecko',  subtitle: 'Token prices & metadata',    icon: provIcon('CoinGecko.webp'),  endpoints: 19, chains: 1  },
-  { name: 'EtherScan',  subtitle: 'Ethereum explorer data',     icon: provIcon('EtherScan.webp'),  endpoints: 21, chains: 1  },
-  { name: 'SimpleHash', subtitle: 'NFT & token data APIs',      icon: provIcon('SimpleHash.webp'), endpoints: 26, chains: 14 },
-  { name: 'Coinbase',   subtitle: 'Exchange & wallet data',     icon: provIcon('Coinbase.webp'),   endpoints: 17, chains: 11 },
-  { name: 'DefiLlama',  subtitle: 'DeFi TVL & protocols',       icon: provIcon('DefiLlama.webp'),  endpoints: 15, chains: 40 },
-  { name: 'Birdeye',    subtitle: 'Solana DEX & token data',    icon: provIcon('Birdeye.webp'),    endpoints: 22, chains: 3  },
-  { name: 'Tatum',      subtitle: 'Multi-chain unified API',    icon: provIcon('Tatum.webp'),      endpoints: 30, chains: 25 },
-  { name: 'Blockdaemon',subtitle: 'Institutional nodes & APIs', icon: provIcon('Blockdaemon.webp'),endpoints: 27, chains: 28 },
-];
-
-export const directSpotlight = {
-  title: 'xStocks',
-  category: 'Tokenized equities · Kraken',
-  description:
-    'Tokenized US equities on Kraken, with real-time prices and corporate actions for 200+ stocks on-chain.',
-  endpoints: 12,
-};
-
 // ============ JSON-RPC ============
 export const jsonRpcHttp = 'https://api.uniblock.dev/uni/v1/json-rpc';
 export const jsonRpcWss = 'wss://api.uniblock.dev/uni/v1/json-rpc';
@@ -431,44 +566,49 @@ export type RpcGroup = { id: string; name: string; icon: string; networks: RpcNe
 const NA = 'No activity in last 7 days';
 const evmProviders = [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.chainstack, PROV.ankr, PROV.blockdaemon];
 const solProviders = [PROV.quicknode, PROV.chainstack];
+const otherProviders = [PROV.quicknode, PROV.ankr];
 
-/** docs.uniblock.dev advertises 300+ blockchains across 55+ JSON-RPC providers. */
-export const rpcNetworkCount = 300;
-export const rpcGroups: RpcGroup[] = [
-  { id: 'solana', name: 'Solana', icon: chainIcon('solana'), networks: [
-    { name: 'Solana',        chainId: 'solana',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: solProviders },
-    { name: 'Solana Devnet', chainId: 'solana-devnet', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: solProviders },
-  ]},
-  { id: 'ethereum', name: 'Ethereum', icon: chainIcon(1), networks: [
-    { name: 'Ethereum',         chainId: '1',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: evmProviders },
-    { name: 'Ethereum Hoodi',   chainId: '560048',   status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.chainstack] },
-    { name: 'Ethereum Sepolia', chainId: '11155111', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura] },
-  ]},
-  { id: 'bnb', name: 'BNB Smart Chain', icon: chainIcon(56), networks: [
-    { name: 'BNB Smart Chain',         chainId: '56', status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.chainstack, PROV.getblock] },
-    { name: 'BNB Smart Chain Testnet', chainId: '97', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
-  ]},
-  { id: 'base', name: 'Base', icon: chainIcon(8453), networks: [
-    { name: 'Base',         chainId: '8453',  status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.chainstack, PROV.ankr] },
-    { name: 'Base Sepolia', chainId: '84532', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
-  ]},
-  { id: 'polygon', name: 'Polygon', icon: chainIcon(80002), networks: [
-    { name: 'Polygon',      chainId: '137',   status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'Polygon Amoy', chainId: '80002', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
-  ]},
-  { id: 'arbitrum', name: 'Arbitrum', icon: chainIcon(42161), networks: [
-    { name: 'Arbitrum One',     chainId: '42161',  status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'Arbitrum Sepolia', chainId: '421614', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
-  ]},
-  { id: 'optimism', name: 'Optimism', icon: chainIcon(10), networks: [
-    { name: 'OP Mainnet', chainId: '10',        status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode, PROV.infura, PROV.ankr] },
-    { name: 'OP Sepolia', chainId: '11155420',  status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.alchemy, PROV.quicknode] },
-  ]},
-  { id: 'avalanche', name: 'Avalanche', icon: chainIcon(43114), networks: [
-    { name: 'Avalanche C-Chain', chainId: '43114', status: 'online', kind: 'mainnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr, PROV.blockdaemon] },
-    { name: 'Avalanche Fuji',    chainId: '43113', status: 'online', kind: 'testnet', lastRequest: NA, wssProviders: [PROV.quicknode, PROV.ankr] },
-  ]},
-];
+/**
+ * Networks the JSON-RPC reference actually publishes: 83 chains, each with a
+ * mainnet and a testnet. The marketing figure is "300+ blockchains" and it lives
+ * in `platformStats`; this is the count of what you can look up, which is the
+ * only number a network list should be footed with.
+ */
+export const rpcNetworkCount = docNetworkCount;
+
+/**
+ * One group per documented chain, with its real networks and chain IDs.
+ *
+ * The WebSocket provider sets are the one part not published per chain; the
+ * docs list providers platform-wide, not per network, so they stay the app's
+ * existing approximation: the EVM roster for EVM chains, the Solana pair for
+ * Solana, and the multi-chain subset elsewhere.
+ */
+export const rpcGroups: RpcGroup[] = docChains.map((chain) => {
+  const wssProviders =
+    chain.category === 'solana' ? solProviders : chain.evm ? evmProviders : otherProviders;
+  const networks: RpcNetwork[] = [
+    {
+      name: chain.name,
+      chainId: String(chain.chainId),
+      status: 'online',
+      kind: 'mainnet',
+      lastRequest: NA,
+      wssProviders,
+    },
+  ];
+  if (chain.testnet) {
+    networks.push({
+      name: chain.testnet.name,
+      chainId: chain.testnet.chainId,
+      status: 'online',
+      kind: 'testnet',
+      lastRequest: NA,
+      wssProviders,
+    });
+  }
+  return { id: chain.id, name: chain.name, icon: chain.icon, networks };
+});
 
 // ============ Webhooks ============
 export type Webhook = {

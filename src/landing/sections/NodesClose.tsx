@@ -2,7 +2,7 @@ import { Icon } from '../../components/Icons';
 import { Band } from './Band';
 import { nodesPage } from '../content/nodes';
 
-/** Closing beat — workload → metal, with booking CTA. */
+/** Closing beat, workload → metal, with booking CTA. */
 export function NodesClose() {
   const { close, cta, ctaHref } = nodesPage;
 

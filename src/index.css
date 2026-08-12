@@ -74,7 +74,7 @@
 
   /* ---- Brand (locked) ---- */
   --ub-blue: #1FB6FF;
-  /* Same as brand blue in every theme — no darker "royal" substitute for text. */
+  /* Same as brand blue in every theme, no darker "royal" substitute for text. */
   --ub-blue-ink: var(--ub-blue);
   --ub-blue-hover: #0FA9F5;
   --ub-blue-soft: rgba(31, 182, 255, 0.10);
@@ -88,7 +88,7 @@
          The neutral ramp is graphite, not slate. A blue-derived near-black
          reads as a dim version of the brand rather than a ground for it, and
          it is the house style of every AI product page. Achromatic grey is
-         the terminal register instead — the one deviation is a single point
+         the terminal register instead, the one deviation is a single point
          of green over red and blue at each step, which is phosphor, not hue.
          Too small to name as a colour; enough that the ramp isn't dead. ---- */
   --ub-black: #0D0E0D;
@@ -121,7 +121,7 @@
 
   /* ---- Semantics ----
      Two values per slot, because one colour cannot do both jobs. The base is
-     the *mark*: chart fills, dots, meter bars — sat high enough to hold its own
+     the *mark*: chart fills, dots, meter bars, sat high enough to hold its own
      next to the brand blue. The `-ink` is the *text*: the same hue dropped to
      AA contrast on the surface. Painting 12px type in the mark colour is how a
      palette ends up simultaneously washed out and illegible.
@@ -166,10 +166,12 @@
   --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font-pixel: 'Geist Pixel', 'Geist Mono', monospace;
-  /* Circle, deliberately not the Square used by the hero figures. Labels and
-     figures are different registers, and running both in the same pixel face
-     makes a caption look like a small headline. */
-  --font-pixel-label: 'Geist Pixel Circle', 'Geist Pixel', 'Geist Mono', monospace;
+  /* Square, the same face as the hero figures. The Circle variant draws its
+     stems out of dots, which at 10px reads as a dither rather than as type,
+     the counters fill in and the caps lose their edges. Square holds the grid
+     at label size, and one pixel face across labels and figures is the more
+     coherent system anyway. */
+  --font-pixel-label: 'Geist Pixel', 'Geist Mono', monospace;
 
   /* ---- Type scale · size is a multiple of 4 · line-height is 150% ---- */
   /* Accent step, below body. Pixel caps carry at this size in a way sentence
@@ -242,7 +244,7 @@
    *reported* width, which is exactly the signal separating those two cases.
 
    Scaled with `zoom` rather than by stepping the type tokens, because type is
-   not the thing that is too small — the design is. The spatial system here is
+   not the thing that is too small, the design is. The spatial system here is
    332 hardcoded px paddings, 38 fixed heights, and chart heights passed as JS
    numbers; none of it is tokenized, so a type-only ladder grows the text
    inside frozen padding and the result reads cramped rather than larger. Zoom
@@ -307,7 +309,7 @@
      one because a bright fill on near-black glares and blooms.
 
      Two deliberate exceptions to that band. The brand blue stays #1FB6FF in
-     both themes and sits above it — brand identity outranks the guideline. The
+     both themes and sits above it, brand identity outranks the guideline. The
      amber sits a hair above it too: pulling it fully in-band dropped its CVD
      separation from the pink to ΔE 7.8, and legibility for a red-green viewer
      is worth more than the last 0.03 of lightness. Ink stays bright, since on
@@ -473,6 +475,7 @@ h1, h2, h3, h4 {
    The same L-shaped registration brackets the cards use, sized down and shown
    on interaction. One recipe, one selector list: nothing re-implements it. */
 .btn,
+.btn-blk,
 .sgm-seg,
 .chip,
 .tb-search,
@@ -485,6 +488,7 @@ h1, h2, h3, h4 {
 .ps-menu,
 .wss-menu,
 .wss-select-btn,
+.project-switcher,
 .explore-card,
 .usum-card,
 .prov-feature,
@@ -493,11 +497,13 @@ h1, h2, h3, h4 {
 .chain-card,
 .prov-card,
 .cap-card,
-.manage-row,
+.nav-row,
+.chain-ep-btn,
 .chart-tip,
 .site-banner { position: relative; }
 
 .btn::after,
+.btn-blk::after,
 .sgm-seg::after,
 .chip::after,
 .tb-search::after,
@@ -510,6 +516,7 @@ h1, h2, h3, h4 {
 .ps-menu::after,
 .wss-menu::after,
 .wss-select-btn::after,
+.project-switcher::after,
 .explore-card::after,
 .usum-card::after,
 .prov-feature::after,
@@ -518,7 +525,8 @@ h1, h2, h3, h4 {
 .chain-card::after,
 .prov-card::after,
 .cap-card::after,
-.manage-row::after,
+.nav-row::after,
+.chain-ep-btn::after,
 .chart-tip::after,
 .site-banner::after {
   content: '';
@@ -547,7 +555,8 @@ h1, h2, h3, h4 {
 
 /* Primary (solid blue) buttons: the brand-blue tick is invisible on a
    brand-blue fill, so swap in the always-legible on-blue accent. */
-.btn.primary::after {
+.btn.primary::after,
+.btn-blk.is-solid::after {
   background-image:
     linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0),
     linear-gradient(var(--ub-accent-on-blue) 0 0), linear-gradient(var(--ub-accent-on-blue) 0 0),
@@ -575,6 +584,8 @@ h1, h2, h3, h4 {
 /* Brackets light up where the pointer or keyboard is. */
 .btn:hover::after,
 .btn:focus-visible::after,
+.btn-blk:hover::after,
+.btn-blk:focus-visible::after,
 .sgm-seg:hover::after,
 .chip:hover::after,
 .chip.on::after,
@@ -586,6 +597,7 @@ h1, h2, h3, h4 {
 .sb-doc:hover::after,
 .qs-card:hover::after,
 .wss-select-btn:hover::after,
+.project-switcher:hover::after,
 .explore-card:hover::after,
 .usum-card:hover::after,
 .prov-feature:hover::after,
@@ -594,7 +606,8 @@ h1, h2, h3, h4 {
 .chain-card:hover::after,
 .prov-card:hover::after,
 .cap-card:hover::after,
-.manage-row:hover::after { opacity: 0.9; }
+.nav-row:hover::after,
+.chain-ep-btn:hover::after { opacity: 0.9; }
 
 /* Transient surfaces carry them permanently: they are already an event. */
 .ps-menu::after,
@@ -602,16 +615,20 @@ h1, h2, h3, h4 {
 .chart-tip::after,
 .site-banner::after { opacity: 0.55; }
 
-/* Selected pickers keep them lit so the state is unmistakable. */
+/* Selected pickers keep them lit so the state is unmistakable, and a dropdown
+   trigger stays lit while its menu is open, so the button and the menu below it
+   are bracketed as one thing. */
+.project-switcher[aria-expanded='true']::after,
 .chain-card.on::after,
 .prov-card.on::after,
 .cap-card.on::after,
 .plan-card.current::after { opacity: 0.9; }
 
-.btn[disabled]::after { opacity: 0 !important; }
+.btn[disabled]::after,
+.btn-blk[disabled]::after { opacity: 0 !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn::after, .sgm-seg::after, .chip::after { transition: none; }
+  .btn::after, .btn-blk::after, .sgm-seg::after, .chip::after { transition: none; }
 }
 
 /* Any surface that should carry four registration ticks joins this list.
@@ -701,6 +718,7 @@ h1, h2, h3, h4 {
 .btn,
 .input,
 .sgm-seg,
+.sgm-tab,
 .seg,
 .tb-search {
   height: var(--ctl-h);
@@ -970,19 +988,28 @@ select.input {
 .sgm-item.on { color: var(--ub-black); }
 .sgm-item svg { flex: none; }
 
-/* ---- seg: one bordered row of cells, divided by hairlines.
-        The active cell fills with ink: no box inside a box. ---- */
-.sgm-seg {
+/* ---- One bordered row of cells, divided by hairlines. Both variants wear it:
+        `tab` differs from `seg` in ARIA and height, not in look, so the app has
+        exactly one idiom for "pick one of these". ----
+   overflow-x alone would compute overflow-y to auto and let the row scroll
+   vertically by a pixel; lock the Y axis. */
+.sgm-seg,
+.sgm-tab {
   max-width: 100%;
   padding: 0;
   background: var(--ub-elevated);
   border: 1px solid var(--ub-line-strong);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
 }
+.sgm-seg::-webkit-scrollbar,
+.sgm-tab::-webkit-scrollbar { display: none; }
 /* The marker is a bracketed cell, not a filled slab: a solid fill inverts to
    a glaring white block in dark mode, which is far more emphasis than a sort
    control deserves. The brackets travel with it. */
-.sgm-seg .sgm-marker {
+.sgm-seg .sgm-marker,
+.sgm-tab .sgm-marker {
   top: 0;
   bottom: 0;
   background-color: var(--ub-blue-wash);
@@ -1003,42 +1030,24 @@ select.input {
     left 3px bottom 3px,  left 3px bottom 3px,
     right 3px bottom 3px, right 3px bottom 3px;
 }
-.sgm-seg .sgm-item {
+.sgm-seg .sgm-item,
+.sgm-tab .sgm-item {
   height: 100%;
   padding: 0 12px;
   border-left: 1px solid var(--ub-line);
 }
-.sgm-seg .sgm-item:first-of-type { border-left: none; }
-.sgm-seg .sgm-item.on { color: var(--ub-black); }
-.sgm-seg .sgm-item:not(.on):hover { background: var(--ub-hover); }
+.sgm-seg .sgm-item:first-of-type,
+.sgm-tab .sgm-item:first-of-type { border-left: none; }
+.sgm-seg .sgm-item.on,
+.sgm-tab .sgm-item.on { color: var(--ub-black); }
+.sgm-seg .sgm-item:not(.on):hover,
+.sgm-tab .sgm-item:not(.on):hover { background: var(--ub-hover); }
 
 /* The container already frames the control; its own brackets would double up. */
-.sgm-seg:hover::after { opacity: 0; }
+.sgm-seg:hover::after,
+.sgm-tab:hover::after { opacity: 0; }
 
-/* ---- tab: a blue rule slides along the baseline ---- */
-.sgm-tab {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--ub-line);
-  /* overflow-x alone would compute overflow-y to auto — and the underline
-     marker sits 1px below the baseline, so the row becomes vertically
-     scrollable. Lock the Y axis. */
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  width: 100%;
-}
-.sgm-tab::-webkit-scrollbar { display: none; }
-.sgm-tab .sgm-marker {
-  bottom: -1px;
-  height: 2px;
-  background: var(--ub-blue);
-}
-.sgm-tab .sgm-item {
-  height: 38px;
-  padding: 0 12px;
-}
-.sgm-tab .sgm-item.on { color: var(--ub-black); }
+
 
 @media (prefers-reduced-motion: reduce) {
   .sgm-marker.ready { transition: none; }
@@ -1047,6 +1056,11 @@ select.input {
 
 /* ---- Chip ---- */
 .chip {
+  /* Flex so a chip can carry a mark beside its label, chain filters do, and
+     so the label centres against the fixed height without a magic line-height. */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   height: var(--ctl-h);
   padding: 0 12px;
   border-radius: 0;
@@ -1079,6 +1093,69 @@ select.input {
   font-weight: 500;
   color: var(--ub-text-2);
   flex: none;
+}
+
+/* ============================================================
+   Confirmation swap
+   ------------------------------------------------------------
+   Any control that changes state in place, copy being the one that matters,
+   keeps both states mounted and cross-fades between them. Replacing the node
+   made the label teleport and, where the two strings differ in width, shoved
+   the row sideways: it read as a glitch rather than as an acknowledgement.
+
+   The done state enters from below and the idle state leaves upward, so the
+   change has a direction. 0.16s, the same beat as every other state change.
+   ============================================================ */
+.swap,
+.swap-icon {
+  display: inline-grid;
+  justify-items: start;
+}
+.swap-icon { justify-items: center; align-items: center; }
+.swap > *,
+.swap-icon > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 0.16s var(--ease-io),
+    transform 0.18s var(--ease-out);
+}
+/* The measure has to come from the wider of the two, or the column collapses
+   to the idle string and the confirmation clips. */
+.swap > .swap-idle,
+.swap > .swap-done {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.swap-done {
+  opacity: 0;
+  transform: translateY(3px);
+  color: var(--ub-success);
+}
+.swap-icon > .swap-done { transform: scale(0.6); }
+.is-copied > .swap > .swap-idle,
+.is-copied > .swap-icon > .swap-idle {
+  opacity: 0;
+  transform: translateY(-3px);
+}
+.is-copied > .swap-icon > .swap-idle { transform: scale(0.6); }
+.is-copied > .swap > .swap-done,
+.is-copied > .swap-icon > .swap-done {
+  opacity: 1;
+  transform: none;
+}
+
+/* One flat pulse of the accent wash, fading out. Deliberately not a travelling
+   sheen, this is a receipt, not a loading shimmer. */
+@keyframes copy-ack {
+  from { background-color: var(--ub-blue-wash); }
+  to   { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap > *, .swap-icon > * { transition: none; }
 }
 
 /* ============================================================

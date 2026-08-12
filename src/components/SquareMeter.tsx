@@ -8,7 +8,7 @@ export type MeterSegment = {
 
 type Props = {
   segments: MeterSegment[];
-  /** Big value in the middle, e.g. "98.2%" — or a node, to animate it. */
+  /** Big value in the middle, e.g. "98.2%", or a node, to animate it. */
   value: ReactNode;
   /** Small caption under it, e.g. "2xx". */
   caption?: string;

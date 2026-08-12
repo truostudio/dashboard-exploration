@@ -9,8 +9,8 @@ import { coverage } from '../content/home';
  *
  * This was two counter-travelling marquees of chain chips. A marquee is
  * decoration: it moves without saying anything, and nothing in it can be read
- * because it will not hold still. The chains are now a lattice — the same
- * construction as the provider mesh, which is the component that works — so
+ * because it will not hold still. The chains are now a lattice, the same
+ * construction as the provider mesh, which is the component that works, so
  * the claim ("300+ networks") is shown as a population you can actually scan.
  */
 export function Coverage() {

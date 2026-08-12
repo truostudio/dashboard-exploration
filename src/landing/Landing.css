@@ -1,7 +1,7 @@
 /* ============================================================
    Uniblock landing pages
-   Same system as the dashboard — square corners, 4pt scale, 12px
-   mono chrome, blue registration ticks — art-directed for a
+   Same system as the dashboard, square corners, 4pt scale, 12px
+   mono chrome, blue registration ticks, art-directed for a
    marketing page: display type, inverted bands, and motion.
    Everything is scoped to .landing so the dashboard is untouched.
    ============================================================ */
@@ -24,7 +24,7 @@
   --lp-gutter: 40px;
   /* One measure for the whole page. Nav, hero, every band and the footer all
      resolve to this box, so the logo, the headline and every section label
-     hang off the same left rail — the single biggest difference between a
+     hang off the same left rail, the single biggest difference between a
      page that looks composed and one that looks stacked. Divisible by 6 and
      12, so the column rails land on whole pixels. */
   --lp-max: 1344px;
@@ -36,7 +36,7 @@
      One column of twelve, and one row of the same height: the unit is a
      SQUARE, not a column. Every block on the page is a whole number of
      squares in each direction, so a "shape" is just an arrangement of units
-     — 4×4, 8×3, 2×2, 12×3 — rather than a rectangle at an arbitrary size.
+    , 4×4, 8×3, 2×2, 12×3, rather than a rectangle at an arbitrary size.
      This is the whole basis of the layout.
 
      Derived from the live inner width so the squares stay square at any
@@ -45,7 +45,7 @@
   /* The seam between two blocks. */
   --lp-seam: var(--s-4);
   /* The one inset used inside every block. It equals --lp-pad, so text in a
-     bordered block and text in a flat block start on the same vertical —
+     bordered block and text in a flat block start on the same vertical,
      which is the difference between a system and a pile of one-offs. */
   --lp-inset: var(--lp-pad);
   /* Vertical rhythm for repeated rows inside a block. */
@@ -105,7 +105,7 @@
    Part of the identity, so it belongs in the page's own surfaces and not
    only inside the WebGL pass. Three dot fields at 1x, 2x and 4x the cell,
    each masked to a different reach, so density steps down in discrete
-   bands the way an ordered dither does — never a smooth fade, which would
+   bands the way an ordered dither does, never a smooth fade, which would
    just be a gradient wearing a costume.
    ============================================================ */
 /* Dot colour follows the surface, not the section: `.lp-band` matched in dark
@@ -121,7 +121,7 @@
 
 /* Three fields at 4x, 2x and 1x the cell, each on its own layer with its own
    reach. Mask layers on one element composite into a single mask, so stacking
-   them as background layers produced one flat texture — the steps only exist
+   them as background layers produced one flat texture, the steps only exist
    if the fields are separate boxes. Where all three overlap the field is
    solid; where only the coarse one survives it is sparse. */
 .dither {
@@ -152,7 +152,7 @@
   mask-image: linear-gradient(var(--dither-to, 180deg), #000 0%, #000 8%, transparent 30%);
 }
 
-/* A band of dither used as an edge — the join between two sections, and the
+/* A band of dither used as an edge, the join between two sections, and the
    thing that replaces a hairline rule. */
 .dither-edge {
   height: calc(var(--lp-row) * 0.75);
@@ -164,14 +164,14 @@
 /* ---- Grain ----
    A flat fill of any near-black reads as a void, which is what makes a dark
    page look cheap. A few percent of monochrome noise gives the ground a
-   material — it is the difference between "unlit" and "matte". Absolute
+   material, it is the difference between "unlit" and "matte". Absolute
    rather than fixed so it travels with the page like paper stock. */
 .landing::after {
   content: '';
   position: absolute;
   inset: 0;
   /* Behind the content, never over it. Grain laid on top of text and marks
-     makes them muddier to read — it textures the surface, not the page. */
+     makes them muddier to read, it textures the surface, not the page. */
   z-index: 0;
   pointer-events: none;
   opacity: 0.055;
@@ -181,7 +181,7 @@
 /* ---- Inverted band ----
    Dark plate for contrast on a light page. In dark theme the whole landing
    is already dark, so invert matches. Dark token overrides apply only when
-   the document is not light — light theme uses :root tokens as-is. */
+   the document is not light, light theme uses :root tokens as-is. */
 .lp-invert {
   background: var(--ub-canvas);
   color: var(--ub-black);
@@ -216,7 +216,7 @@
 
 /* Light theme: only the home hero stays transparent so the WebGL plate
    shows through. Other invert bands (nav, footer, etc.) keep --ub-canvas.
-   Invert must not flip rails to pale — those vanish on a light plate. */
+   Invert must not flip rails to pale, those vanish on a light plate. */
 :root[data-theme='light'] .landing .lp-invert {
   --lp-rail: rgba(13, 14, 13, 0.12);
 }
@@ -242,7 +242,7 @@
    Scroll choreography
    ============================================================ */
 /* Content is visible by default. This used to start at opacity 0 and wait for
-   an IntersectionObserver — which meant any section whose reveal never fired
+   an IntersectionObserver, which meant any section whose reveal never fired
    rendered as an empty void, and it did exactly that during screenshot passes.
    The entrance now animates position only: if the observer never runs, the
    text is still fully readable, just not offset. */
@@ -255,7 +255,7 @@
 [data-reveal-group] > * { transition-delay: calc(var(--i, 0) * 0.07s); }
 
 /* Headline lines rise, one after the other. They used to sit at translateY(105%)
-   inside an overflow:hidden mask — which renders the entire headline INVISIBLE
+   inside an overflow:hidden mask, which renders the entire headline INVISIBLE
    if the reveal never fires. The rise is now a short offset with no clip, so
    the worst case is type that never animated, not type that never appeared. */
 .lp-line {
@@ -281,10 +281,10 @@
 /* The rule between two bands belongs to the container, not the viewport. As a
    border on .lp-band it ran the full width of the window and cut straight
    across the gutter, ignoring the measure everything else on the page obeys.
-   It is drawn on the container box instead — see .lp-band::before below. */
+   It is drawn on the container box instead, see .lp-band::before below. */
 .lp-band + .lp-band:not(.lp-invert)::before { border-top: 1px solid var(--ub-line); }
 
-/* The page's outer edge is the only rule drawn behind content — it is the
+/* The page's outer edge is the only rule drawn behind content, it is the
    plate the blocks are set into. Everything else you can see of the grid is
    an edge of an actual block. */
 .lp-band::before,
@@ -369,7 +369,7 @@
 
 /* ---- Column assignments ----
    Sections that are not block fields still hang off the twelve columns.
-   Everything that *is* a block field sizes itself in square units instead —
+   Everything that *is* a block field sizes itself in square units instead,
    see .lp-blocks. */
 .lp-head { grid-column: 1 / 9; }
 .lp-head-split { grid-column: 1 / -1; }
@@ -414,7 +414,7 @@
    ticked at each of the twelve column boundaries, with the section number set
    oversized in the pixel face sitting on the line. It divides, it counts, and
    it is made of the same twelve columns the section below is built on. No
-   colour — the number is line ink, so it reads as structure, not as an accent. */
+   colour, the number is line ink, so it reads as structure, not as an accent. */
 .lp-divider {
   display: flex;
   align-items: flex-end;
@@ -477,7 +477,7 @@
   color: var(--ub-text-3);
 }
 /* The section number is not the Uniblock path, a live signal or a chosen
-   option — it is a number. Colouring it brand blue was the same arbitrary
+   option, it is a number. Colouring it brand blue was the same arbitrary
    accent as the focus cycle. Hierarchy here comes from brightness against the
    rest of the row, which is already the quietest text on the page. */
 .lp-spec-idx { color: var(--ub-black); }
@@ -540,7 +540,7 @@
    Nav
    ============================================================ */
 /* ---- Nav ----
-   Terminal instrument strip on the page rails — mono indices, live chip,
+   Terminal instrument strip on the page rails, mono indices, live chip,
    registration marks. Transparent over the hero; opaque once you leave. */
 .lp-nav-wrap {
   position: sticky;
@@ -679,7 +679,7 @@
 .lp-nav-sheet-bar,
 .lp-nav-sheet-foot { display: none; }
 
-/* Mega menus — Panel + Table, positioned on the wrap (outside lp-invert). */
+/* Mega menus. Panel + Table, positioned on the wrap (outside lp-invert). */
 .lp-nav-dd-trigger {
   border: 0;
   background: transparent;
@@ -741,7 +741,7 @@
 /* ============================================================
    1 · Hero
    ============================================================ */
-/* Transparent so the network reads through — this is the one place the
+/* Transparent so the network reads through, this is the one place the
    signature artifact gets the whole frame. The WebGL pass clears to the
    invert plate (see RequestStream) so light theme never shows through the
    dither holes while type still uses invert ink. */
@@ -750,7 +750,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  /* The nav is 52px flush to the top — no floating wrap padding. */
+  /* The nav is 52px flush to the top, no floating wrap padding. */
   min-height: calc(100svh - 52px);
   display: flex;
   flex-direction: column;
@@ -784,7 +784,7 @@
   color: var(--ub-text-3);
   margin-bottom: var(--s-4);
 }
-/* Pricing page hero — no WebGL plate behind it, so the invert fills itself.
+/* Pricing page hero, no WebGL plate behind it, so the invert fills itself.
    Shorter than the home hero; the table below is the load-bearing instrument. */
 .lp-pricing-hero {
   min-height: min(72svh, 560px);
@@ -896,7 +896,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Keep the caret hard while paths cycle — blink reads as idle, not typing. */
+/* Keep the caret hard while paths cycle, blink reads as idle, not typing. */
 .lp-hero-cmd .lp-caret { animation: none; }
 
 .lp-hero-cta { display: flex; flex-wrap: wrap; gap: var(--s-3); }
@@ -1047,7 +1047,7 @@
 /* The panel it sits in already draws the box and the corner ticks. A second
    border and a second set of marks inside it was the nested-frame look. */
 /* Without this the block's flex column shrink-wraps the gauge to its content
-   width and `align-items: center` centres nothing — the whole graphic sat
+   width and `align-items: center` centres nothing, the whole graphic sat
    left of centre inside its block. */
 .lp-infra-gauge {
   width: 100%;
@@ -1080,7 +1080,7 @@
 }
 
 /* ============================================================
-   4 · Trusted by — static customers board
+   4 · Trusted by, static customers board
    Page rails own the L/R edges; the board only draws top/bottom
    and internal seams, so nothing doubles.
    ============================================================ */
@@ -1093,7 +1093,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
   align-items: stretch;
-  /* No L/R border — .lp-band::before rails already mark that edge. */
+  /* No L/R border, .lp-band::before rails already mark that edge. */
   border-top: 1px solid var(--ub-line);
   border-bottom: 1px solid var(--ub-line);
 }
@@ -1140,7 +1140,7 @@
   padding: var(--s-7) var(--s-5);
   text-align: center;
   background: var(--ub-sunken);
-  /* Single seams to the logo columns — cells on either side stay clear. */
+  /* Single seams to the logo columns, cells on either side stay clear. */
   border-left: 1px solid var(--ub-line);
   border-right: 1px solid var(--ub-line);
 }
@@ -1219,7 +1219,7 @@
    5 · Overview
    ============================================================ */
 /* ============================================================
-   Proof graphics — the demonstrations that carry each claim
+   Proof graphics, the demonstrations that carry each claim
    ============================================================ */
 .pg {
   border: 1px solid var(--ub-line-strong);
@@ -1232,7 +1232,7 @@
    The product is called Uniblock, so the page is built the way the name
    says: one module square is the brick, and every surface is a whole
    number of bricks snapped into the twelve columns. Nothing is sized to
-   fit its contents — contents are sized to fit the block.
+   fit its contents, contents are sized to fit the block.
    ============================================================ */
 
 /* ============================================================
@@ -1260,7 +1260,7 @@
 
 /* ---- Figure caption ----
    A graphic with no words is naked. This is a real explanation of what the
-   thing below shows — not a title bar, which is why it has no rule, no badge
+   thing below shows, not a title bar, which is why it has no rule, no badge
    and no controls. */
 .win-cap {
   flex: none;
@@ -1318,7 +1318,7 @@
   color: var(--ub-text-2);
 }
 .win-note .lp-proof-cta { margin-top: var(--s-2); }
-/* Inside a drawn window, a short buffer centres — that is what an editor does
+/* Inside a drawn window, a short buffer centres, that is what an editor does
    with a short file. A flat block has no box, so centring just makes the text
    float in the middle of nothing: it starts at the top edge, level with
    whatever it sits beside. */
@@ -1335,13 +1335,13 @@
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
   /* The square is the *minimum*, not a cage. A row that has to hold more than
-     its units allow grows rather than clipping its contents — the alternative
+     its units allow grows rather than clipping its contents, the alternative
      is silently cropped graphics, which is worse than a block that is one
      unit and a bit tall. */
   /* Width is the module; height is the content.
 
      Blocks used to be a fixed number of units tall in both directions, which
-     is why graphics sat in acres of nothing — a 3-unit box holding 180px of
+     is why graphics sat in acres of nothing, a 3-unit box holding 180px of
      diagram. The square unit is what the page is measured across; forcing it
      vertically as well only produced empty boxes. Rows now take the height of
      the tallest block in them, and blocks in a row match. */
@@ -1350,7 +1350,7 @@
   /* ---- The seam ----
      Blocks are set apart rather than butted edge to edge. But `column-gap` on
      a subgrid resizes its tracks, which walks every block off the page's
-     column lines — that is why nothing looked aligned. So the columns keep
+     column lines, that is why nothing looked aligned. So the columns keep
      zero gap and stay exactly where the parent put them, and each block insets
      itself by half a seam instead. The field bleeds outward by the same half,
      so the outermost block edges land back on the column lines.
@@ -1361,7 +1361,7 @@
   margin-inline: calc(var(--lp-seam) / -2);
   padding-inline: 0;
 }
-/* `.lp-pair` is `display: contents`, so its children — not the wrapper — are
+/* `.lp-pair` is `display: contents`, so its children, not the wrapper, are
    the real grid items. Every rule that sizes a block has to reach through it. */
 .lp-blocks > *,
 .lp-blocks > .lp-pair > * { margin-inline: calc(var(--lp-seam) / 2); }
@@ -1369,7 +1369,7 @@
    than a two-block row does. */
 .lp-workspace { row-gap: var(--s-8); }
 
-/* A wall, a course of figures and a plan row are each meant to be continuous —
+/* A wall, a course of figures and a plan row are each meant to be continuous,
    their internal rules divide one object rather than separating several. */
 .lp-wall,
 .lp-stats,
@@ -1402,7 +1402,7 @@
    so desktop column order is simply DOM order.
    `order` cannot be used to flip a pair here. With `display: contents` there is
    no per-pair box, so every Win in the field is a sibling of every other and
-   the grid compares `order` across all of them — one pair's flip reshuffles the
+   the grid compares `order` across all of them, one pair's flip reshuffles the
    whole section. Mobile re-stacks note-first with flex `order` instead, where
    `.lp-pair` is a real container and the scope is the pair. */
 .lp-pair {
@@ -1441,7 +1441,7 @@
 
 /* ---- Plan table ----
    Plans across, capabilities down. Every value shares a baseline because it
-   shares a row — the ragged-column problem in a four-card pricing block cannot
+   shares a row, the ragged-column problem in a four-card pricing block cannot
    happen in a table. */
 .plan-table {
   width: 100%;
@@ -1515,7 +1515,7 @@
   letter-spacing: 0.08em;
 }
 .lp-pricing .lp-head { margin-bottom: var(--s-8); }
-/* Page mode: no competing section title — just billing chrome over the table. */
+/* Page mode: no competing section title, just billing chrome over the table. */
 .lp-pricing-page { padding-top: var(--s-8); }
 .lp-pricing-toolbar {
   display: flex;
@@ -1550,7 +1550,7 @@
   height: var(--h, 100%);
   background: var(--ub-border);
   transform-origin: bottom center;
-  /* Instant ink, short physical punch — scrubbing 90 days should feel like
+  /* Instant ink, short physical punch, scrubbing 90 days should feel like
      a readout, not a crossfade. */
   transition: transform 0.1s var(--ease-out);
 }
@@ -1577,7 +1577,7 @@
 .log {
   display: flex;
   flex-direction: column;
-  /* Newest at the bottom, buffer anchored there — the way a tail fills. */
+  /* Newest at the bottom, buffer anchored there, the way a tail fills. */
   justify-content: flex-end;
   height: 100%;
   padding: var(--lp-inset);
@@ -1658,7 +1658,7 @@
 [data-revealed] .lp-brick,
 [data-revealed] .lp-wall-brick { transform: none; }
 /* The container still needs [data-reveal] so the observer marks it, but the
-   bricks carry the entrance — the wall itself must not also slide. */
+   bricks carry the entrance, the wall itself must not also slide. */
 .lp-wall[data-reveal] { transform: none; }
 
 /* ---- One box per block ----
@@ -1679,7 +1679,7 @@
 .win-body .lp-gantt::before, .win-body .lp-gantt::after,
 .win-body .lp-infra-gauge::before, .win-body .lp-infra-gauge::after,
 .win-body .lp-enterprise::before, .win-body .lp-enterprise::after,
-/* The lattice keeps its rules — they divide bricks, they are not a frame —
+/* The lattice keeps its rules, they divide bricks, they are not a frame,
    but the corner ticks belong to the window around it. */
 .win-body .lp-lattice::before, .win-body .lp-lattice::after {
   display: none;
@@ -1769,7 +1769,7 @@
 [data-revealed] .lp-brick,
 [data-revealed] .lp-wall-brick { transform: none; }
 /* The container still needs [data-reveal] so the observer marks it, but the
-   bricks carry the entrance — the wall itself must not also slide. */
+   bricks carry the entrance, the wall itself must not also slide. */
 .lp-wall[data-reveal] { transform: none; }
 
 /* ---- One box per block ----
@@ -1790,7 +1790,7 @@
 .win-body .lp-gantt::before, .win-body .lp-gantt::after,
 .win-body .lp-infra-gauge::before, .win-body .lp-infra-gauge::after,
 .win-body .lp-enterprise::before, .win-body .lp-enterprise::after,
-/* The lattice keeps its rules — they divide bricks, they are not a frame —
+/* The lattice keeps its rules, they divide bricks, they are not a frame,
    but the corner ticks belong to the window around it. */
 .win-body .lp-lattice::before, .win-body .lp-lattice::after {
   display: none;
@@ -1874,7 +1874,7 @@
 .pg-score { height: 6px; background: var(--ub-grid); display: block; }
 /* An animation rather than a transition, because the race is remounted every
    time its window takes focus and a transition would already be at its end
-   state on the first paint — nothing would move. */
+   state on the first paint, nothing would move. */
 .pg-score-fill {
   display: block;
   height: 100%;
@@ -1898,7 +1898,7 @@
 /* The winner leads on weight now that every row is in colour. */
 .pg-race-row:not(.on) .pg-score-fill { opacity: 0.45; }
 
-/* Header cells double as the key — a chip over each column. */
+/* Header cells double as the key, a chip over each column. */
 .pg-race-key {
   display: inline-flex;
   align-items: center;
@@ -1933,7 +1933,7 @@
   gap: var(--s-4);
   padding: var(--lp-inset);
 }
-/* Stack when the panel is narrow — this graphic often sits in a 5-col
+/* Stack when the panel is narrow, this graphic often sits in a 5-col
    module where the viewport is still wide. */
 @container pg-bill (max-width: 480px) {
   .pg-bill {
@@ -1967,7 +1967,7 @@
 .pg-bill-row .avatar-art { filter: grayscale(1); opacity: 0.5; }
 .pg-bill-row.struck { color: var(--ub-text-3); text-decoration: line-through; }
 /* Same track as the struck rows so the amount stays on the right rail and the
-   name yields under narrow columns — flex + margin-auto let them collide. */
+   name yields under narrow columns, flex + margin-auto let them collide. */
 .pg-bill-row.total {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) auto;
@@ -2079,7 +2079,6 @@
 .pg-norm-sig { font-family: var(--font-mono); font-size: var(--fs-micro); line-height: var(--lh-micro); color: var(--ub-text-3); }
 
 .lp-explorer-tabs { padding: 0 var(--lp-inset); }
-.lp-explorer-tabs .sgm-tab { border-bottom-color: var(--ub-line); }
 .lp-endpoint {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
@@ -2180,7 +2179,7 @@
 .lp-ledger-visual { min-width: 0; }
 
 /* ============================================================
-   6 · The full stack — pinned sequence
+   6 · The full stack, pinned sequence
    ============================================================ */
 .lp-stack { padding-top: var(--lp-band-y); }
 
@@ -2492,7 +2491,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
-  /* Stretched grid item — fill the row so the byline can sit on the shared floor. */
+  /* Stretched grid item, fill the row so the byline can sit on the shared floor. */
   min-height: 100%;
 }
 .lp-lead-copy {
@@ -2574,12 +2573,12 @@
 /* ============================================================
    11 · FAQ
    ============================================================ */
-/* Abut the invert footer — no empty band pad between the last chapter
+/* Abut the invert footer, no empty band pad between the last chapter
    and the close stage (that gap read as a black divider). */
 .lp-faq-band {
   padding-bottom: 0;
 }
-/* The row is the full width of the section — the hover state runs edge to
+/* The row is the full width of the section, the hover state runs edge to
    edge and only the text is inset. A highlight that stops short of the
    section's own edge reads as a card, which this is not. */
 .lp-inner > .lp-faq { padding-inline: 0; }
@@ -2633,7 +2632,7 @@
 }
 
 /* ============================================================
-   12 · Footer — closing band
+   12 · Footer, closing band
    Chrome stacks first (close CTA, links, legal), then the nucleus
    owns the floor: full measure, nothing over it, running off the
    bottom edge of the document.
@@ -2644,12 +2643,12 @@
   isolation: isolate;
   overflow-x: clip;
   overflow-y: visible;
-  /* Own the invert plate — scene no longer covers the full footer. */
+  /* Own the invert plate, scene no longer covers the full footer. */
   background: var(--ub-canvas);
   display: flex;
   flex-direction: column;
-  /* No top pad — FAQ already ends on a rule; padding here made a black gap.
-     No bottom pad — the field runs to the edge. */
+  /* No top pad. FAQ already ends on a rule; padding here made a black gap.
+     No bottom pad, the field runs to the edge. */
   padding: 0 var(--lp-gutter);
 }
 
@@ -2955,8 +2954,8 @@
   .pg-race-flag { display: none; }
 
   /* Nav collapses to a full-screen sheet. A 320px flyout was generic drawer
-     chrome; this is the readout language the rest of the page is built in —
-     a prompt, a numbered listing, controls on the floor — given the whole
+     chrome; this is the readout language the rest of the page is built in,
+     a prompt, a numbered listing, controls on the floor, given the whole
      viewport. The bar itself floats above it so the close is always there. */
   .lp-nav-toggle { display: inline-flex; }
   .lp-brand,

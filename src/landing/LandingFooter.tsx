@@ -13,7 +13,7 @@ const groups: { label: string; links: { label: string; href: string; icon: LinkI
 /**
  * Page ending as a closing band.
  *
- * Chrome first — close CTA, links, legal — then the nucleus owns the floor.
+ * Chrome first, close CTA, links, legal, then the nucleus owns the floor.
  * The artifact is the last thing on the page rather than a texture behind the
  * copy, so the document dissolves into the network it has been describing.
  */
@@ -75,7 +75,7 @@ export function LandingFooter() {
         </div>
       </div>
 
-      {/* The floor. Full measure, no copy over it — the field gets the frame. */}
+      {/* The floor. Full measure, no copy over it; the field gets the frame. */}
       <div className="lp-footer-stage">
         <EndpointField />
       </div>

@@ -27,7 +27,7 @@ import type { ViewId } from '../App';
  */
 export type PaletteResult =
   | { kind: 'endpoint'; id: string; name: string; method: 'GET' | 'POST'; surface: string; calls: number; errorRate: number; p95: number; cu: number }
-  | { kind: 'chain'; id: string; name: string; symbol: string; chainId: string; color: string; icon: string; live: boolean }
+  | { kind: 'chain'; id: string; name: string; symbol: string; chainId: string; color?: string; icon: string; live: boolean }
   | { kind: 'catalog'; id: string; name: string; method: string; title: string; owner: string }
   | { kind: 'page'; id: string; name: string; hint: string; view: ViewId; via?: string };
 
@@ -106,7 +106,7 @@ export function CommandPalette({
   const listRef = useRef<HTMLUListElement>(null);
 
   // The 24h/all-chains window is the catalogue's resting state, and the figures
-  // here are a preview rather than the answer — the row you land on carries the
+  // here are a preview rather than the answer: the row you land on carries the
   // range you actually have selected.
   const endpoints = useMemo(() => analytics('24h', 'all').endpoints, []);
   const liveChains = useMemo(
@@ -228,7 +228,7 @@ export function CommandPalette({
         kind: 'page', id: `pg:${p.view}`, name: p.name, hint: p.hint, view: p.view, via,
       }));
 
-    // Pages normally rank last — you are usually looking for data, not a route.
+    // Pages normally rank last; you are usually looking for data, not a route.
     // But when the query is the start of a page's name, that page is almost
     // certainly the intent: typing "chains" and landing on an endpoint that
     // merely contains the word is the wrong answer confidently delivered.
@@ -276,7 +276,7 @@ export function CommandPalette({
   const run = (r: PaletteResult) => {
     if (r.kind === 'page') onNavigate(r.view);
     // A chain hit opens that chain's coverage, not just the directory it lives
-    // in — landing on an unfiltered list is the search not finishing its job.
+    // in, landing on an unfiltered list is the search not finishing its job.
     else if (r.kind === 'chain') onOpenChain(r.id.replace(/^ch:/, ''));
     else if (r.kind === 'catalog') onNavigate('apis-all');
     else onOpenEndpoint(r.name);
