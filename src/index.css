@@ -113,6 +113,18 @@
 
   --ub-scrim: rgba(13, 14, 13, 0.45);
   --ub-blueprint: rgba(31, 182, 255, 0.06);
+  /* The blueprint rule and its wash, in the danger ink. Only the site banner's
+     alert state uses them: the readout keeps its exact construction and only
+     changes colour, so an incident is the same instrument reading differently
+     rather than a second banner. */
+  --ub-danger-wash: rgba(255, 45, 111, 0.05);
+  /* Text sitting on a solid brand-blue plate. Deliberately NOT overridden in
+     the dark theme: the plate is the same #1FB6FF in both, so its ink cannot
+     flip with the surface. `--ub-black` would, and did, turning the recap's
+     accent figure into near-white on bright blue. `--ub-accent-on-blue` is not
+     this: that one is for hairline registration ticks, where visibility beats
+     contrast ratio. 9.6:1 against the fill. */
+  --ub-ink-on-blue: #0D0E0D;
   --ub-plate: transparent;         /* ring drawn over provider/chain artwork */
   /* Registration ticks drawn on top of a solid blue fill (primary buttons):
      --ub-blue barely shows against itself, so this is a dedicated,
@@ -301,6 +313,7 @@
 
   --ub-scrim: rgba(4, 5, 4, 0.66);
   --ub-blueprint: rgba(31, 182, 255, 0.08);
+  --ub-danger-wash: rgba(255, 45, 111, 0.07);
   --ub-plate: rgba(255, 255, 255, 0.14);
   --ub-accent-on-blue: #FFFFFF;
 
@@ -579,6 +592,44 @@ h1, h2, h3, h4 {
     9px 1px, 1px 9px,
     9px 1px, 1px 9px,
     9px 1px, 1px 9px;
+}
+
+/* Wide rows get the entry mark only.
+   ------------------------------------------------------------
+   A `NavRow` is ~500px wide and ~60px tall, and four corners that far apart
+   never group into one bracketed object: at button size (3px inset, 6px arms)
+   they read as four specks at the extremities, and the inset was tight enough
+   that the blue arms landed on the row's own hairline border and muddied it.
+
+   So the row is bracketed where it begins. The left edge is where the marker
+   and the label are, and where the eye enters; the chevron on the right is
+   already the marker that says where the row goes, so bracketing that end too
+   puts two competing signals on one row. Same recipe and same ink as every
+   other surface, with fewer arms and more room. */
+.nav-row::after {
+  inset: 6px;
+  background-image:
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0),
+    linear-gradient(var(--ub-blue) 0 0), linear-gradient(var(--ub-blue) 0 0);
+  background-size:
+    10px 1px, 1px 10px,
+    10px 1px, 1px 10px;
+  background-position:
+    left top, left top,
+    left bottom, left bottom;
+}
+/* The dense row runs flush: `padding: 10px 0`, because a ~300px rail column
+   cannot spend 20px of gutter on every row. That leaves the bracket nowhere to
+   sit, and inset from the left it landed straight on the step marker. So it
+   hangs in the panel's own padding instead of taking any from the row, which
+   also puts the mark outside the text block where it belongs. Shorter arms
+   here: the row is half the height, and 10px on a 40px row is nearly an edge. */
+.nav-row.is-dense::after {
+  inset: 3px auto 3px -14px;
+  width: 8px;
+  background-size:
+    8px 1px, 1px 8px,
+    8px 1px, 1px 8px;
 }
 
 /* Brackets light up where the pointer or keyboard is. */
@@ -1176,8 +1227,47 @@ select.input {
 .rise-5 { animation-delay: 0.26s; }
 .rise-6 { animation-delay: 0.32s; }
 
+/* ---- Content swap ----
+   For a region whose *contents* are replaced in place: a paged list, a deck
+   page, a banner stepping to the next message, a detail panel following a new
+   selection. Nothing in this system may cut straight to new content; replacing
+   what someone is reading with no transition reads as a glitch, not a change.
+
+   Put the class on an element keyed by whatever identifies the content
+   (`key={page}`), so React remounts it and the animation replays. Add `is-back`
+   when the move is backwards and it enters from the other side, which is what
+   makes stepping feel like a position rather than a reload.
+
+   One recipe. Do not redeclare these keyframes per component. */
+@keyframes swapIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes swapInBack {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+.swap-in { animation: swapIn 0.36s var(--ease-out) both; }
+.swap-in.is-back { animation-name: swapInBack; }
+/* `subtle` is the same move at a shorter throw, for a swap inside a panel where
+   a full 16px slide would read as the panel itself moving. */
+.swap-in.is-subtle { animation-name: swapInSubtle; }
+@keyframes swapInSubtle {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A region that changes height as its contents swap animates to the new height
+   rather than snapping to it. Pair with a measured height, see `.wir-stage`. */
+.swap-stage {
+  overflow: hidden;
+  transition: height 0.38s var(--ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none; opacity: 1; }
+  .swap-in { animation: none; }
+  .swap-stage { transition: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;

@@ -3,6 +3,7 @@
  * toolbar, table, or field markup, and should not carry inline style props.
  */
 export { Panel, PanelHead, TitledPanel } from './Panel';
+export { Hero } from './Hero';
 export { ViewToolbar, SectionHeader, SearchInput } from './Toolbar';
 export { Badge, MethodBadge, Dot } from './Badge';
 export type { Tone } from './Badge';

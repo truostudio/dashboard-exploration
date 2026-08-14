@@ -108,7 +108,7 @@ export function CommandPalette({
   // The 24h/all-chains window is the catalogue's resting state, and the figures
   // here are a preview rather than the answer: the row you land on carries the
   // range you actually have selected.
-  const endpoints = useMemo(() => analytics('24h', 'all').endpoints, []);
+  const endpoints = useMemo(() => analytics('1d', 'all').endpoints, []);
   const liveChains = useMemo(
     () => new Set<string>(analytics('30d', 'all').chainMix.map((c) => c.id)),
     [],

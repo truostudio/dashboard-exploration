@@ -174,20 +174,32 @@ export type BarItem = {
   color?: string;
 };
 
-/** Ranked rows with a proportional bar, used for call counts and CU breakdowns. */
+/**
+ * Ranked rows with a proportional bar, used for call counts and CU breakdowns.
+ *
+ * The bar sits *under* the label rather than beside it. Side by side, the label
+ * column and the bar column compete for the same width, and the longest string
+ * in the list decides how much room every bar gets: one
+ * `debug_traceTransaction` and every row's bar is squeezed, or the name breaks
+ * mid-token into `debug_traceTransa / ction` and stops being a name you can
+ * search for. Stacked, the label gets the full width and the bars all measure
+ * against the same track, which is the only way the comparison is honest.
+ */
 export function BarList({ items }: { items: BarItem[] }) {
   return (
     <ul className="list">
       {items.map((item) => (
         <li key={item.id} className="list-row">
-          <div className="list-main">
-            <span>{item.label}</span>
-            {item.meta && <span className="dim">{item.meta}</span>}
+          <div className="list-head">
+            <div className="list-main">
+              <span>{item.label}</span>
+              {item.meta && <span className="dim">{item.meta}</span>}
+            </div>
+            <span className="mono dim list-pct">{item.value}</span>
           </div>
           <div className="bar" style={{ '--w': `${item.share}%` } as CSSProperties}>
             <div className="bar-fill" style={item.color ? { background: item.color } : undefined} />
           </div>
-          <span className="mono dim list-pct">{item.value}</span>
         </li>
       ))}
     </ul>

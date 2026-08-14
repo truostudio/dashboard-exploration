@@ -27,9 +27,37 @@ Three labels are used throughout:
 | Quickstart → **Create webhook** | Enables on a non-empty URL, then only marks the step complete. Nothing is created. | `POST /webhooks`. The form fields already match the `Webhook` type. |
 | Quickstart → **Invite** | Enables on an `@`-containing string, then only marks the step complete. | `POST` an invite. |
 | Topbar bell → notifications | Read state, per-row read, and *Mark all read* are real, but live in component state, a reload restores the seed from `data/mock.ts`. | Persist read state server-side. The `Notification` type is the contract. |
-| Overview rail → *Week in review* | Every figure is derived from `weekInReview` in `data/mock.ts`, itself scaled off the mock 30-day series. The maths is real; the inputs are not. | Compute the same fields server-side. **Cost and time savings are illustrative**, those need real pricing, not a mock constant. |
+| Overview rail → *Week in review* | Every figure is derived from `weekInReview` in `data/mock.ts`, itself scaled off the mock 30-day series. The maths is real; the inputs are not. | Compute the same fields server-side. Nothing in the deck is a counterfactual any more, see the note below, so each field maps to something you can actually query. |
 | Analytics (all tabs) | `snapshot(range, chain)` is a **seeded deterministic generator**, the same range always produces the same numbers. It looks like real telemetry and is not. | Replace `data/analytics.ts` with a fetch returning the same `Snapshot` shape. This is the single biggest data swap in the app. |
 | Onboarding progress (`Quickstart n/5`) | Lives in `App.tsx` state; resets on reload. | Persist per-user. |
+| Nodes → **provisioned state** | Hand-written fixtures in [`data/nodes.ts`](../src/data/nodes.ts): three nodes with sync state, method mix, disk, and an event log. The fleet aggregates on the `fleet` object (weighted p95, load, worst uptime) are **real maths over fake inputs**. | Replace `dedicatedNodes` with a fetch of the same shape. The aggregates carry over untouched. Note `lag`/`lagSeconds` must come from the node's own head vs the network head; a client that reports its own height as canonical will report zero lag while stuck. |
+| Nodes → dev state switch (bottom-right) | Toggles empty ↔ provisioned. `import.meta.env.DEV` only, Vite compiles the whole branch out of a production build. | Delete it once there is a real provisioning signal. The view should pick its state from whether the fetch returns nodes. |
+
+### A note on the Week in review deck: no counterfactuals
+
+The deck used to claim two things Uniblock cannot know, in the same voice as the things
+it counts:
+
+- **"$4,180 saved this week"**, from a `directSpend` of $6,310 and a `perMillionDirect` of
+  $15.28. That needed each of seven vendors' negotiated rate, for this customer, at this
+  volume, on this split. Those are private, tiered, and different for every buyer. It was
+  a guess wearing a dollar sign.
+- **"31 engineer-hours saved"**, from a 16/9/6 breakdown. Nobody can count hours an
+  engineer did not spend; it needed an invented rate per integration and per incident,
+  and the answer moved with the rate.
+
+Both are gone, along with the recap footnote that promised "nothing here is an estimate"
+two pages away from them. What replaced them only uses figures that are **counted** (from
+the request log) or **published** (a vendor's own price list):
+
+| Page | Now shows | Why it holds up |
+|------|-----------|-----------------|
+| Cost | Sum of the seven providers' **published entry tiers**, `cost.planFloors`. Plus your real spend and your real $/M. | List prices are public and checkable. It is a floor, not a projection, so it understates on purpose. `monthly: null` marks a vendor that publishes no price at all, which is its own argument, not a gap to fill in. |
+| Work | Incidents absorbed, times paged, integrations not written, invoices, keys, streak. | Every row is either counted from the failover log or structural: one integration and one invoice instead of seven, because that is how many contracts exist. |
+
+**Do not reintroduce a modelled saving here.** If a cost comparison is wanted later it
+needs real per-customer vendor pricing, and it must be labelled as modelled where it
+appears, not blended into a deck whose credibility rests on everything else being counted.
 
 ## Inert: renders, does nothing
 
@@ -43,6 +71,7 @@ These are the ones that will waste your time if nobody tells you. Each is a styl
 | Settings → Team | **New User**, per-row **Edit** and **Delete** |
 | Webhooks | **Create Webhook**, and the rows carry `.row-click` styling without an open handler, so they look clickable and are not. The per-row URL **copy** is real. |
 | Quickstart | **Open docs**, **Migrating from Alchemy / Infura**, **Rotate** (key), **Compare plans** |
+| Nodes | **Add a node** only. **Docs** is a real external link, **What sizing covers** scrolls to the sizing panel, **Routing and latency analytics** navigates to Analytics, and picking a row in the fleet table drives the detail panels below. |
 | JSON-RPC, All APIs, Unified APIs, Chains | Doc links and secondary actions in the toolbars |
 
 `NavRow` rows in Settings → *Manage Project* (**Rename**, **Archive**) are also inert,

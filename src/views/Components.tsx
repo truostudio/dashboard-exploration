@@ -5,7 +5,7 @@ import { Segmented } from '../components/Segmented';
 import { SquareMeter } from '../components/SquareMeter';
 import { AnimatedNumber } from '../components/AnimatedNumber';
 import {
-  Panel, PanelHead, TitledPanel,
+  Panel, PanelHead, TitledPanel, Hero,
   ViewToolbar, SectionHeader, SearchInput,
   Badge, MethodBadge, Dot,
   Avatar, AvatarStack,
@@ -636,6 +636,24 @@ export function Components() {
           <TitledPanel eyebrow="Live" title="Test an Endpoint" sub="Send a request." marks={false}>
             <span className="dim">Body</span>
           </TitledPanel>
+        </Entry>
+        <Entry
+          name="Hero"
+          desc="The screen-opening block: eyebrow, display-size title, one paragraph, a row of .btn-blk actions, and the dither field behind all of it. Quickstart and Nodes both open on it. Use it when a screen is the first thing someone sees, including when it is empty: a resting empty state deserves the same treatment as a first run, not a centred icon. plain drops the dither."
+          props={[['eyebrow', 'ReactNode'], ['title', 'ReactNode'], ['sub', 'ReactNode'], ['actions', 'ReactNode'], ['plain', 'boolean'], ['className', 'string']]}
+          code={`<Hero\n  eyebrow="Dedicated nodes / none provisioned"\n  title={<>A node of your own,<br />sized to your traffic.</>}\n  sub="We size nodes per chain against what you actually send."\n  actions={\n    <>\n      <button className="btn-blk on-light is-solid">Book a call</button>\n      <button className="btn-blk on-light is-bare">What it costs</button>\n    </>\n  }\n/>`}
+        >
+          <Hero
+            eyebrow="Dedicated nodes / none provisioned"
+            title={<>A node of your own,<br />sized to your traffic.</>}
+            sub="We size nodes per chain against what you actually send, which is why this one starts with a conversation."
+            actions={
+              <>
+                <button className="btn-blk on-light is-solid">Book a call</button>
+                <button className="btn-blk on-light is-bare">What it costs</button>
+              </>
+            }
+          />
         </Entry>
         <Entry name="Empty" desc="Dashed placeholder for no-data states. bare drops the border/background for use inside a table cell. Add icon + title for the richer shape analytics charts and stat panels want when a project has no traffic yet."
           props={[['bare', 'boolean'], ['icon', 'ReactNode'], ['title', 'ReactNode']]}

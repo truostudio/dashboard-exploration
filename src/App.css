@@ -430,6 +430,11 @@
   justify-content: space-between;
   gap: 16px;
   flex: none;
+  /* A ceiling, not a layout constraint: `max-height: auto` cannot be
+     transitioned, so the collapse on dismiss needs a real number to travel
+     from. Well clear of the tallest the band ever gets, which is the wrapped
+     two-line mobile build at ~80px. */
+  max-height: 200px;
   padding: 8px 40px;
   background: var(--ub-elevated);
   border-bottom: 1px solid var(--ub-line-strong);
@@ -438,22 +443,43 @@
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   animation: siteBannerIn 0.34s var(--ease-out);
+  /* The band changes register when the queue steps between an announcement and
+     an incident. Crossing between the two inks rather than switching means the
+     colour arrives with the message sliding in, not a frame before it. */
+  transition:
+    border-color 0.26s var(--ease-io),
+    box-shadow 0.26s var(--ease-io);
 }
+.site-banner::before { transition: background-color 0.26s var(--ease-io); }
+/* Leaving: the band collapses to nothing instead of vanishing. `max-height`
+   rather than `height` so the resting state stays content-sized, and the
+   padding and border go with it or a 1px rule is left behind. */
+.site-banner.is-leaving {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.26s var(--ease-io),
+    padding 0.26s var(--ease-io),
+    opacity 0.18s var(--ease-io),
+    border-bottom-width 0.26s var(--ease-io);
+}
+/* Flat wash, no rule pattern.
+   This used to carry the blueprint `repeating-linear-gradient` at a 32px
+   period. On a band that is only ~49px tall that does not read as a texture:
+   it produces exactly ONE hairline, at whatever arbitrary height the period
+   happens to land on, straight through the message. The banner already has
+   plenty of construction, a bottom border, an inset shadow, and four
+   registration ticks. It does not also need a stray line across the type. */
 .site-banner::before {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(var(--ub-blue-wash), var(--ub-blue-wash)),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 31px,
-      var(--ub-blueprint) 31px,
-      var(--ub-blueprint) 32px
-    );
-  opacity: 1;
+  background: var(--ub-blue-wash);
 }
 @keyframes siteBannerIn {
   from { opacity: 0; transform: translateY(-6px); }
@@ -489,13 +515,22 @@
   flex: none;
   color: var(--ub-text-3);
 }
+/* The prose is the only thing allowed to shrink: `1 1 auto` against the
+   actions' `flex: none` below. */
 .site-banner-msg {
   margin: 0;
+  flex: 1 1 auto;
   min-width: 0;
   color: var(--ub-black);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.site-banner-actions {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
 }
 .site-banner-link {
   display: inline;
@@ -510,15 +545,40 @@
   cursor: pointer;
 }
 .site-banner-link:hover { color: var(--ub-blue-hover); }
-.site-banner .btn.site-banner-close {
+.site-banner-controls {
   position: relative;
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* Stepping the queue by hand, in the same idiom as a table's pager. Nothing
+   here advances on a timer: swapping the line someone is mid-way through
+   reading is bad on an announcement and indefensible on an incident. */
+.site-banner-pager { margin-right: 4px; }
+.site-banner .btn.site-banner-close,
+.site-banner-pager .btn {
   color: var(--ub-text-3);
 }
-.site-banner .btn.site-banner-close:hover {
+.site-banner .btn.site-banner-close:hover,
+.site-banner-pager .btn:hover {
   color: var(--ub-black);
   background: var(--ub-hover);
 }
+
+/* ---- Alert: a live condition, not an announcement ----
+   Same instrument, different reading. The construction is identical, only the
+   ink moves to danger, so an incident does not arrive as a second banner with
+   its own shape and its own rules. */
+.site-banner.is-alert {
+  border-bottom-color: var(--ub-danger);
+  box-shadow: inset 0 -1px 0 var(--ub-danger-soft);
+}
+.site-banner.is-alert::before { background: var(--ub-danger-wash); }
+.site-banner.is-alert .site-banner-prompt,
+.site-banner.is-alert .site-banner-tag { color: var(--ub-danger-ink); }
+.site-banner.is-alert .site-banner-link { color: var(--ub-danger-ink); }
+.site-banner.is-alert .site-banner-link:hover { color: var(--ub-danger); }
 
 /* ============================================================
    Topbar
@@ -908,15 +968,25 @@
   display: flex;
   flex-direction: column;
 }
+/* Label and figure on one line, the bar on its own line beneath. Side by side
+   they fought for the same width and the longest label in the list decided how
+   much track every bar got. Stacked, the name gets the full row and the bars
+   share one baseline, which is the only arrangement where the lengths actually
+   compare. */
 .list-row {
-  display: grid;
-  grid-template-columns: minmax(160px, 1.7fr) minmax(80px, 2fr) 64px;
-  align-items: center;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px 0;
   border-top: 1px solid var(--ub-line);
 }
 .list-row:first-child { border-top: none; }
+.list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
 .list-main {
   display: flex;
   flex-direction: column;
@@ -925,11 +995,19 @@
   font-size: var(--fs-body);
   line-height: var(--lh-body);
 }
-/* `min-width: 0` on the column lets the grid track shrink, but the children
-   still overflow it, an endpoint path is one unbreakable token, so it ran
-   straight across the bar. Wrapped rather than truncated on purpose: the part
-   that distinguishes these rows is the tail (`…/getNFTsForOwner`), which is
-   exactly what an ellipsis would eat. */
+/* A bar-list label is chrome, not prose: 12px, like every other label, meta and
+   table header in the system. The 16px step made these rows read as headings
+   next to the panels around them. `.list-main` itself stays at body size, it is
+   also the generic two-line stack in table cells (Webhooks, Team, Billing). */
+.list-row .list-main {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+/* `min-width: 0` lets the column shrink, but the children still overflow it, an
+   endpoint path is one unbreakable token, so it ran straight across the bar.
+   Wrapped rather than truncated on purpose: the part that distinguishes these
+   rows is the tail (`…/getNFTsForOwner`), which is exactly what an ellipsis
+   would eat. */
 .list-main > * {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -939,6 +1017,7 @@
   line-height: var(--lh-micro);
 }
 .list-pct {
+  flex: none;
   text-align: right;
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
@@ -1663,29 +1742,23 @@
 /* The stage holds the height between pages and animates to the next one, so
    turning a page is a movement rather than the modal snapping to a new size
    under your pointer. The page itself enters from the side you came from. */
-.wir-stage {
-  overflow: hidden;
-  transition: height 0.38s var(--ease-out);
-}
-.wir-stage-inner { animation: wirPage 0.36s var(--ease-out) both; }
-.wir-stage-inner.is-back { animation-name: wirPageBack; }
-@keyframes wirPage {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: none; }
-}
-@keyframes wirPageBack {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: none; }
-}
+/* The deck's page swap is the shared `.swap-in` / `.swap-stage` recipe from
+   index.css. It used to declare its own identical keyframes here, which is how
+   a second one gets written. */
 .wir-share { display: inline-flex; animation: wirShare 0.3s var(--ease-out) both; }
 @keyframes wirShare {
   from { opacity: 0; transform: translateX(8px); }
   to   { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wir-stage { transition: none; }
-  .wir-stage-inner, .wir-share { animation: none; }
+  .wir-share { animation: none; }
 }
+
+/* `.spec` opens with a rule so it separates from whatever it follows, a chart on
+   the first page, a bar list on the others. The Work page is only a spec, so
+   that rule had nothing above it to divide and read as a stray line across the
+   top of the column. */
+.wir-page-detail > .spec:first-child { border-top: none; }
 
 .wir-page {
   display: grid;
@@ -1705,83 +1778,385 @@
 .wir-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
 
-.wir-recap { display: flex; flex-direction: column; gap: 20px; }
-.wir-recap-head { display: flex; flex-direction: column; gap: 8px; }
-.wir-recap-title {
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+/* ---- Recap: the last page of the deck ----
+   A mosaic, not a ledger. Five rows at one size made the week's biggest fact
+   sit level with its smallest and gave the closing page nothing to land on.
+   One headline figure over the dither field, then four marked cells, then the
+   footnote: scale carries the hierarchy the way it does on the Quickstart
+   hero, using type the system already owns rather than a new device. */
+.wir-recap { display: flex; flex-direction: column; gap: 8px; }
+
+.wir-recap-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 32px;
+  background: var(--ub-sunken);
+  border: 1px solid var(--ub-line-strong);
 }
-.wir-recap-list { display: flex; flex-direction: column; }
-.wir-recap-row {
+/* `center`, not `flex-end`. Bottom-anchored, the headline figure sank to the
+   floor of the band with all the air stacked above it, which reads as the
+   block having slipped rather than been placed. */
+.wir-recap-hero-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 14px 0;
-  border-top: 1px solid var(--ub-line);
+  gap: 32px;
 }
-.wir-recap-row:last-child { border-bottom: 1px solid var(--ub-line); }
-.wir-recap-label {
-  font-size: var(--fs-micro);
-  line-height: var(--lh-micro);
+.wir-recap-hero-copy { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* A real share of the hero, not whatever the columns shrink to. */
+.wir-recap-hero .wf { flex: 0 1 300px; }
+.wir-recap-hero-num {
+  /* The one place in the deck the pixel face runs at display size. The unit
+     underneath keeps it from being a number with no claim attached. */
+  font-size: var(--fs-3xl);
+  line-height: 1.04;
+  color: var(--ub-black);
+}
+.wir-recap-hero-unit {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--ub-text-2);
 }
+
+
+/* A bento, not a 2x2. Equal boxes gave four unrelated figures identical weight,
+   which reads as a form rather than a recap. The money block runs tall down the
+   left, two stack beside it, and the streak runs full width underneath. */
+.wir-recap-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.1fr);
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  /* Hairlines as a background showing through a 1px gap, so the interior rules
+     are shared and the block reads as one plate rather than four boxes. */
+  background: var(--ub-line-strong);
+  border: 1px solid var(--ub-line-strong);
+}
+.wir-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  background: var(--ub-elevated);
+}
+/* Inline with the label, set off by a hairline rather than a separator glyph. */
+.wir-cell-mark {
+  margin-right: 8px;
+  padding-right: 8px;
+  border-right: 1px solid var(--ub-border);
+  color: var(--ub-text-3);
+}
+.wir-cell-num {
+  margin-top: 2px;
+  font-size: var(--fs-xl);
+  line-height: 1.15;
+  color: var(--ub-black);
+}
+.wir-cell-label {
+  display: flex;
+  align-items: baseline;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  color: var(--ub-text-2);
+}
+/* Notes sit on the bottom edge so the three drawings above them stay level. */
+.wir-cell-note {
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  color: var(--ub-text-3);
+}
+
+/* Exactly one filled cell, and it is the money. Blue is the Uniblock path, so
+   the figure that says what the single contract saved is the one entitled to
+   it; a second accent here would turn the rule into decoration. */
+.wir-cell.is-accent {
+  background: var(--ub-blue);
+  /* Fixed ink: the plate does not change between themes, so neither can what
+     is written on it. See --ub-ink-on-blue. */
+  color: var(--ub-ink-on-blue);
+}
+.wir-cell.is-accent .wir-cell-num { color: var(--ub-ink-on-blue); }
+.wir-cell.is-accent .wir-cell-mark {
+  color: rgba(13, 14, 13, 0.55);
+  border-right-color: rgba(13, 14, 13, 0.28);
+}
+.wir-cell.is-accent .wir-cell-label,
+.wir-cell.is-accent .wir-cell-sub,
+.wir-cell.is-accent .wir-cell-note { color: rgba(13, 14, 13, 0.68); }
+
+/* Each cell's own device, so the three are not one layout repeated. It takes
+   the slack between the label and the note and centres in it, which lands the
+   three drawings on the same optical line however tall each one happens to
+   be, instead of hanging them off the label with a ragged gap underneath. */
+.wir-cell-device {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+.wir-cell-sub {
+  display: block;
+  margin-top: 8px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+
+/* ---- Week field ----
+   One column per day, one square per 5,000 requests, so the area is the
+   headline figure rather than a picture of it. The columns flex to fill
+   whatever width the hero gives them, capped so they stay bars and do not
+   spread into slabs. */
+.wf { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.wf-cols {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.wf-col {
+  flex: 1;
+  min-width: 0;
+  max-width: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+/* Bottom-up, so the stacks sit on a shared baseline like a chart and not like
+   seven lists that happen to be next to each other. */
+/* 1px between units rather than 2: at fifteen units on the busiest day the
+   gaps alone were costing the band 15px of height it did not have. */
+.wf-stack { display: flex; flex-direction: column-reverse; gap: 1px; }
+.wf-sq { height: 5px; background: var(--ub-blue); opacity: 0.34; }
+.wf-col.is-peak .wf-sq { opacity: 1; }
+.wf-day {
+  text-align: center;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  color: var(--ub-text-3);
+}
+.wf-col.is-peak .wf-day { color: var(--ub-blue-ink); }
+/* The key draws its unit rather than describing it, and the peak is named here
+   instead of on a callout floating over six empty days. */
+.wf-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ub-line);
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  color: var(--ub-text-3);
+}
+.wf-key { display: inline-flex; align-items: center; gap: 5px; }
+.wf-key-sq { width: 14px; height: 5px; background: var(--ub-blue); opacity: 0.34; }
+.wf-peak { color: var(--ub-blue-ink); }
+
+/* ---- Provider fan ----
+   One contract on the left, the seven providers this project actually reached
+   on the right, orthogonal hairlines between. Wiring, not decoration.
+
+   HTML for the hub and the labels, SVG for the connectors only. As one SVG the
+   labels scaled with the drawing, so it could never be allowed to fill its
+   cell; split, the names sit on the real type tokens and the wiring stretches
+   to whatever width is going. */
+.fan {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+}
+.fan-hub-wrap {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.fan-hub { width: 9px; height: 9px; background: var(--ub-blue); }
+.fan-hub-label {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  letter-spacing: 0.04em;
+  font-family: var(--font-pixel-label);
+  text-transform: uppercase;
+  color: var(--ub-blue-ink);
+}
+/* Takes all the slack, which is what makes the drawing span the cell. */
+.fan-links { flex: 1; min-width: 20px; align-self: stretch; }
+.fan-link { fill: none; stroke: var(--ub-line-strong); stroke-width: 1; }
+.fan-nodes {
+  list-style: none;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  margin: 0;
+  padding: 0;
+}
+.fan-node-row { display: flex; align-items: center; gap: 8px; }
+.fan-node {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--ub-elevated);
+  border: 1px solid var(--ub-border);
+}
+.fan-name {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  color: var(--ub-text-2);
+}
+
+/* ---- Failover bars ----
+   One row per provider that needed routing around, with what it cost in
+   rerouted requests. A shared grid rather than per-row flex, so the tracks all
+   start at the same x and the lengths are actually comparable. */
+.fbars {
+  list-style: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+.fbar { display: contents; }
+.fbar-name,
+.fbar-val {
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  color: var(--ub-text-3);
+}
+.fbar-val { text-align: right; }
+.fbar-track { height: 6px; background: var(--ub-grid); }
+/* Warning ink, not blue: these bars are the wobbles, not the win. It is the
+   only place in the recap that colour appears, so it stays meaningful. */
+.fbar-fill { display: block; height: 100%; width: var(--w); background: var(--ub-warning); opacity: 0.75; }
+
+/* ---- Plan floors ----
+   A price ladder with the prices on it, stretched across the cell. The dashed
+   bar is the vendor that publishes none, drawn full height with a "?": an
+   unknown has no scale, and guessing one would put an invented number back on
+   the page. */
+.floors {
+  list-style: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 62px;
+}
+.floor {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+.floor-amt {
+  text-align: center;
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  color: rgba(13, 14, 13, 0.6);
+}
+.floor-bar { height: var(--h); background: var(--ub-ink-on-blue); opacity: 0.45; }
+.floor-bar.is-unknown {
+  background: none;
+  border: 1px dashed var(--ub-ink-on-blue);
+  opacity: 0.4;
+}
+
 .wir-recap-foot {
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
-  max-width: 60ch;
 }
 
 @media (max-width: 760px) {
   .wir-page { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .wir-recap-grid { grid-template-columns: minmax(0, 1fr); }
+  .wir-recap-hero { padding: 24px; }
+  .wir-recap-hero-num { font-size: var(--fs-2xl); }
 }
 
 /* ============================================================
-   Quickstart
-   ============================================================ */
-/* ============================================================
-   Quickstart hero
+   Hero (components/ui/Hero.tsx)
    ------------------------------------------------------------
-   The one inverted surface in the app. A first-run screen is where contrast
-   is worth spending, and a single dark panel gives the product a face without
-   committing the whole dashboard to a dark register.
+   The screen-opening block, shared by Quickstart and Nodes. Display-size type
+   over the dither field, on the elevated surface rather than an inverted one:
+   a screen that opens loudly does not also need to change register.
+
+   It lives here rather than under a view heading because two screens use it and
+   a third will. Splitting it back out is how a second hero gets written.
    ============================================================ */
-.qs-hero {
+.hero {
   position: relative;
   overflow: hidden;
   padding: 56px 48px 64px;
   background: var(--ub-elevated);
   border: 1px solid var(--ub-border-soft);
 }
-.qs-hero-inner {
+.hero-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 68ch;
+  max-width: 58ch;
 }
-.qs-hero-title {
-  font-size: var(--fs-2xl);
-  line-height: var(--lh-2xl);
+.hero-eyebrow { color: var(--ub-blue-ink); }
+.hero-title {
+  margin: 12px 0 0;
+  /* Oversized and tight. The display step is where a brand gets to be loud,
+     and the app's other headings are deliberately quiet by comparison. */
+  font-size: var(--fs-3xl);
+  line-height: 1.06;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
+  color: var(--ub-black);
   text-wrap: balance;
 }
-.qs-hero-sub {
+.hero-sub {
+  margin: 20px 0 0;
+  max-width: 54ch;
   font-size: var(--fs-body);
   line-height: var(--lh-body);
+  color: var(--ub-text-2);
 }
-.qs-hero-actions {
+.hero-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 32px;
 }
+/* Full-bleed. The falloff lives in the shader's coverage ramp rather than in a
+   CSS mask: fading opacity would grey the ink out, while fading coverage thins
+   the dots out, which is what a screen actually does. */
+.hero-dither { opacity: 0.85; }
 
+/* ============================================================
+   Quickstart
+   ============================================================ */
 .qs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
@@ -2847,7 +3222,7 @@
   gap: 12px;
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--ub-line);
 }
 .prov-check {
@@ -3273,17 +3648,14 @@
   .widget-tile { border-left: none; border-top: 1px solid var(--ub-line); }
   .widget-tile:first-child { border-top: none; }
 
-  .qs-hero { padding: 32px 24px; }
-  .qs-hero-title { font-size: var(--fs-xl); line-height: var(--lh-xl); }
+  .hero { padding: 32px 24px; }
+  .hero-title { font-size: var(--fs-xl); line-height: var(--lh-xl); }
   .spotlight { padding: 24px; flex-direction: column; }
   .spotlight-title { font-size: var(--fs-xl); line-height: var(--lh-xl); }
 
   .panel { padding: 20px; }
   .content { padding: 20px 16px 64px; }
   .view { gap: 20px; }
-
-  .list-row { grid-template-columns: 1fr 56px; }
-  .list-row .bar { grid-column: 1 / -1; order: 3; }
 
   .tb-title { font-size: var(--fs-lg); line-height: var(--lh-lg); }
   .tb-subtitle, .tb-crumb { display: none; }
@@ -4096,47 +4468,13 @@
 /* ============================================================
    Nodes: gated feature
    ------------------------------------------------------------
-   Empty is the resting state, so it is laid out as a real screen rather than
-   a placeholder squeezed into a panel.
+   Empty is the resting state, so it opens on the shared `Hero` like Quickstart
+   does, rather than on a centred icon apologising for having no rows. The
+   provisioned state below it is the same screen with a fleet in it.
    ============================================================ */
-.node-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  padding: 56px 24px 48px;
-}
-.node-hero-icon {
-  display: inline-flex;
-  padding: 14px;
-  color: var(--ub-blue);
-  background: var(--ub-blue-soft);
-  border: 1px solid var(--ub-blue-border);
-}
-.node-hero-title {
-  margin: 4px 0 0;
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.node-hero-body {
+.node-note {
   margin: 0;
-  max-width: 460px;
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-}
-.node-cta {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.node-foot {
-  margin: 20px auto 0;
-  max-width: 520px;
+  max-width: 78ch;
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
 }
@@ -4149,6 +4487,150 @@
   font-weight: 600;
 }
 .node-card-body { margin: 0; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* ---- Fleet table ----
+   Two lines per cell: the figure, then what it means. A block height with no
+   lag beside it is a number nobody can act on. */
+.node-id { display: flex; align-items: center; gap: 8px; }
+.node-id-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.node-load { min-width: 120px; }
+.node-load .usage-bar,
+.node-load .qs-bar { margin-bottom: 4px; }
+/* Latency and load are figures; the client string is not, so the table's own
+   column sizing is left alone and only the load cell is pinned. */
+.node-table td { vertical-align: top; }
+
+/* ---- Selected node ----
+   Identity and disk on the left, method mix on the right. The mix is the
+   column that answers "is this node earning its price", so it gets its own
+   panel rather than a row inside the spec. */
+/* The animation wrapper has to keep the view's own column rhythm: a bare div
+   around the two blocks would collapse the 24px gap between them. */
+.node-detail-swap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* `stretch`, not `start`: the two panels are read across, and a right-hand
+   column that stops short of its neighbour is the ragged-comparison tell. Both
+   run to the taller of the two and the method list pages to fit. */
+.node-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+.node-endpoints {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-bottom: 16px;
+  background: var(--ub-line);
+  border: 1px solid var(--ub-line);
+}
+.node-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--ub-sunken);
+}
+.node-endpoint .eyebrow { flex: none; width: 44px; }
+.node-endpoint-url {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  overflow-wrap: anywhere;
+}
+
+/* The method list has to end level with the node's own panel beside it, however
+   many methods this node happens to serve. The list takes the slack and the
+   pager sits on the bottom edge, so a short page leaves space rather than
+   letting the two columns go ragged. */
+.node-methods { display: flex; flex-direction: column; }
+.node-methods-list { flex: 1; }
+/* `TableFoot` normally closes a flush panel and brings its own 24px gutter.
+   Here it closes a padded one, so it only needs the rule and the vertical
+   rhythm back. */
+.node-methods .table-foot { margin-top: 16px; padding: 16px 0 0; }
+
+.node-disk { margin-top: 16px; }
+.node-disk-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+}
+.node-disk-note { margin: 8px 0 0; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* ---- Event log ----
+   A leading rule carries the kind, so failovers are scannable down the left
+   edge without spending colour on every row. */
+.node-events { list-style: none; margin: 0; padding: 0; }
+.node-event {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0 12px 14px;
+  border-top: 1px solid var(--ub-line);
+  border-left: 2px solid var(--ub-border);
+}
+.node-event:first-child { border-top: 0; }
+/* Only the two kinds that cost the customer something get ink. Upgrades,
+   restarts and disk work stay on the neutral rule: routine, logged, not news.
+   Nothing here goes blue, blue is the Uniblock path, not emphasis. */
+.node-event.is-failover { border-left-color: var(--ub-warning); }
+.node-event.is-reorg { border-left-color: var(--ub-danger); }
+.node-event-ts { flex: none; width: 108px; font-size: var(--fs-micro); line-height: var(--lh-micro); }
+.node-event-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.node-event-title {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: 500;
+}
+.node-event-detail { font-size: var(--fs-micro); line-height: var(--lh-micro); }
+
+/* ---- Dev-only state switch ----
+   Vite compiles the whole branch out of a production build, so this never
+   ships. It is still drawn as scaffolding rather than as product: dashed,
+   tagged, and parked out of the layout so it cannot be mistaken for a control
+   anyone is supposed to find. */
+.dev-switch {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--ub-elevated);
+  border: 1px dashed var(--ub-border);
+  box-shadow: var(--shadow-pop);
+}
+.dev-switch-tag {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ub-text-3);
+}
+
+@media (max-width: 900px) {
+  .node-detail { grid-template-columns: minmax(0, 1fr); }
+  .node-event { flex-wrap: wrap; gap: 8px; }
+  .node-event-ts { width: auto; }
+}
 
 /* ============================================================
    API Tester
@@ -4283,28 +4765,6 @@
 .chain-ep-btn:focus-visible .chain-ep-copy,
 .chain-ep-btn.is-copied .chain-ep-copy { opacity: 1; }
 
-/* ---- Quickstart hero contents ---- */
-.qs-hero-inner { position: relative; z-index: 1; max-width: 58ch; }
-.qs-hero-eyebrow { color: var(--ub-blue-ink); }
-.qs-hero-title {
-  margin: 12px 0 0;
-  /* Oversized and tight. The display step is where a brand gets to be loud,
-     and the app's other headings are deliberately quiet by comparison. */
-  font-size: var(--fs-3xl);
-  line-height: 1.06;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  color: var(--ub-black);
-}
-.qs-hero-sub {
-  margin: 20px 0 0;
-  max-width: 54ch;
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  color: var(--ub-text-2);
-}
-.qs-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
-
 /* Boxed mono actions. Square, hairline, no fill unless it is the primary,
    the reference language is a stamped label, not a rounded UI button. */
 .btn-blk {
@@ -4349,8 +4809,6 @@
   text-underline-offset: 3px;
 }
 .btn-blk.is-bare:hover { background: transparent; color: var(--ub-white); }
-
-.qs-hero-code { position: relative; z-index: 0; margin-bottom: -1px; }
 
 /* Light-surface variant, so the boxed action is a brand device rather than
    something that only exists on the one dark panel. */
@@ -4421,14 +4879,11 @@
   image-rendering: pixelated;
 }
 
-/* Full-bleed. The falloff lives in the shader's coverage ramp rather than in a
-   CSS mask, fading opacity would grey the ink out, while fading coverage
-   thins the dots out, which is what a screen actually does. */
-.qs-hero-dither { opacity: 0.85; }
 /* Narrow panels have no clear column to give the field, so it drops back to
-   texture rather than competing with the copy for the same pixels. */
+   texture rather than competing with the copy for the same pixels. The base
+   opacity sits with the rest of `.hero`. */
 @media (max-width: 900px) {
-  .qs-hero-dither { opacity: 0.38; }
+  .hero-dither { opacity: 0.38; }
 }
 
 /* ---- Chain coverage readout ----

@@ -168,6 +168,22 @@ Kept so the system can be re-rounded from one place.
 | `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Marker travel (~0.34s) |
 | `--ease-io` | `cubic-bezier(0.4, 0, 0.2, 1)` | State changes (~0.16s) |
 
+**No hard cuts.** Nothing in this system changes state by cutting to the new one. Content
+replaced in place transitions, a region that changes height animates to it, an element
+that leaves animates out before it unmounts, and a colour that changes crosses rather
+than switches. An instant swap reads as a page reload, not as a change the product made.
+
+Three classes carry this, all declared once in `index.css` beside `.rise`:
+
+| Class | Use |
+|-------|-----|
+| `.swap-in` | Content replaced in place. Put it on an element keyed by whatever identifies the content (`key={page}`) so React remounts it and the animation replays. `is-back` enters from the other side for a backwards move; `is-subtle` is a shorter vertical throw for a swap inside a panel. |
+| `.swap-stage` | Wraps a region whose height changes as its contents swap. Pair with a measured height (see `WeekInReviewModal`) and it animates to the new one instead of snapping. |
+| `.rise` / `.rise-1`…`.rise-6` | First-paint entrance for a view's blocks, staggered. |
+
+Do not write a component-local `@keyframes` that fades or slides content. That is how a
+system ends up with six near-identical versions of one move.
+
 ### Shell constants
 
 | Token | Value |
@@ -263,6 +279,39 @@ Header row: eyebrow, title, subtitle, and a right-hand actions slot.
   {children}
 </TitledPanel>
 ```
+
+#### `Hero`
+
+The screen-opening block: eyebrow, display-size title, one paragraph, a row of `.btn-blk` actions, and the dither field drifting behind all of it. It sits on `--ub-elevated` rather than an inverted surface, a screen that opens loudly does not also need to change register.
+
+Use it when a screen is the first thing someone sees. That includes when it is *empty*: an empty state that is the resting state of a screen (Nodes, where dedicated nodes are switched on after a sales conversation) gets the same treatment as a first run, not a centred icon apologising for having no rows. Quickstart and Nodes are both this component; a third hero should be too.
+
+`plain` drops the dither, for a hero that already carries artwork. The field is full-bleed and thins out in the shader's own coverage ramp rather than behind a CSS mask, fading opacity would grey the ink out, while fading coverage thins the dots, which is what a screen actually does.
+
+| Prop | Type |
+|------|------|
+| `eyebrow` | `ReactNode` |
+| `title` | `ReactNode` |
+| `sub` | `ReactNode` |
+| `actions` | `ReactNode`, a row of `.btn-blk on-light` |
+| `plain` | `boolean` |
+| `className` | `string` |
+
+```tsx
+<Hero
+  eyebrow="Dedicated nodes / none provisioned"
+  title={<>A node of your own,<br />sized to your traffic.</>}
+  sub="We size nodes per chain against what you actually send."
+  actions={
+    <>
+      <button className="btn-blk on-light is-solid">Book a call</button>
+      <button className="btn-blk on-light is-bare">What it costs</button>
+    </>
+  }
+/>
+```
+
+CSS: `.hero*` in `App.css`, one block, not under a view heading. It is shared, and splitting it back out per view is how a second hero gets written.
 
 #### `Empty`
 

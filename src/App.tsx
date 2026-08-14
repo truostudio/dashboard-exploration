@@ -295,7 +295,7 @@ function App() {
               }}
             />
           )}
-          {view === 'nodes' && <Nodes />}
+          {view === 'nodes' && <Nodes onNavigate={navigate} />}
           {view === 'json-rpc' && <JsonRpc />}
           {view === 'webhooks' && <Webhooks />}
           {view === 'api-tester' && <ApiTester />}

@@ -209,7 +209,7 @@ export const overviewKpis = {
 const weekRows = overviewUsage.rows.slice(-7);
 const weekTotal = weekRows.reduce((sum, r) => sum + r.total, 0);
 
-export type WeekPageId = 'week' | 'failover' | 'providers' | 'cost' | 'time' | 'recap';
+export type WeekPageId = 'week' | 'failover' | 'providers' | 'cost' | 'work' | 'recap';
 
 export const weekInReview = {
   label: 'Week 24',
@@ -251,24 +251,61 @@ export const weekInReview = {
     ],
   },
 
+  /**
+   * Cost.
+   *
+   * This used to carry `directSpend`, `perMillionDirect` and a `savedWeek`
+   * derived from them: what the same week "would have cost" buying seven
+   * provider plans directly. Uniblock cannot know that. It would need each
+   * vendor's negotiated rate for this customer, at this volume, on this split,
+   * and those are private, tiered, and different for every buyer. A precise
+   * figure invented from list prices is not a saving, it is a guess wearing a
+   * dollar sign, and it sat two pages away from a footnote promising nothing in
+   * the deck was estimated.
+   *
+   * What is left is only what can be shown or counted:
+   *   - `spendWeek` / `perMillion`: your invoice, and your spend over your CUs.
+   *   - `planFloors`: each provider's *published* entry tier. Public, checkable,
+   *     and a floor rather than a projection, so it understates on purpose.
+   *     Reaching seven vendors means carrying seven of these before a single
+   *     request is served. That is a structural fact about contracts, not a
+   *     forecast about prices.
+   */
   cost: {
-    savedWeek: 4180,
-    savedQtd: 18400,
-    /** What the same week costs buying each provider plan directly. */
-    directSpend: 6310,
-    uniblockSpend: 2130,
+    spendWeek: 2130,
+    spendQtd: 27900,
     perMillion: 5.16,
-    perMillionDirect: 15.28,
+    computeUnits: 413_200_000,
+    /**
+     * Published entry-tier list price, per provider, per month. `monthly: null`
+     * means the vendor does not publish one at all, which is its own argument:
+     * that provider costs a sales call before it costs money.
+     */
+    planFloors: [
+      { name: 'Helius',      monthly: 49 },
+      { name: 'Alchemy',     monthly: 49 },
+      { name: 'QuickNode',   monthly: 49 },
+      { name: 'Infura',      monthly: 50 },
+      { name: 'Moralis',     monthly: 49 },
+      { name: 'Ankr',        monthly: 99 },
+      { name: 'Blockdaemon', monthly: null },
+    ],
   },
 
-  time: {
-    /** Engineering hours not spent on integrations, incidents, and billing. */
-    hoursSaved: 31,
-    breakdown: [
-      { label: 'Provider integrations not written', hours: 16 },
-      { label: 'Incident response absorbed',        hours: 9 },
-      { label: 'Contract and invoice admin',        hours: 6 },
-    ],
+  /**
+   * Work you did not do.
+   *
+   * Formerly "Time", built on `hoursSaved: 31` and a 16/9/6 breakdown. Nobody
+   * can count hours an engineer did not spend: it needed a made-up rate per
+   * integration and per incident, and the answer moved with the rate. Every row
+   * here is either counted from the request log (incidents absorbed, times
+   * paged, the streak) or structural (one integration and one invoice instead
+   * of seven, because that is how many contracts exist).
+   */
+  work: {
+    integrationsNotWritten: 6,
+    invoices: 1,
+    keysToRotate: 1,
     /** Aggregate wait removed by routing to the fastest healthy provider. */
     latencySavedMs: 14,
     userHoursSaved: 1.6,

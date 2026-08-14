@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../components/Icons';
-import { Dither } from '../components/Dither';
 import { Segmented } from '../components/Segmented';
 import {
-  TitledPanel, Field, TextInput, Form, FormActions, Badge, CopyButton,
+  Hero, TitledPanel, Field, TextInput, Form, FormActions, Badge, CopyButton,
 } from '../components/ui';
 import type { ViewId } from '../App';
 
@@ -112,21 +111,13 @@ export function Quickstart({
 
   return (
     <div className="view">
-      {/* Textured with the house dither rather than inverted. The field is the
-          same Bayer/FBM effect the dashboard ships, inked in the brand blue,
-          drifting slowly across the full panel and thinning to nothing before it
-          reaches the copy so it never fights the headline. */}
-      <section className="qs-hero marks-4 rise rise-1">
-        <div className="qs-hero-inner">
-          <span className="eyebrow qs-hero-eyebrow">Quickstart / 00-05</span>
-          <h2 className="qs-hero-title">
-            Make your first request<br />in under a minute.
-          </h2>
-          <p className="qs-hero-sub">
-            Your project is ready. Drop the snippet below into your codebase, hit Run, and Uniblock
-            routes it through the fastest healthy provider for the chain you picked.
-          </p>
-          <div className="qs-hero-actions">
+      <Hero
+        className="rise rise-1"
+        eyebrow="Quickstart / 00-05"
+        title={<>Make your first request<br />in under a minute.</>}
+        sub="Your project is ready. Drop the snippet below into your codebase, hit Run, and Uniblock routes it through the fastest healthy provider for the chain you picked."
+        actions={
+          <>
             <button
               className="btn-blk on-light is-solid"
               onClick={() => document.getElementById('qs-step-3')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
@@ -139,10 +130,9 @@ export function Quickstart({
             <button className="btn-blk on-light is-bare">
               Migrating from Alchemy / Infura
             </button>
-          </div>
-        </div>
-        <Dither className="qs-hero-dither" />
-      </section>
+          </>
+        }
+      />
 
       <TitledPanel
         title="1 · Your API key"
